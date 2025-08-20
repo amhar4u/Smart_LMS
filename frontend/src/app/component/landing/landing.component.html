@@ -1,0 +1,152 @@
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1 class="hero-title">
+        Welcome to <span class="brand-highlight">Smart LMS</span>
+      </h1>
+      <p class="hero-subtitle">
+        Revolutionize your learning experience with our intelligent Learning Management System. 
+        Connect, learn, and grow with cutting-edge educational technology.
+      </p>
+      <div class="hero-actions">
+        <button mat-raised-button color="primary" class="cta-button" routerLink="/auth/register/student">
+          <mat-icon>school</mat-icon>
+          Join as Student
+        </button>
+        <button mat-raised-button color="accent" class="cta-button" routerLink="/auth/register/teacher">
+          <mat-icon>person</mat-icon>
+          Join as Teacher
+        </button>
+        <button mat-stroked-button class="login-button" routerLink="/auth/login">
+          Already have an account? Sign In
+        </button>
+      </div>
+    </div>
+    <div class="hero-image">
+      <div class="hero-visual">
+        <mat-icon class="hero-icon">school</mat-icon>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Why Choose Smart LMS?</h2>
+      <p>Discover the features that make learning engaging and effective</p>
+    </div>
+    
+    <div class="features-grid">
+      <mat-card class="feature-card" *ngFor="let feature of features">
+        <mat-card-content>
+          <div class="feature-icon">
+            <mat-icon>{{ feature.icon }}</mat-icon>
+          </div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <h3>10,000+</h3>
+        <p>Active Students</p>
+      </div>
+      <div class="stat-item">
+        <h3>500+</h3>
+        <p>Expert Teachers</p>
+      </div>
+      <div class="stat-item">
+        <h3>1,000+</h3>
+        <p>Courses Available</p>
+      </div>
+      <div class="stat-item">
+        <h3>98%</h3>
+        <p>Success Rate</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>What Our Community Says</h2>
+      <p>Real experiences from students and teachers</p>
+    </div>
+    
+    <div class="testimonials-grid">
+      <mat-card class="testimonial-card" *ngFor="let testimonial of testimonials">
+        <mat-card-content>
+          <div class="testimonial-content">
+            <p>"{{ testimonial.message }}"</p>
+          </div>
+          <div class="testimonial-author">
+            <div class="author-avatar">
+              {{ testimonial.avatar }}
+            </div>
+            <div class="author-info">
+              <h4>{{ testimonial.name }}</h4>
+              <p>{{ testimonial.role }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content">
+      <h2>Ready to Start Your Learning Journey?</h2>
+      <p>Join thousands of students and teachers who are already transforming education with Smart LMS</p>
+      <div class="cta-buttons">
+        <button mat-raised-button color="primary" size="large" routerLink="/auth/register/student">
+          Get Started as Student
+        </button>
+        <button mat-raised-button color="accent" size="large" routerLink="/auth/register/teacher">
+          Become a Teacher
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Smart LMS</h3>
+        <p>Empowering education through technology</p>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <a routerLink="/auth/login">Login</a>
+        <a routerLink="/auth/register/student">Student Registration</a>
+        <a routerLink="/auth/register/teacher">Teacher Registration</a>
+      </div>
+      <div class="footer-section">
+        <h4>Support</h4>
+        <a href="#">Help Center</a>
+        <a href="#">Contact Us</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Smart LMS. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
