@@ -1,1 +1,599 @@
-/* You can add global styles to this file, and also import other style files */
+/* Angular Material Theme - Fixed */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Global Reset */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background-attachment: fixed;
+}
+
+/* Custom Material UI Overrides */
+.mat-card {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  margin: 1rem;
+  max-width: 100%;
+}
+
+.mat-form-field {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.mat-raised-button {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 12px 24px !important;
+  min-width: 120px;
+}
+
+.mat-icon {
+  vertical-align: middle;
+}
+
+/* Mobile Responsive Container */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Mobile Responsive Form Fields */
+.full-width {
+  width: 100% !important;
+}
+
+.half-width {
+  width: calc(50% - 0.5rem) !important;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mt-2 { margin-top: 1rem; }
+
+/* Custom animations (minimal) */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 0.5rem;
+  }
+  
+  .mat-card {
+    margin: 0.5rem;
+    border-radius: 8px !important;
+  }
+  
+  .half-width {
+    width: 100% !important;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .mat-raised-button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 0.25rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  
+  .mat-card {
+    margin: 0.25rem;
+    min-width: calc(100vw - 0.5rem);
+  }
+  
+  .mat-form-field {
+    margin-bottom: 0.75rem;
+  }
+  
+  .mat-card-content {
+    padding: 1.5rem !important;
+  }
+}
+
+/* Professional & User-Friendly Color Palette with Patterns */
+:root {
+  /* Primary Colors - Professional Blue */
+  --primary-color: #2563EB;
+  --primary-dark: #1D4ED8;
+  --primary-light: #3B82F6;
+  --primary-ultra-light: #EFF6FF;
+  
+  /* Secondary Colors - Clean Teal */
+  --secondary-color: #059669;
+  --secondary-dark: #047857;
+  --secondary-light: #10B981;
+  --secondary-ultra-light: #ECFDF5;
+  
+  /* Accent Colors - Warm Orange */
+  --accent-color: #EA580C;
+  --accent-dark: #C2410C;
+  --accent-light: #FB923C;
+  --accent-ultra-light: #FFF7ED;
+  
+  /* Pattern Gradients */
+  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #059669 100%);
+  --gradient-secondary: linear-gradient(135deg, #059669 0%, #EA580C 100%);
+  --gradient-accent: linear-gradient(135deg, #EA580C 0%, #2563EB 100%);
+  --gradient-soft: linear-gradient(135deg, #EFF6FF 0%, #ECFDF5 50%, #FFF7ED 100%);
+  
+  /* Zoom-like Patterns */
+  --pattern-dots: radial-gradient(circle at 2px 2px, rgba(37, 99, 235, 0.2) 1px, transparent 0);
+  --pattern-grid: linear-gradient(rgba(5, 150, 105, 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(5, 150, 105, 0.1) 1px, transparent 1px);
+  --pattern-diagonal: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(234, 88, 12, 0.1) 10px, rgba(234, 88, 12, 0.1) 20px);
+  --pattern-waves: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.08) 0%, transparent 70%),
+                   radial-gradient(circle at 20% 80%, rgba(5, 150, 105, 0.08) 0%, transparent 70%),
+                   radial-gradient(circle at 80% 20%, rgba(234, 88, 12, 0.08) 0%, transparent 70%);
+  
+  /* Success - Professional Green */
+  --success-color: #059669;
+  --success-dark: #047857;
+  --success-light: #10B981;
+  
+  /* Warning - Clear Orange */
+  --warning-color: #D97706;
+  --warning-dark: #B45309;
+  --warning-light: #F59E0B;
+  
+  /* Error - Clear Red */
+  --error-color: #DC2626;
+  --error-dark: #B91C1C;
+  --error-light: #EF4444;
+  
+  /* Info - Professional Blue */
+  --info-color: #2563EB;
+  --info-dark: #1D4ED8;
+  --info-light: #3B82F6;
+  
+  /* Text Colors - Enhanced Readability */
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --text-light: #9CA3AF;
+  --text-white: #FFFFFF;
+  
+  /* Background Colors - Clean & Professional */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-tertiary: #F3F4F6;
+  --bg-accent: #F0F9FF;
+  
+  /* Shadow Colors - Professional */
+  --shadow-primary: rgba(37, 99, 235, 0.15);
+  --shadow-secondary: rgba(5, 150, 105, 0.15);
+  --shadow-accent: rgba(234, 88, 12, 0.15);
+  --shadow-dark: rgba(31, 41, 55, 0.1);
+}
+
+/* Custom Material Button Styles */
+.mat-mdc-raised-button.mat-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px var(--shadow-primary) !important;
+  transition: all 0.3s ease !important;
+}
+
+.mat-mdc-raised-button.mat-primary:hover {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%) !important;
+  box-shadow: 0 6px 20px var(--shadow-primary) !important;
+  transform: translateY(-2px) !important;
+}
+
+.mat-mdc-raised-button.mat-accent {
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-dark) 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px var(--shadow-secondary) !important;
+  transition: all 0.3s ease !important;
+}
+
+.mat-mdc-raised-button.mat-accent:hover {
+  background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--secondary-color) 100%) !important;
+  box-shadow: 0 6px 20px var(--shadow-secondary) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Custom Material Form Field Styles */
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-form-field-label {
+  color: var(--primary-color) !important;
+}
+
+/* Snackbar Styling */
+.success-snackbar {
+  background: var(--success-color) !important;
+  color: white !important;
+}
+
+.error-snackbar {
+  background: var(--error-color) !important;
+  color: white !important;
+}
+
+.warning-snackbar {
+  background: var(--warning-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.info-snackbar {
+  background: var(--info-color) !important;
+  color: white !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neutral-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+}
+
+/* Custom Material Snackbar Styles */
+.mat-mdc-snack-bar-container {
+  border-radius: 8px !important;
+}
+
+.success-snackbar .mat-mdc-snack-bar-container {
+  background: var(--success-color) !important;
+  color: white !important;
+}
+
+.error-snackbar .mat-mdc-snack-bar-container {
+  background: var(--error-color) !important;
+  color: white !important;
+}
+
+.warning-snackbar .mat-mdc-snack-bar-container {
+  background: var(--warning-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.info-snackbar .mat-mdc-snack-bar-container {
+  background: var(--info-color) !important;
+  color: white !important;
+}
+
+/* Custom Card Styling */
+.mat-mdc-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(45, 52, 54, 0.08) !important;
+  border: 1px solid var(--neutral-200) !important;
+}
+
+/* Custom Stepper Styling */
+::ng-deep .mat-step-header.cdk-keyboard-focused,
+::ng-deep .mat-step-header.cdk-program-focused,
+::ng-deep .mat-step-header:hover {
+  background-color: var(--accent-ultra-light) !important;
+}
+
+::ng-deep .mat-step-header .mat-step-icon {
+  background-color: var(--accent-color) !important;
+  color: white !important;
+}
+
+::ng-deep .mat-step-header .mat-step-icon-selected {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+::ng-deep .mat-step-header .mat-step-label {
+  color: var(--text-primary) !important;
+}
+
+::ng-deep .mat-step-header .mat-step-label.mat-step-label-active {
+  color: var(--primary-color) !important;
+}
+
+/* Animations and Transitions */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Enhanced Global Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 15px var(--primary-color);
+  }
+  to {
+    box-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color), 0 0 30px var(--primary-color);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Button Animations */
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+  }
+}
+
+.pulse-animation {
+  animation: buttonPulse 2s infinite;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 599px) {
+  .hide-xs {
+    display: none !important;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 959px) {
+  .hide-sm {
+    display: none !important;
+  }
+}
+
+@media (min-width: 960px) and (max-width: 1279px) {
+  .hide-md {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hide-lg {
+    display: none !important;
+  }
+}
+
+/* Utility Classes */
+.full-width {
+  width: 100% !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-content-center {
+  justify-content: center !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.gap-1 { gap: 0.25rem !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.gap-4 { gap: 1.5rem !important; }
+.gap-5 { gap: 2rem !important; }
+
+/* Loading Animation */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Pattern Animation Keyframes */
+@keyframes dotShift {
+  0% { background-position: 0% 0%, 0 0; }
+  100% { background-position: 100% 100%, 25px 25px; }
+}
+
+@keyframes waveShift {
+  0% { background-position: 0% 0%, 0 0; }
+  100% { background-position: 100% 100%, 60px 60px; }
+}
+
+@keyframes diagonalMove {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+@keyframes gridShift {
+  0% { background-position: 0% 0%, 0 0; }
+  50% { background-position: 50% 50%, 10px 10px; }
+  100% { background-position: 100% 100%, 20px 20px; }
+}
+
+@keyframes headerWave {
+  0% { background-position: 0% 0%, 0 0, 0 0; }
+  50% { background-position: 50% 50%, 15px 15px, 25px 25px; }
+  100% { background-position: 100% 100%, 30px 30px, 50px 50px; }
+}
+
+@keyframes patternShift {
+  0% { background-position: 0% 0%, 0 0; }
+  25% { background-position: 25% 25%, 10px 10px; }
+  50% { background-position: 50% 50%, 20px 20px; }
+  75% { background-position: 75% 75%, 30px 30px; }
+  100% { background-position: 100% 100%, 40px 40px; }
+}

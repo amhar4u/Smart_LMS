@@ -1,0 +1,126 @@
+// Material UI Theme Configuration - Fixed
+@use '@angular/material' as mat;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Define Custom Palette - Fixed syntax
+$custom-primary: mat.define-palette(mat.$blue-palette);
+$custom-accent: mat.define-palette(mat.$teal-palette);
+$custom-warn: mat.define-palette(mat.$red-palette);
+
+// Create the theme - Fixed syntax
+$custom-theme: mat.define-light-theme((
+  color: (
+    primary: $custom-primary,
+    accent: $custom-accent,
+    warn: $custom-warn,
+  )
+));
+
+// Include theme styles for all components
+@include mat.all-component-themes($custom-theme);
+
+// Custom Material overrides for LMS with Mobile Responsiveness
+.mat-card {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  margin: 1rem;
+  max-width: 100%;
+}
+
+.mat-form-field {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.mat-raised-button {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 12px 24px !important;
+  min-width: 120px;
+}
+
+.mat-icon {
+  vertical-align: middle;
+}
+
+// Background - Simple and clean
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  font-family: 'Roboto', sans-serif;
+}
+
+// Mobile Responsive Container
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+// Mobile Responsive Form Fields
+.full-width {
+  width: 100% !important;
+}
+
+.half-width {
+  width: calc(50% - 0.5rem) !important;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+// Mobile Responsive Design
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 0.5rem;
+  }
+  
+  .mat-card {
+    margin: 0.5rem;
+    border-radius: 8px !important;
+  }
+  
+  .half-width {
+    width: 100% !important;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .mat-raised-button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 0.25rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  
+  .mat-card {
+    margin: 0.25rem;
+    min-width: calc(100vw - 0.5rem);
+  }
+  
+  .mat-form-field {
+    margin-bottom: 0.75rem;
+  }
+}
