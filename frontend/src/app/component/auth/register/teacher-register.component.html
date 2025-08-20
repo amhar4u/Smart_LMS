@@ -1,0 +1,223 @@
+<div class="register-container">
+  <div class="register-card-wrapper">
+    <mat-card class="register-card">
+      <mat-card-header class="register-header">
+        <div class="header-content">
+          <div class="logo-section">
+            <mat-icon class="logo-icon">school</mat-icon>
+            <h1>Smart LMS</h1>
+          </div>
+          <h2>Teacher Registration</h2>
+          <p>Join our community of educators and inspire students worldwide</p>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content class="register-content">
+        <mat-stepper orientation="vertical" #stepper linear>
+          <!-- Step 1: Personal Information -->
+          <mat-step [stepControl]="personalInfoForm" label="Personal Information">
+            <form [formGroup]="personalInfoForm" class="step-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>First Name</mat-label>
+                  <input matInput formControlName="firstName" placeholder="Enter your first name" required>
+                  <mat-icon matSuffix>person</mat-icon>
+                  <mat-error *ngIf="personalInfoForm.get('firstName')?.invalid && personalInfoForm.get('firstName')?.touched">
+                    {{ getErrorMessage(personalInfoForm, 'firstName') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Last Name</mat-label>
+                  <input matInput formControlName="lastName" placeholder="Enter your last name" required>
+                  <mat-icon matSuffix>person</mat-icon>
+                  <mat-error *ngIf="personalInfoForm.get('lastName')?.invalid && personalInfoForm.get('lastName')?.touched">
+                    {{ getErrorMessage(personalInfoForm, 'lastName') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Phone Number (Optional)</mat-label>
+                <input matInput type="tel" formControlName="phone" placeholder="Enter your phone number">
+                <mat-icon matSuffix>phone</mat-icon>
+                <mat-error *ngIf="personalInfoForm.get('phone')?.invalid && personalInfoForm.get('phone')?.touched">
+                  {{ getErrorMessage(personalInfoForm, 'phone') }}
+                </mat-error>
+              </mat-form-field>
+
+              <div class="step-actions">
+                <button mat-raised-button color="primary" matStepperNext 
+                        [disabled]="personalInfoForm.invalid" type="button">
+                  Next
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </form>
+          </mat-step>
+
+          <!-- Step 2: Account Information -->
+          <mat-step [stepControl]="accountInfoForm" label="Account Information">
+            <form [formGroup]="accountInfoForm" class="step-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Email Address</mat-label>
+                <input matInput type="email" formControlName="email" placeholder="Enter your email" required>
+                <mat-icon matSuffix>email</mat-icon>
+                <mat-error *ngIf="accountInfoForm.get('email')?.invalid && accountInfoForm.get('email')?.touched">
+                  {{ getErrorMessage(accountInfoForm, 'email') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Password</mat-label>
+                <input matInput [type]="hidePassword ? 'password' : 'text'" 
+                       formControlName="password" placeholder="Create a strong password" required>
+                <button mat-icon-button matSuffix (click)="togglePasswordVisibility()" type="button">
+                  <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                <mat-error *ngIf="accountInfoForm.get('password')?.invalid && accountInfoForm.get('password')?.touched">
+                  {{ getErrorMessage(accountInfoForm, 'password') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Confirm Password</mat-label>
+                <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" 
+                       formControlName="confirmPassword" placeholder="Confirm your password" required>
+                <button mat-icon-button matSuffix (click)="toggleConfirmPasswordVisibility()" type="button">
+                  <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                <mat-error *ngIf="accountInfoForm.get('confirmPassword')?.invalid && accountInfoForm.get('confirmPassword')?.touched">
+                  {{ getErrorMessage(accountInfoForm, 'confirmPassword') }}
+                </mat-error>
+              </mat-form-field>
+
+              <div class="password-requirements">
+                <h4>Password Requirements:</h4>
+                <ul>
+                  <li>At least 8 characters long</li>
+                  <li>One uppercase letter</li>
+                  <li>One lowercase letter</li>
+                  <li>One number</li>
+                  <li>One special character (@$!%*?&)</li>
+                </ul>
+              </div>
+
+              <div class="step-actions">
+                <button mat-stroked-button matStepperPrevious type="button">
+                  <mat-icon>arrow_back</mat-icon>
+                  Previous
+                </button>
+                <button mat-raised-button color="primary" matStepperNext 
+                        [disabled]="accountInfoForm.invalid" type="button">
+                  Next
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </form>
+          </mat-step>
+
+          <!-- Step 3: Professional Information -->
+          <mat-step [stepControl]="professionalInfoForm" label="Professional Information">
+            <form [formGroup]="professionalInfoForm" class="step-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Employee ID (Optional)</mat-label>
+                <input matInput formControlName="employeeId" placeholder="Enter your employee ID">
+                <mat-icon matSuffix>badge</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Department</mat-label>
+                <mat-select formControlName="department" required>
+                  <mat-option *ngFor="let dept of departments" [value]="dept">
+                    {{ dept }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="professionalInfoForm.get('department')?.invalid && professionalInfoForm.get('department')?.touched">
+                  {{ getErrorMessage(professionalInfoForm, 'department') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Specialization</mat-label>
+                <mat-select formControlName="specialization" required>
+                  <mat-option *ngFor="let spec of specializations" [value]="spec">
+                    {{ spec }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="professionalInfoForm.get('specialization')?.invalid && professionalInfoForm.get('specialization')?.touched">
+                  {{ getErrorMessage(professionalInfoForm, 'specialization') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Experience Level</mat-label>
+                <mat-select formControlName="experience" required>
+                  <mat-option *ngFor="let exp of experienceRanges" [value]="exp.value">
+                    {{ exp.label }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="professionalInfoForm.get('experience')?.invalid && professionalInfoForm.get('experience')?.touched">
+                  {{ getErrorMessage(professionalInfoForm, 'experience') }}
+                </mat-error>
+              </mat-form-field>
+
+              <div class="info-note">
+                <mat-icon>info</mat-icon>
+                <p>Your professional information helps us match you with relevant courses and students. This information can be updated later in your profile.</p>
+              </div>
+
+              <div class="step-actions">
+                <button mat-stroked-button matStepperPrevious type="button">
+                  <mat-icon>arrow_back</mat-icon>
+                  Previous
+                </button>
+                <button mat-raised-button color="accent" (click)="onSubmit()" 
+                        [disabled]="personalInfoForm.invalid || accountInfoForm.invalid || professionalInfoForm.invalid" 
+                        type="button" class="register-button">
+                  <mat-icon>how_to_reg</mat-icon>
+                  Complete Registration
+                </button>
+              </div>
+            </form>
+          </mat-step>
+        </mat-stepper>
+
+        <!-- Login Link -->
+        <div class="login-link">
+          <span>Already have an account?</span>
+          <button mat-button routerLink="/auth/login" color="primary">
+            Sign In
+          </button>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="back-to-home">
+          <button mat-button routerLink="/" type="button" class="home-button">
+            <mat-icon>home</mat-icon>
+            Back to Home
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Background Design -->
+  <div class="background-design">
+    <div class="floating-element" style="top: 5%; left: 5%; animation-delay: 0s;">
+      <mat-icon>person</mat-icon>
+    </div>
+    <div class="floating-element" style="top: 15%; right: 10%; animation-delay: 2s;">
+      <mat-icon>library_books</mat-icon>
+    </div>
+    <div class="floating-element" style="bottom: 20%; left: 8%; animation-delay: 4s;">
+      <mat-icon>psychology</mat-icon>
+    </div>
+    <div class="floating-element" style="bottom: 5%; right: 5%; animation-delay: 6s;">
+      <mat-icon>workspace_premium</mat-icon>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Spinner -->
+<app-loading-spinner></app-loading-spinner>

@@ -1,0 +1,559 @@
+.register-container {
+  min-height: 100vh;
+  background: 
+    var(--pattern-waves),
+    var(--pattern-diagonal),
+    var(--gradient-soft);
+  background-size: 
+    100% 100%,
+    60px 60px,
+    100% 100%;
+  background-position: 
+    0 0,
+    0 0,
+    0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+  animation: backgroundShift 25s ease-in-out infinite;
+}
+
+.register-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, var(--shadow-primary) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, var(--shadow-secondary) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, var(--shadow-accent) 0%, transparent 50%),
+    var(--pattern-dots);
+  background-size: 
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    25px 25px;
+  z-index: 1;
+  animation: float 8s ease-in-out infinite;
+}
+
+.register-card-wrapper {
+  width: 100%;
+  max-width: 650px;
+  z-index: 2;
+  position: relative;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.register-card {
+  border-radius: 32px !important;
+  box-shadow: 
+    0 30px 60px var(--shadow-dark),
+    0 0 0 1px rgba(255, 255, 255, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px);
+  background: 
+    var(--bg-primary),
+    var(--pattern-grid) !important;
+  background-size: 
+    100% 100%,
+    30px 30px;
+  background-position: 
+    0 0,
+    0 0;
+  overflow: hidden;
+  position: relative;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.register-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 10% 90%, rgba(255, 107, 107, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 90% 10%, rgba(78, 205, 196, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.register-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 40px 80px var(--shadow-dark),
+    0 0 0 1px rgba(255, 255, 255, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.register-header {
+  background: 
+    var(--gradient-primary),
+    var(--pattern-waves),
+    var(--pattern-dots);
+  background-size: 
+    100% 100%,
+    150px 150px,
+    20px 20px;
+  background-position: 
+    0 0,
+    0 0,
+    0 0;
+  color: white;
+  padding: 3rem 2rem 2rem;
+  margin: 0;
+  border-radius: 32px 32px 0 0;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  animation: headerWave 20s ease-in-out infinite;
+}
+
+.register-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  z-index: 1;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+  animation: fadeInDown 0.8s ease-out 0.2s both;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.logo-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: var(--accent-color);
+  animation: pulse 2s infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.header-content h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 0;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.02em;
+}
+
+.header-content h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: -0.01em;
+}
+
+.header-content p {
+  font-size: 1rem;
+  margin: 0.75rem 0 0 0;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.header-content p {
+  opacity: 0.9;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.register-content {
+  padding: 2rem 1.5rem 1.5rem !important;
+}
+
+.step-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.half-width {
+  flex: 1;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.step-actions button {
+  padding: 8px 24px !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+}
+
+.step-actions button mat-icon {
+  margin: 0 4px;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.register-button {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 12px 24px !important;
+}
+
+.register-button mat-icon {
+  margin-right: 8px;
+}
+
+.password-requirements {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+
+.password-requirements h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.password-requirements ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.password-requirements li {
+  margin-bottom: 0.2rem;
+}
+
+.info-note {
+  background: #e8f4fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 0 8px 8px 0;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.info-note mat-icon {
+  color: #2196f3;
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin-top: 2px;
+}
+
+.info-note p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #1976d2;
+  line-height: 1.4;
+}
+
+.login-link {
+  text-align: center;
+  margin: 1.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.login-link span {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.back-to-home {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.home-button {
+  color: #666 !important;
+  text-transform: none !important;
+  font-size: 0.9rem !important;
+}
+
+.home-button mat-icon {
+  margin-right: 0.5rem;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Action Buttons Styling */
+.register-actions {
+  padding: 1.5rem;
+  border-top: 1px solid var(--neutral-200);
+  background: var(--bg-tertiary);
+  border-radius: 0 0 20px 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.btn-register {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+  color: white !important;
+  padding: 12px 32px !important;
+  border-radius: 50px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-register:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4) !important;
+}
+
+.btn-login-link {
+  color: var(--accent-color) !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  padding: 12px 24px !important;
+  border-radius: 50px !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-login-link:hover {
+  background: var(--accent-ultra-light) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Material Stepper Customization */
+::ng-deep .mat-stepper-vertical {
+  background: transparent;
+}
+
+::ng-deep .mat-step-header {
+  pointer-events: none;
+  background: transparent;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+::ng-deep .mat-step-header:hover {
+  background: rgba(255, 107, 107, 0.05);
+}
+
+::ng-deep .mat-step-header .mat-step-icon {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+::ng-deep .mat-step-header .mat-step-icon-selected {
+  background-color: #4caf50;
+}
+
+::ng-deep .mat-step-header .mat-step-label {
+  font-weight: 500;
+  color: #333;
+}
+
+::ng-deep .mat-step-content {
+  border-left: 2px solid #e0e0e0;
+  margin-left: 18px;
+  padding-left: 24px;
+}
+
+/* Background Animation */
+.background-design {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.floating-element {
+  position: absolute;
+  animation: float 8s ease-in-out infinite;
+  opacity: 0.1;
+}
+
+.floating-element mat-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: white;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-30px) rotate(180deg);
+  }
+}
+
+/* Custom Snackbar Styles */
+::ng-deep .success-snackbar {
+  background: #4caf50 !important;
+  color: white !important;
+}
+
+::ng-deep .error-snackbar {
+  background: #f44336 !important;
+  color: white !important;
+}
+
+/* Material Form Field Customization */
+::ng-deep .mat-mdc-form-field-outline {
+  color: #e0e0e0;
+}
+
+::ng-deep .mat-mdc-form-field-focus-indicator {
+  background-color: #ff6b6b;
+}
+
+::ng-deep .mat-mdc-select-panel {
+  border-radius: 8px;
+}
+
+/* Form Field Improvements */
+::ng-deep .teacher-register .mat-mdc-form-field {
+  margin-bottom: 1rem;
+}
+
+::ng-deep .teacher-register .mat-mdc-form-field-error {
+  color: var(--error-color) !important;
+  font-size: 0.85rem;
+}
+
+/* Stepper Customization */
+::ng-deep .teacher-register .mat-stepper-horizontal {
+  margin: 1rem 0;
+}
+
+::ng-deep .teacher-register .mat-step-header {
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+  margin: 0 4px !important;
+}
+
+::ng-deep .teacher-register .mat-step-icon {
+  background: var(--neutral-300) !important;
+  color: white !important;
+}
+
+::ng-deep .teacher-register .mat-step-icon-selected {
+  background: var(--primary-color) !important;
+}
+
+::ng-deep .teacher-register .mat-step-icon-state-done {
+  background: var(--success-color) !important;
+}
+
+/* Loading Spinner Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .register-container {
+    padding: 1rem;
+  }
+  
+  .register-card-wrapper {
+    max-width: 100%;
+  }
+  
+  .register-header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .register-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .register-actions {
+    padding: 1rem;
+    flex-direction: column;
+  }
+  
+  .btn-register,
+  .btn-login-link {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .register-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .form-section h3 {
+    font-size: 1.1rem;
+  }
+}
