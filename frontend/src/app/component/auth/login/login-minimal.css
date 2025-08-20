@@ -1,0 +1,8 @@
+/* Minimal CSS - Let Material UI handle most styling */
+
+.login-card {
+  max-width: 400px !important;
+  width: 100% !important;
+}
+
+/* Remove all the heavy custom CSS and let Material UI handle styling */
