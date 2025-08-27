@@ -32,7 +32,7 @@ import { LoginRequest, UserRole } from '../../../models/user.model';
     MatSelectModule,
     MatCheckboxModule,
     MatSnackBarModule,
-    LoadingSpinnerComponent
+    // LoadingSpinnerComponent
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css']

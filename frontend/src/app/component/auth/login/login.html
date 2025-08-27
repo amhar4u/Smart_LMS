@@ -3,27 +3,21 @@
     <mat-card class="login-card">
       <mat-card-header class="login-header">
         <div class="header-content">
-          <div class="auth-container">
-  <div class="fade-in" style="width: 100%; max-width: 400px;">
-    <mat-card class="login-card">
-      <mat-card-header class="text-center mb-3">
-        <div class="mb-2">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
-            <mat-icon color="primary" style="font-size: 2rem; width: 2rem; height: 2rem;">school</mat-icon>
-            <span style="font-size: 1.5rem; font-weight: 600; color: #2563EB;">Smart LMS</span>
+          <div class="logo-section">
+            <mat-icon class="logo-icon">school</mat-icon>
           </div>
+          <h1>Smart LMS</h1>
+          <h2>Learning Management System</h2>
+          <p>Welcome back! Please sign in to your account.</p>
         </div>
-        <mat-card-subtitle style="color: #64748b; text-align: center;">
-          Welcome back! Please sign in to your account.
-        </mat-card-subtitle>
       </mat-card-header>
-      <mat-card-content style="padding: 2rem;">
+      
+      <mat-card-content class="login-content">
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-          
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email Address</mat-label>
             <input matInput type="email" formControlName="email" placeholder="Enter your email" required>
-            <mat-icon matSuffix color="primary">email</mat-icon>
+            <mat-icon matSuffix>email</mat-icon>
             <mat-error *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
               {{ getErrorMessage('email') }}
             </mat-error>
@@ -41,60 +35,51 @@
             </mat-error>
           </mat-form-field>
 
-          <!-- Remember Me & Forgot Password -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin: 1rem 0; flex-wrap: wrap; gap: 0.5rem;">
-            <mat-checkbox formControlName="rememberMe" color="primary">
+          <div class="form-options">
+            <mat-checkbox formControlName="rememberMe" color="primary" class="remember-me">
               Remember me
             </mat-checkbox>
-            <a href="#" style="color: #2563EB; text-decoration: none; font-size: 0.9rem;">Forgot Password?</a>
+            <a href="#" class="forgot-password">Forgot Password?</a>
           </div>
 
-          <!-- Submit Button -->
           <button mat-raised-button color="primary" type="submit" 
-                  class="full-width" 
-                  style="margin-bottom: 1.5rem; height: 48px; font-size: 1rem;"
+                  class="login-button full-width" 
                   [disabled]="loginForm.invalid">
-            <mat-icon style="margin-right: 0.5rem;">login</mat-icon>
+            <mat-icon>login</mat-icon>
             Sign In
           </button>
+        </form>
 
-          <!-- Divider -->
-          <div style="text-align: center; margin: 1.5rem 0; position: relative;">
-            <span style="background: white; padding: 0 1rem; color: #64748b; font-size: 0.9rem;">New to Smart LMS?</span>
-            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: -1;"></div>
-          </div>
-
-          <!-- Registration Links -->
-          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div class="register-section">
+          <p>New to Smart LMS?</p>
+          <div class="register-buttons">
             <button mat-stroked-button color="accent" type="button" 
                     routerLink="/auth/register/student" 
-                    class="full-width" 
-                    style="height: 44px;">
-              <mat-icon style="margin-right: 0.5rem;">school</mat-icon>
+                    class="register-link register-student full-width">
+              <mat-icon>school</mat-icon>
               Register as Student
             </button>
             
-            <button mat-stroked-button color="accent" type="button" 
+            <button mat-stroked-button color="primary" type="button" 
                     routerLink="/auth/register/teacher" 
-                    class="full-width"
-                    style="height: 44px;">
-              <mat-icon style="margin-right: 0.5rem;">person</mat-icon>
+                    class="register-link register-teacher full-width">
+              <mat-icon>person</mat-icon>
               Register as Teacher
             </button>
           </div>
+        </div>
 
-          <!-- Back to Home -->
-          <div style="text-align: center; margin-top: 1.5rem;">
-            <button mat-button routerLink="/" type="button" style="color: #64748b;">
-              <mat-icon style="margin-right: 0.5rem;">home</mat-icon>
-              Back to Home
-            </button>
-          </div>
-        </form>
+        <div class="back-to-home">
+          <a routerLink="/" class="back-link">
+            <mat-icon>home</mat-icon>
+            Back to Home
+          </a>
+        </div>
       </mat-card-content>
     </mat-card>
   </div>
+  
+  <!-- Loading Spinner -->
+  <!-- <app-loading-spinner></app-loading-spinner> -->
 </div>
 
-<!-- Loading Spinner -->
-<app-loading-spinner></app-loading-spinner>
