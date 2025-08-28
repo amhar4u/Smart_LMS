@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const authenticate = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -271,6 +272,21 @@ router.post('/login', [
       });
     }
 
+    // Check if user is approved (skip for admin users)
+    if (user.role !== 'admin' && user.status !== 'approved') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is pending approval. Please wait for admin approval.',
+        status: user.status,
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role
+        }
+      });
+    }
+
     // Compare password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
@@ -302,6 +318,97 @@ router.post('/login', [
     res.status(500).json({
       success: false,
       message: 'Login failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// @route   POST /api/auth/check-status
+// @desc    Check user status (for pending users)
+// @access  Public
+router.post('/check-status', [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please enter a valid email address')
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // If user is approved, generate token
+    let token = null;
+    if (user.status === 'approved') {
+      token = generateToken(user._id);
+    }
+
+    // Return user status
+    res.status(200).json({
+      success: true,
+      message: 'Status check successful',
+      data: {
+        user: user.getPublicProfile(),
+        token
+      }
+    });
+
+  } catch (error) {
+    console.error('Status check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Status check failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// @route   GET /api/auth/status
+// @desc    Check current user's status (for logged-in users)
+// @access  Private
+router.get('/status', authenticate, async (req, res) => {
+  try {
+    // Get user from auth middleware
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Return user status
+    res.status(200).json({
+      success: true,
+      message: 'Status check successful',
+      status: user.status,
+      data: {
+        user: user.getPublicProfile()
+      }
+    });
+
+  } catch (error) {
+    console.error('Status check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Status check failed',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
