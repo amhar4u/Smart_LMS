@@ -1,0 +1,57 @@
+.confirmation-dialog {
+  padding: 0;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 24px 0;
+}
+
+.dialog-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dialog-icon mat-icon {
+  font-size: 24px;
+  height: 24px;
+  width: 24px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.dialog-content {
+  padding: 16px 24px;
+  color: #6c757d;
+  line-height: 1.5;
+}
+
+.dialog-content p {
+  margin: 0;
+}
+
+.dialog-actions {
+  padding: 0 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancel-btn {
+  color: #6c757d;
+}
+
+.confirm-btn {
+  min-width: 100px;
+}
