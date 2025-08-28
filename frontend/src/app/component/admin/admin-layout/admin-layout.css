@@ -1,0 +1,286 @@
+/* Admin Layout Styles - Modern Sidebar Design */
+.admin-layout {
+  height: 100vh;
+  width: 100%;
+}
+
+.sidenav-container {
+  height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar Styles */
+.sidenav {
+  width: 280px;
+  background: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-circle {
+  width: 48px;
+  height: 48px;
+  background: #2196F3;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+}
+
+/* Navigation Styles */
+.sidebar-nav {
+  padding: 20px 16px;
+}
+
+.nav-item {
+  margin-bottom: 8px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: #e3f2fd;
+}
+
+.nav-item.active {
+  background: #e3f2fd;
+  border-left: 4px solid #2196F3;
+}
+
+.nav-item.expandable.expanded {
+  background: #f5f5f5;
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  position: relative;
+}
+
+.nav-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
+.nav-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.expand-icon {
+  font-size: 16px;
+  color: #999;
+  margin-left: auto;
+}
+
+.add-icon {
+  font-size: 16px;
+  color: #999;
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+/* Count Badges */
+.count-badge {
+  background: #2196F3;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.count-badge.green {
+  background: #4CAF50;
+}
+
+.count-badge.orange {
+  background: #FF9800;
+}
+
+/* Sub-menu Styles */
+.sub-menu {
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 8px 16px;
+  padding: 8px 0;
+  border-left: 2px solid #e9ecef;
+}
+
+.sub-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sub-nav-item:hover {
+  background: #e9ecef;
+}
+
+.sub-nav-item.active {
+  background: #e3f2fd;
+  color: #2196F3;
+}
+
+.sub-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #666;
+}
+
+.sub-text {
+  flex: 1;
+  font-size: 13px;
+  color: #555;
+}
+
+.arrow-icon {
+  font-size: 16px;
+  color: #999;
+  margin-left: auto;
+}
+
+/* Top Toolbar */
+.top-toolbar {
+  background: white;
+  color: #333;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0 20px;
+}
+
+.menu-toggle {
+  color: #666;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 20px;
+  padding: 8px 16px;
+  gap: 8px;
+  margin-right: 20px;
+}
+
+.search-container mat-icon {
+  color: #999;
+  font-size: 20px;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  width: 200px;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.profile-button {
+  color: #666;
+}
+
+.profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e3f2fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar mat-icon {
+  font-size: 24px;
+  color: #2196F3;
+}
+
+/* Main Content */
+.main-content {
+  background: #f8f9fa;
+}
+
+.page-content {
+  padding: 20px;
+  min-height: calc(100vh - 64px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidenav {
+    width: 260px;
+  }
+  
+  .search-container {
+    display: none;
+  }
+}
+
+/* Animation for expand/collapse */
+.sub-menu {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effects */
+.nav-item:hover .nav-icon {
+  color: #2196F3;
+}
+
+.nav-item:hover .nav-text {
+  color: #2196F3;
+}
+
+.sub-nav-item:hover .sub-icon {
+  color: #2196F3;
+}
+
+.sub-nav-item:hover .sub-text {
+  color: #2196F3;
+}

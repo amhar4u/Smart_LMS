@@ -1,0 +1,117 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav 
+      #drawer
+      mode="side" 
+      opened="true"
+      class="sidenav"
+      fixedInViewport="true">
+      
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <div class="logo-circle">
+            <mat-icon>school</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <!-- Dashboard -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/dashboard">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">dashboard</mat-icon>
+            <span class="nav-text">Dashboard</span>
+          </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="nav-item expandable" [class.expanded]="userManagementExpanded">
+          <div class="nav-content" (click)="toggleUserManagement()">
+            <mat-icon class="nav-icon">people</mat-icon>
+            <span class="nav-text">User Management</span>
+            <mat-icon class="expand-icon">{{ userManagementExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+          
+          <!-- Sub-menu for User Management -->
+          <div class="sub-menu" *ngIf="userManagementExpanded">
+            <div class="sub-nav-item" routerLinkActive="active" routerLink="/admin/manage-students">
+              <mat-icon class="sub-icon">school</mat-icon>
+              <span class="sub-text">Students</span>
+              <span class="count-badge">{{ studentCount || 0 }}</span>
+            </div>
+            <div class="sub-nav-item" routerLinkActive="active" routerLink="/admin/manage-lecturers">
+              <mat-icon class="sub-icon">person</mat-icon>
+              <span class="sub-text">Lecturers</span>
+              <span class="count-badge">{{ lecturerCount || 0 }}</span>
+            </div>
+            <div class="sub-nav-item" routerLinkActive="active" routerLink="/admin/manage-admins">
+              <mat-icon class="sub-icon">admin_panel_settings</mat-icon>
+              <span class="sub-text">Admins</span>
+              <span class="count-badge">{{ adminCount || 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Posts (Courses) -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/courses">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">library_books</mat-icon>
+            <span class="nav-text">Posts</span>
+            <span class="count-badge green">8</span>
+          </div>
+        </div>
+
+        <!-- Schedules -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/schedules">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">schedule</mat-icon>
+            <span class="nav-text">Schedules</span>
+            <mat-icon class="add-icon">add</mat-icon>
+            <span class="count-badge orange">3</span>
+          </div>
+        </div>
+
+        <!-- Analytics -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/analytics">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">analytics</mat-icon>
+            <span class="nav-text">Analytics</span>
+          </div>
+        </div>
+      </nav>
+    </mat-sidenav>
+
+    <!-- Main Content -->
+    <mat-sidenav-content class="main-content">
+      <!-- Top Toolbar -->
+      <mat-toolbar class="top-toolbar">
+        <button mat-icon-button (click)="drawer.toggle()" class="menu-toggle">
+          <mat-icon>menu</mat-icon>
+        </button>
+        
+        <span class="spacer"></span>
+        
+        <!-- Search -->
+        <div class="search-container">
+          <mat-icon>search</mat-icon>
+          <input type="text" placeholder="Search..." class="search-input">
+        </div>
+        
+        <!-- Profile -->
+        <button mat-icon-button class="profile-button">
+          <div class="profile-avatar">
+            <mat-icon>account_circle</mat-icon>
+          </div>
+        </button>
+      </mat-toolbar>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <ng-content></ng-content>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
