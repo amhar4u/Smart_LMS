@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { StudentLayout } from '../student-layout/student-layout';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-student-dashboard',
@@ -22,7 +23,13 @@ import { StudentLayout } from '../student-layout/student-layout';
   templateUrl: './student-dashboard.html',
   styleUrls: ['./student-dashboard.css']
 })
-export class StudentDashboard {
+export class StudentDashboard implements OnInit {
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    // Start status monitoring when dashboard loads
+    this.authService.startStatusMonitoring();
+  }
   // Sample data for dashboard cards
   dashboardStats = [
     { title: 'Enrolled Courses', value: 6, icon: 'library_books', color: '#4CAF50', growth: '+2 this semester' },

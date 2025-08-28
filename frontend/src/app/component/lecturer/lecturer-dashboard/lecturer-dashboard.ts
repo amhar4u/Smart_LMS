@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { LecturerLayout } from '../lecturer-layout/lecturer-layout';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-lecturer-dashboard',
@@ -17,7 +18,13 @@ import { LecturerLayout } from '../lecturer-layout/lecturer-layout';
   templateUrl: './lecturer-dashboard.html',
   styleUrl: './lecturer-dashboard.css'
 })
-export class LecturerDashboard {
+export class LecturerDashboard implements OnInit {
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    // Start status monitoring when dashboard loads
+    this.authService.startStatusMonitoring();
+  }
   // Sample data for dashboard cards
   dashboardStats = [
     { title: 'Total Students', value: 156, icon: 'people', color: '#9C27B0', growth: '+8 this semester' },
