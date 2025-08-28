@@ -1,0 +1,133 @@
+<div class="student-layout">
+  <!-- Sidebar -->
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav 
+      #drawer
+      mode="side" 
+      opened="true"
+      class="sidenav"
+      fixedInViewport="true">
+      
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <div class="logo-circle">
+            <mat-icon>school</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <!-- Dashboard -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/dashboard">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">dashboard</mat-icon>
+            <span class="nav-text">Dashboard</span>
+          </div>
+        </div>
+
+        <!-- My Courses -->
+        <div class="nav-item expandable" [class.expanded]="coursesExpanded">
+          <div class="nav-content" (click)="toggleCourses()">
+            <mat-icon class="nav-icon">library_books</mat-icon>
+            <span class="nav-text">My Courses</span>
+            <mat-icon class="expand-icon">{{ coursesExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+          
+          <!-- Sub-menu for Courses -->
+          <div class="sub-menu" *ngIf="coursesExpanded">
+            <div class="sub-nav-item" routerLinkActive="active" routerLink="/student/courses/enrolled">
+              <mat-icon class="sub-icon">book</mat-icon>
+              <span class="sub-text">Enrolled</span>
+              <span class="count-badge">{{ enrolledCourses || 0 }}</span>
+            </div>
+            <div class="sub-nav-item" routerLinkActive="active" routerLink="/student/courses/completed">
+              <mat-icon class="sub-icon">check_circle</mat-icon>
+              <span class="sub-text">Completed</span>
+              <span class="count-badge green">4</span>
+            </div>
+            <div class="sub-nav-item" routerLinkActive="active" routerLink="/student/courses/browse">
+              <mat-icon class="sub-icon">search</mat-icon>
+              <span class="sub-text">Browse</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assignments -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/assignments">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">assignment</mat-icon>
+            <span class="nav-text">Assignments</span>
+            <span class="count-badge orange">{{ pendingAssignments }}</span>
+          </div>
+        </div>
+
+        <!-- Grades -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/grades">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">grade</mat-icon>
+            <span class="nav-text">Grades</span>
+          </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/schedule">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">schedule</mat-icon>
+            <span class="nav-text">Schedule</span>
+          </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/resources">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">folder</mat-icon>
+            <span class="nav-text">Resources</span>
+          </div>
+        </div>
+      </nav>
+    </mat-sidenav>
+
+    <!-- Main Content -->
+    <mat-sidenav-content class="main-content">
+      <!-- Top Toolbar -->
+      <mat-toolbar class="top-toolbar">
+        <button mat-icon-button (click)="drawer.toggle()" class="menu-toggle">
+          <mat-icon>menu</mat-icon>
+        </button>
+        
+        <span class="spacer"></span>
+        
+        <!-- Search -->
+        <div class="search-container">
+          <mat-icon>search</mat-icon>
+          <input type="text" placeholder="Search courses, assignments..." class="search-input">
+        </div>
+        
+        <!-- User Info -->
+        <div class="user-info" *ngIf="currentUser$ | async as currentUser">
+          <span class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</span>
+          <span class="user-role">{{ currentUser.role | titlecase }}</span>
+        </div>
+        
+        <!-- Profile -->
+        <button mat-icon-button class="profile-button">
+          <div class="profile-avatar">
+            <mat-icon>account_circle</mat-icon>
+          </div>
+        </button>
+        
+        <!-- Logout -->
+        <button mat-icon-button class="logout-button" (click)="logout()" title="Logout">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </mat-toolbar>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <ng-content></ng-content>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
