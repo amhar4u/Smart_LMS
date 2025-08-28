@@ -7,6 +7,16 @@ export const authGuard = () => {
   const router = inject(Router);
 
   if (authService.isLoggedIn()) {
+    const user = authService.getCurrentUser();
+    
+    // Check if user status is pending (for non-admin users)
+    if (user && user.role !== 'admin' && user.status === 'pending') {
+      // Logout pending user and redirect to login
+      authService.logout();
+      router.navigate(['/auth/login']);
+      return false;
+    }
+    
     return true;
   } else {
     router.navigate(['/auth/login']);
