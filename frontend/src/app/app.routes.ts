@@ -30,6 +30,30 @@ export const routes: Routes = [
     loadComponent: () => import('./component/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard)
   },
   {
+    path: 'admin/manage-admins',
+    loadComponent: () => import('./component/admin/manage-admins/manage-admins').then(m => m.ManageAdmins)
+  },
+  {
+    path: 'admin/manage-students',
+    loadComponent: () => import('./component/admin/manage-students/manage-students').then(m => m.ManageStudents)
+  },
+  {
+    path: 'admin/manage-lecturers',
+    loadComponent: () => import('./component/admin/manage-lecturers/manage-lecturers').then(m => m.ManageLecturers)
+  },
+  {
+    path: 'admin/courses',
+    redirectTo: 'admin/dashboard'
+  },
+  {
+    path: 'admin/schedules',
+    redirectTo: 'admin/dashboard'
+  },
+  {
+    path: 'admin/promote',
+    redirectTo: 'admin/dashboard'
+  },
+  {
     path: '**',
     redirectTo: ''
   }
