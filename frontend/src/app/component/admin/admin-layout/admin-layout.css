@@ -208,6 +208,41 @@
   width: 200px;
 }
 
+/* User Info */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-right: 16px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-button {
+  color: #666;
+  margin-right: 8px;
+}
+
+.logout-button {
+  color: #f44336;
+}
+
+.logout-button:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
 .search-input::placeholder {
   color: #999;
 }

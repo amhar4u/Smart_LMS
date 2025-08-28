@@ -100,11 +100,22 @@
           <input type="text" placeholder="Search..." class="search-input">
         </div>
         
+        <!-- User Info -->
+        <div class="user-info" *ngIf="currentUser$ | async as currentUser">
+          <span class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</span>
+          <span class="user-role">{{ currentUser.role | titlecase }}</span>
+        </div>
+        
         <!-- Profile -->
         <button mat-icon-button class="profile-button">
           <div class="profile-avatar">
             <mat-icon>account_circle</mat-icon>
           </div>
+        </button>
+        
+        <!-- Logout -->
+        <button mat-icon-button class="logout-button" (click)="logout()" title="Logout">
+          <mat-icon>logout</mat-icon>
         </button>
       </mat-toolbar>
 

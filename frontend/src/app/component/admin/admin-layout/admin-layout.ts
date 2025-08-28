@@ -9,6 +9,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { UserManagementService } from '../../../services/user-management.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -28,6 +29,7 @@ export class AdminLayout implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private router = inject(Router);
   private userManagementService = inject(UserManagementService);
+  private authService = inject(AuthService);
 
   // Navigation state
   userManagementExpanded = false;
@@ -37,6 +39,9 @@ export class AdminLayout implements OnInit {
   lecturerCount = 0;
   adminCount = 0;
 
+  // Current user
+  currentUser$ = this.authService.currentUser$;
+
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
       map(result => result.matches),
@@ -44,6 +49,12 @@ export class AdminLayout implements OnInit {
     );
 
   ngOnInit() {
+    // Check if user is admin
+    if (!this.authService.isAdmin()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    
     this.loadUserCounts();
   }
 
@@ -56,9 +67,8 @@ export class AdminLayout implements OnInit {
   }
 
   logout() {
-    // TODO: Implement logout functionality
-    console.log('Logout clicked');
-    this.router.navigate(['/login']);
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 
   private loadUserCounts() {
