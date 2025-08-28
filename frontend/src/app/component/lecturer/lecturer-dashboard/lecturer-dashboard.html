@@ -1,1 +1,171 @@
-<p>lecturer-dashboard works!</p>
+<app-lecturer-layout>
+  <!-- Dashboard Content -->
+  <div class="dashboard-content">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>Lecturer Dashboard</h1>
+      <p>Welcome back! Here's your teaching overview and student progress.</p>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <mat-card *ngFor="let stat of dashboardStats" class="stat-card" [style.border-left]="'4px solid ' + stat.color">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon" [style.background-color]="stat.color">
+              <mat-icon>{{ stat.icon }}</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h2>{{ stat.value | number }}</h2>
+              <p>{{ stat.title }}</p>
+              <span class="stat-growth" [style.color]="stat.color">{{ stat.growth }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Quick Actions -->
+      <mat-card class="quick-actions-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>flash_on</mat-icon>
+            Quick Actions
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="action-buttons">
+            <button mat-raised-button color="primary" class="action-btn">
+              <mat-icon>add</mat-icon>
+              Create Course
+            </button>
+            <button mat-raised-button color="accent" class="action-btn">
+              <mat-icon>assignment</mat-icon>
+              New Assignment
+            </button>
+            <button mat-stroked-button class="action-btn">
+              <mat-icon>grade</mat-icon>
+              Grade Submissions
+            </button>
+            <button mat-stroked-button class="action-btn">
+              <mat-icon>analytics</mat-icon>
+              View Analytics
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- My Courses -->
+      <mat-card class="courses-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>library_books</mat-icon>
+            My Courses
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="courses-list">
+            <div *ngFor="let course of myCourses" class="course-item">
+              <div class="course-progress">
+                <div class="progress-circle" [style.background]="'conic-gradient(#9C27B0 0deg ' + (course.progress * 3.6) + 'deg, #e0e0e0 ' + (course.progress * 3.6) + 'deg 360deg)'">
+                  <span>{{ course.progress }}%</span>
+                </div>
+              </div>
+              <div class="course-content">
+                <p class="course-name">{{ course.name }}</p>
+                <span class="course-students">{{ course.students }} students</span>
+                <span class="course-next">{{ course.nextClass }}</span>
+              </div>
+              <div class="course-status" [class]="course.status">
+                <mat-icon>play_circle</mat-icon>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Pending Tasks -->
+      <mat-card class="tasks-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>task</mat-icon>
+            Pending Tasks
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="tasks-list">
+            <div *ngFor="let task of pendingTasks" class="task-item">
+              <div class="task-icon" [class]="task.priority">
+                <mat-icon>task_alt</mat-icon>
+              </div>
+              <div class="task-content">
+                <p class="task-title">{{ task.title }}</p>
+                <span class="task-count">{{ task.count }} items</span>
+                <span class="task-due">Due: {{ task.dueDate | date:'short' }}</span>
+              </div>
+              <div class="task-priority" [class]="task.priority">
+                <span>{{ task.priority | titlecase }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Student Performance -->
+      <mat-card class="performance-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>trending_up</mat-icon>
+            Student Performance
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="performance-list">
+            <div *ngFor="let performance of studentPerformance" class="performance-item">
+              <div class="performance-grade">
+                <div class="grade-circle" [class]="performance.status">
+                  <span>{{ performance.avgGrade }}%</span>
+                </div>
+              </div>
+              <div class="performance-content">
+                <p class="performance-course">{{ performance.course }}</p>
+                <span class="performance-improvement" [style.color]="performance.improvement.includes('+') ? '#4CAF50' : '#f44336'">
+                  {{ performance.improvement }}
+                </span>
+              </div>
+              <div class="performance-status" [class]="performance.status">
+                <mat-icon>{{ performance.status === 'excellent' ? 'star' : performance.status === 'good' ? 'check_circle' : 'warning' }}</mat-icon>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Recent Activities -->
+      <mat-card class="activities-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>history</mat-icon>
+            Recent Activities
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="activities-list">
+            <div *ngFor="let activity of recentActivities" class="activity-item">
+              <div class="activity-icon">
+                <mat-icon>{{ activity.icon }}</mat-icon>
+              </div>
+              <div class="activity-content">
+                <p class="activity-action">{{ activity.action }}</p>
+                <span class="activity-user">{{ activity.user }}</span>
+                <span class="activity-time">{{ activity.time }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</app-lecturer-layout>
