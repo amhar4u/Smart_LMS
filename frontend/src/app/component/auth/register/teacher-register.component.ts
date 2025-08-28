@@ -169,11 +169,21 @@ export class TeacherRegisterComponent implements OnInit {
       this.authService.registerTeacher(registrationData).subscribe({
         next: (response) => {
           this.loadingService.hide();
-          this.snackBar.open('Registration successful! Welcome to Smart LMS!', 'Close', {
+          
+          // Store pending user data
+          localStorage.setItem('pendingUser', JSON.stringify({
+            email: registrationData.email,
+            firstName: registrationData.firstName,
+            lastName: registrationData.lastName,
+            role: 'teacher'
+          }));
+          
+          this.snackBar.open('Registration successful! Your account is pending approval.', 'Close', {
             duration: 5000,
             panelClass: ['success-snackbar']
           });
-          this.router.navigate(['/auth/login']);
+          
+          this.router.navigate(['/auth/pending-approval']);
         },
         error: (error) => {
           this.loadingService.hide();
