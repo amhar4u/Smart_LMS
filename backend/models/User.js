@@ -103,6 +103,11 @@ const userSchema = new mongoose.Schema({
   },
   
   // Account Status
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
   isActive: {
     type: Boolean,
     default: true
