@@ -92,11 +92,68 @@ export class LoginComponent implements OnInit {
             panelClass: ['success-snackbar']
           });
 
+          // Start status monitoring for non-admin users
+          if (response.user.role !== 'admin') {
+            this.authService.startStatusMonitoring();
+          }
+
           // Navigate based on user role
           this.navigateBasedOnRole(response.user.role);
         },
         error: (error) => {
           this.loadingService.hide();
+          
+          console.log('=== LOGIN ERROR DEBUG ===');
+          console.log('Full error object:', error);
+          console.log('error.status:', error.status);
+          console.log('error.error:', error.error);
+          console.log('error.error?.status:', error.error?.status);
+          console.log('error.error?.message:', error.error?.message);
+          console.log('Condition 1 (status 403):', error.status === 403);
+          console.log('Condition 2 (status pending):', error.error?.status === 'pending');
+          console.log('Condition 3 (message includes):', error.error?.message?.includes('pending approval'));
+          console.log('Final condition result:', error.status === 403 && (error.error?.status === 'pending' || error.error?.message?.includes('pending approval')));
+          console.log('========================');
+          
+          // Check if the error is due to pending approval
+          if (error.status === 403 && 
+              (error.error?.status === 'pending' || 
+               error.error?.message?.includes('pending approval'))) {
+            
+            console.log('SHOWING PENDING MESSAGE');
+            
+            // Show pending approval message instead of redirecting
+            this.snackBar.open(
+              '⏳ Your registration is still pending approval. Please wait for admin approval before accessing the system.', 
+              'Understood', 
+              {
+                duration: 8000,
+                panelClass: ['warning-snackbar'],
+                horizontalPosition: 'center',
+                verticalPosition: 'top'
+              }
+            );
+            return;
+          }
+          
+          // Check if account is rejected
+          if (error.status === 403 && error.error?.status === 'rejected') {
+            console.log('SHOWING REJECTED MESSAGE');
+            this.snackBar.open(
+              '❌ Your registration has been rejected. Please contact administrator for more information.', 
+              'Close', 
+              {
+                duration: 8000,
+                panelClass: ['error-snackbar'],
+                horizontalPosition: 'center',
+                verticalPosition: 'top'
+              }
+            );
+            return;
+          }
+          
+          console.log('SHOWING DEFAULT ERROR MESSAGE');
+          // Default error message for other cases
           this.snackBar.open('Invalid credentials. Please try again.', 'Close', {
             duration: 5000,
             panelClass: ['error-snackbar']
