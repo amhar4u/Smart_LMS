@@ -22,8 +22,20 @@ export class AuthService {
   constructor(private http: HttpClient) {
     // Check if user is logged in on service initialization
     const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      this.currentUserSubject.next(JSON.parse(savedUser));
+    const token = localStorage.getItem('token');
+    
+    // Only restore user if both user data and token exist
+    if (savedUser && token) {
+      try {
+        const user = JSON.parse(savedUser);
+        this.currentUserSubject.next(user);
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        this.clearAuthData();
+      }
+    } else {
+      // Clear any partial auth data
+      this.clearAuthData();
     }
   }
 
@@ -110,6 +122,24 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
+  clearAuthData(): void {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
+    this.currentUserSubject.next(null);
+  }
+
+  // Debug method to check auth state
+  debugAuthState(): void {
+    console.log('=== Auth Debug State ===');
+    console.log('Token:', this.getToken());
+    console.log('Current User:', this.getCurrentUser());
+    console.log('Is Logged In:', this.isLoggedIn());
+    console.log('Is Admin:', this.isAdmin());
+    console.log('Is Student:', this.isStudent());
+    console.log('Is Teacher:', this.isTeacher());
+    console.log('======================');
+  }
+
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
@@ -119,7 +149,19 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken() && !!this.getCurrentUser();
+    const token = this.getToken();
+    const user = this.getCurrentUser();
+    
+    // If either token or user is missing, clear auth data and return false
+    if (!token || !user) {
+      if (token || user) {
+        // Partial auth data exists, clear it
+        this.clearAuthData();
+      }
+      return false;
+    }
+    
+    return true;
   }
 
   isStudent(): boolean {
