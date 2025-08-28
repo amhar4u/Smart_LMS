@@ -1,0 +1,236 @@
+/* Manage Admins Styles */
+.manage-admins-content {
+  width: 100%;
+}
+
+/* Page Header */
+.page-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.page-header h1 {
+  margin: 0 0 8px;
+  color: #2c3e50;
+  font-size: 2.5em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-header p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 1.2em;
+  font-weight: 300;
+}
+
+/* Action Bar */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  flex: 1;
+  max-width: 400px;
+  min-width: 250px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.action-buttons button {
+  height: 48px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Table Card */
+.table-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.table-card mat-card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.table-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.3em;
+  margin: 0;
+}
+
+/* Admins Table */
+.admins-table {
+  width: 100%;
+  background: white;
+}
+
+.admins-table th {
+  background: #f8f9fa;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 0.95em;
+  padding: 16px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.admins-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f3f4;
+  color: #495057;
+}
+
+.admins-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Role Badges */
+.role-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-super-admin {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.role-admin {
+  background: rgba(255, 152, 0, 0.1);
+  color: #FF9800;
+}
+
+.role-moderator {
+  background: rgba(156, 39, 176, 0.1);
+  color: #9C27B0;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-active {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+}
+
+.status-inactive {
+  background: rgba(158, 158, 158, 0.1);
+  color: #9E9E9E;
+}
+
+.status-pending {
+  background: rgba(255, 193, 7, 0.1);
+  color: #FFC107;
+}
+
+/* Action Buttons */
+.admins-table button {
+  margin: 0 2px;
+  width: 36px;
+  height: 36px;
+}
+
+.admins-table button mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-field {
+    max-width: none;
+    width: 100%;
+  }
+  
+  .action-buttons {
+    justify-content: center;
+  }
+  
+  .page-header h1 {
+    font-size: 2em;
+  }
+  
+  .admins-table {
+    font-size: 0.9em;
+  }
+  
+  .admins-table th,
+  .admins-table td {
+    padding: 12px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 1.8em;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+  }
+  
+  .admins-table {
+    font-size: 0.8em;
+  }
+  
+  .admins-table th,
+  .admins-table td {
+    padding: 8px 4px;
+  }
+}
+
+/* Animation */
+.table-card {
+  animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

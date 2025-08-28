@@ -1,0 +1,108 @@
+<app-admin-layout>
+  <div class="manage-students-content">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>Student Management</h1>
+      <p>Manage student accounts, enrollments, and academic progress</p>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search students...</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Search by name, email, or course">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      
+      <div class="action-buttons">
+        <button mat-raised-button color="primary" (click)="addStudent()">
+          <mat-icon>add</mat-icon>
+          Add Student
+        </button>
+        <button mat-stroked-button (click)="exportStudents()">
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+      </div>
+    </div>
+
+    <!-- Students Table -->
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>school</mat-icon>
+          Students List
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Loading Indicator -->
+        <div *ngIf="isLoading$ | async" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading students...</p>
+        </div>
+
+        <!-- No Data Message -->
+        <div *ngIf="!(isLoading$ | async) && (students$ | async) && (students$ | async)!.length === 0" class="no-data-container">
+          <mat-icon class="no-data-icon">school_off</mat-icon>
+          <h3>No Students Found</h3>
+          <p>No student records found. Try adjusting your search or add a new student.</p>
+        </div>
+
+        <!-- Students Table -->
+        <table mat-table [dataSource]="(students$ | async) || []" class="students-table" *ngIf="!(isLoading$ | async) && (students$ | async) && (students$ | async)!.length > 0">
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>ID</th>
+            <td mat-cell *matCellDef="let student">{{ getStudentId(student) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let student">{{ getStudentName(student) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let student">{{ student.email }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="course">
+            <th mat-header-cell *matHeaderCellDef>Course</th>
+            <td mat-cell *matCellDef="let student">{{ student.course || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let student">
+              <span class="status-badge" [class]="getStatusClass(getStudentStatus(student))">
+                {{ getStudentStatus(student) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Created</th>
+            <td mat-cell *matCellDef="let student">{{ student.createdAt | date:'short' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let student">
+              <button mat-icon-button color="primary" (click)="editStudent(student)" title="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="accent" (click)="viewStudent(student)" title="View">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteStudent(student)" title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</app-admin-layout>
