@@ -5,6 +5,7 @@ export interface User {
   email: string;
   phone?: string;
   role: UserRole;
+  status?: 'pending' | 'approved' | 'rejected';
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

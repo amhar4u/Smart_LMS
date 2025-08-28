@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { User, UserRole, LoginRequest, AuthResponse, StudentRegistration, TeacherRegistration } from '../models/user.model';
 
 interface ApiResponse<T> {
@@ -19,7 +20,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private router: Router) {
     // Check if user is logged in on service initialization
     const savedUser = localStorage.getItem('currentUser');
     const token = localStorage.getItem('token');
@@ -55,7 +56,12 @@ export class AuthService {
           throw new Error(response.message || 'Login failed');
         }
       }),
-      catchError(this.handleError<AuthResponse>('login'))
+      catchError((error: HttpErrorResponse) => {
+        // For login, we want to preserve the original HTTP error structure
+        // so the login component can handle pending/rejected status properly
+        console.error('Login error:', error);
+        return throwError(() => error);
+      })
     );
   }
 
@@ -119,7 +125,32 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
+    localStorage.removeItem('pendingUser');
     this.currentUserSubject.next(null);
+  }
+
+  checkPendingUserStatus(): Observable<ApiResponse<{ user: User; token?: string }>> {
+    const token = localStorage.getItem('token');
+    const pendingUser = JSON.parse(localStorage.getItem('pendingUser') || '{}');
+    
+    if (!token && !pendingUser.email) {
+      return throwError(() => new Error('No token or pending user data found'));
+    }
+
+    // If we have a token, use it for authenticated status check
+    if (token) {
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+      return this.http.get<ApiResponse<{ user: User; token?: string }>>(`${this.API_URL}/users/profile`, { headers }).pipe(
+        catchError(this.handleError<ApiResponse<{ user: User; token?: string }>>('checkPendingUserStatus'))
+      );
+    }
+
+    // Otherwise, check status using email (for pending users)
+    return this.http.post<ApiResponse<{ user: User; token?: string }>>(`${this.API_URL}/auth/check-status`, {
+      email: pendingUser.email
+    }).pipe(
+      catchError(this.handleError<ApiResponse<{ user: User; token?: string }>>('checkPendingUserStatus'))
+    );
   }
 
   clearAuthData(): void {
@@ -177,6 +208,47 @@ export class AuthService {
   isAdmin(): boolean {
     const user = this.getCurrentUser();
     return user?.role === UserRole.ADMIN;
+  }
+
+  // Check if user status has changed and redirect if necessary
+  checkCurrentUserStatus(): void {
+    const user = this.getCurrentUser();
+    if (!user || user.role === 'admin') return;
+
+    // Call backend to get current user status
+    this.http.get(`${this.API_URL}/auth/status`, { headers: this.getAuthHeaders() })
+      .subscribe({
+        next: (response: any) => {
+          if (response.status === 'pending') {
+            // User status changed to pending, logout and redirect to login
+            this.logout();
+            this.router.navigate(['/auth/login']);
+          } else if (response.status === 'rejected') {
+            // User was rejected, logout and redirect to login
+            this.logout();
+            this.router.navigate(['/auth/login']);
+          }
+        },
+        error: (error) => {
+          console.error('Status check failed:', error);
+          // If token is invalid, logout
+          if (error.status === 401) {
+            this.logout();
+            this.router.navigate(['/auth/login']);
+          }
+        }
+      });
+  }
+
+  // Start monitoring user status (call this after login)
+  startStatusMonitoring(): void {
+    const user = this.getCurrentUser();
+    if (!user || user.role === 'admin') return;
+
+    // Check status every 10 seconds
+    setInterval(() => {
+      this.checkCurrentUserStatus();
+    }, 10000);
   }
 
   // Get authorization headers for API requests

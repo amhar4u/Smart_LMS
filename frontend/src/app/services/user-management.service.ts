@@ -274,4 +274,45 @@ export class UserManagementService {
       document.body.removeChild(link);
     }
   }
+
+  // User approval methods
+  approveUser(userId: string): Observable<ApiResponse<User>> {
+    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/approve`, {}).pipe(
+      tap(() => this.refreshUsers()),
+      catchError((error) => {
+        console.error('Error approving user:', error);
+        return of({ success: false, data: {} as User, message: 'Failed to approve user' });
+      })
+    );
+  }
+
+  rejectUser(userId: string): Observable<ApiResponse<User>> {
+    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/reject`, {}).pipe(
+      tap(() => this.refreshUsers()),
+      catchError((error) => {
+        console.error('Error rejecting user:', error);
+        return of({ success: false, data: {} as User, message: 'Failed to reject user' });
+      })
+    );
+  }
+
+  getPendingUsers(role?: 'student' | 'teacher'): Observable<UsersResponse> {
+    let params = new HttpParams();
+    if (role) {
+      params = params.set('role', role);
+    }
+    
+    return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/pending`, { params }).pipe(
+      map(response => response.success ? response.data : { users: [] }),
+      catchError((error) => {
+        console.error('Error getting pending users:', error);
+        return of({ users: [] });
+      })
+    );
+  }
+
+  private refreshUsers(): void {
+    // Trigger a refresh of the current users list
+    this.getAllUsers().subscribe();
+  }
 }
