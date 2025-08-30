@@ -54,7 +54,7 @@ const auth = async (req, res, next) => {
       console.log(`✅ [AUTH] User authenticated: ${user.email} (${user.role})`);
 
       // Add user to request
-      req.user = decoded;
+      req.user = user;
       next();
     } catch (err) {
       console.log(`❌ [AUTH] Token verification failed:`, err.message);
