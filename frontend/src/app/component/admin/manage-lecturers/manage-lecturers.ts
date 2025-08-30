@@ -9,10 +9,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { AdminLayout } from '../admin-layout/admin-layout';
 import { UserManagementService, User } from '../../../services/user-management.service';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, map } from 'rxjs/operators';
+import { UserDialogComponent, UserDialogData } from '../../../shared/user-dialog/user-dialog.component';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog';
+import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, map, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manage-lecturers',
@@ -27,6 +30,7 @@ import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, ma
     MatFormFieldModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
+    MatDialogModule,
     AdminLayout
   ],
   templateUrl: './manage-lecturers.html',
@@ -41,15 +45,20 @@ export class ManageLecturers implements OnInit, OnDestroy {
 
   constructor(
     private userService: UserManagementService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
-    // Setup live search
+    console.log('🚀 [ManageLecturers] Component initializing');
+    
+    // Setup live search with better error handling
     this.lecturers$ = this.searchControl.valueChanges.pipe(
       startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(searchTerm => {
+        console.log(`🔍 [ManageLecturers] Search term: "${searchTerm}"`);
         this.isLoading$.next(true);
+        
         if (searchTerm && searchTerm.trim()) {
           return this.userService.searchUsers(searchTerm.trim(), 'teacher');
         } else {
@@ -57,15 +66,27 @@ export class ManageLecturers implements OnInit, OnDestroy {
         }
       }),
       map(users => {
+        console.log(`✅ [ManageLecturers] Received ${users.length} lecturers:`, users);
         this.isLoading$.next(false);
         return users;
+      }),
+      catchError(error => {
+        console.error('❌ [ManageLecturers] Error loading lecturers:', error);
+        this.isLoading$.next(false);
+        this.snackBar.open('Error loading lecturers. Please try again.', 'Close', {
+          duration: 5000
+        });
+        return of([]);
       }),
       takeUntil(this.destroy$)
     );
   }
 
   ngOnInit(): void {
-    // Initial load handled by search control
+    console.log('🎯 [ManageLecturers] Component initialized');
+    // Initial load will be handled by the search control with empty string
+    // Force an initial load
+    this.refreshLecturers();
   }
 
   ngOnDestroy(): void {
@@ -74,77 +95,134 @@ export class ManageLecturers implements OnInit, OnDestroy {
   }
 
   addLecturer(): void {
-    this.snackBar.open('Add Lecturer functionality will be implemented', 'Close', {
-      duration: 3000
+    const dialogData: UserDialogData = {
+      mode: 'create',
+      role: 'teacher'
+    };
+
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '700px',
+      data: dialogData,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.createUser(result).subscribe({
+          next: (newUser) => {
+            if (newUser) {
+              this.snackBar.open('Lecturer created successfully', 'Close', {
+                duration: 3000
+              });
+              this.refreshLecturers();
+            } else {
+              this.snackBar.open('Failed to create lecturer', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error creating lecturer:', error);
+            this.snackBar.open('Error creating lecturer', 'Close', { duration: 3000 });
+          }
+        });
+      }
     });
   }
 
   editLecturer(lecturer: User): void {
-    if (confirm(`Are you sure you want to update ${lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`}?`)) {
-      const updates: Partial<User> = {
-        isActive: !lecturer.isActive
-      };
-      
-      const lecturerId = lecturer._id || lecturer.id;
-      if (!lecturerId) {
-        this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
-        return;
-      }
-      
-      this.userService.updateUser(lecturerId, updates).subscribe({
-        next: (updatedUser: User | null) => {
-          if (updatedUser) {
-            this.snackBar.open(`${lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`} updated successfully`, 'Close', {
-              duration: 3000
-            });
-            this.refreshLecturers();
-          } else {
-            this.snackBar.open('Failed to update lecturer', 'Close', { duration: 3000 });
-          }
-        },
-        error: (error: any) => {
-          console.error('Error updating lecturer:', error);
-          this.snackBar.open('Error updating lecturer', 'Close', { duration: 3000 });
+    const dialogData: UserDialogData = {
+      user: lecturer,
+      mode: 'edit',
+      role: 'teacher'
+    };
+
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '700px',
+      data: dialogData,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const lecturerId = lecturer._id || lecturer.id;
+        if (!lecturerId) {
+          this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
+          return;
         }
-      });
-    }
+
+        this.userService.updateUser(lecturerId, result).subscribe({
+          next: (updatedUser) => {
+            if (updatedUser) {
+              this.snackBar.open('Lecturer updated successfully', 'Close', {
+                duration: 3000
+              });
+              this.refreshLecturers();
+            } else {
+              this.snackBar.open('Failed to update lecturer', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error updating lecturer:', error);
+            this.snackBar.open('Error updating lecturer', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
   viewLecturer(lecturer: User): void {
-    const name = lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`;
-    this.snackBar.open(`Viewing ${name} - Full view dialog will be implemented`, 'Close', {
-      duration: 3000
+    const dialogData: UserDialogData = {
+      user: lecturer,
+      mode: 'view',
+      role: 'teacher'
+    };
+
+    this.dialog.open(UserDialogComponent, {
+      width: '700px',
+      data: dialogData
     });
   }
 
   deleteLecturer(lecturer: User): void {
     const name = lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`;
-    if (confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
-      const lecturerId = lecturer._id || lecturer.id;
-      if (!lecturerId) {
-        this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
-        return;
+    
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Lecturer',
+        message: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
       }
-      
-      this.userService.deleteUser(lecturerId, 'teacher').subscribe({
-        next: (success: boolean) => {
-          if (success) {
-            this.snackBar.open(`${name} deleted successfully`, 'Close', {
-              duration: 3000
-            });
-            this.refreshLecturers();
-          } else {
-            this.snackBar.open('Failed to delete lecturer', 'Close', {
-              duration: 3000
-            });
-          }
-        },
-        error: (error: any) => {
-          console.error('Error deleting lecturer:', error);
-          this.snackBar.open('Error deleting lecturer', 'Close', { duration: 3000 });
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const lecturerId = lecturer._id || lecturer.id;
+        if (!lecturerId) {
+          this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
+          return;
         }
-      });
-    }
+        
+        this.userService.deleteUser(lecturerId, 'teacher').subscribe({
+          next: (success) => {
+            if (success) {
+              this.snackBar.open(`${name} deleted successfully`, 'Close', {
+                duration: 3000
+              });
+              this.refreshLecturers();
+            } else {
+              this.snackBar.open('Failed to delete lecturer', 'Close', {
+                duration: 3000
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting lecturer:', error);
+            this.snackBar.open('Error deleting lecturer', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
   exportLecturers(): void {
@@ -179,8 +257,14 @@ export class ManageLecturers implements OnInit, OnDestroy {
   }
 
   private refreshLecturers(): void {
+    console.log('🔄 [ManageLecturers] Refreshing lecturers list');
+    // Force refresh by triggering the search control
     this.userService.refreshUsersByRole('teacher');
     const currentSearchTerm = this.searchControl.value || '';
-    this.searchControl.setValue(currentSearchTerm);
+    // Use updateValueAndValidity to trigger the search even with the same value
+    this.searchControl.setValue('');
+    setTimeout(() => {
+      this.searchControl.setValue(currentSearchTerm);
+    }, 100);
   }
 }
