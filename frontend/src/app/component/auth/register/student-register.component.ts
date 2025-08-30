@@ -17,6 +17,7 @@ import { LoadingService } from '../../../services/loading.service';
 import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
 import { ValidationService } from '../../../services/validation.service';
 import { StudentRegistration } from '../../../models/user.model';
+import { CourseService, Course } from '../../../services/course.service';
 
 @Component({
   selector: 'app-student-register',
@@ -46,23 +47,8 @@ export class StudentRegisterComponent implements OnInit {
   hidePassword = true;
   hideConfirmPassword = true;
 
-  courses = [
-    'Computer Science',
-    'Information Technology',
-    'Software Engineering',
-    'Data Science',
-    'Cybersecurity',
-    'Business Administration',
-    'Marketing',
-    'Finance',
-    'Engineering',
-    'Mathematics',
-    'Physics',
-    'Chemistry',
-    'Biology',
-    'Medicine',
-    'Other'
-  ];
+  courses: Course[] = [];
+  isLoadingCourses = false;
 
   semesters = [
     'Semester 1',
@@ -80,11 +66,33 @@ export class StudentRegisterComponent implements OnInit {
     private authService: AuthService,
     private loadingService: LoadingService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private courseService: CourseService
   ) {}
 
   ngOnInit(): void {
     this.initializeForms();
+    this.loadCourses();
+  }
+
+  loadCourses(): void {
+    this.isLoadingCourses = true;
+    this.courseService.getCourses().subscribe({
+      next: (response) => {
+        this.isLoadingCourses = false;
+        if (response.success) {
+          this.courses = response.data;
+        }
+      },
+      error: (error) => {
+        this.isLoadingCourses = false;
+        console.error('Error loading courses:', error);
+        this.snackBar.open('Error loading courses. Please refresh the page.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
   }
 
   initializeForms(): void {
