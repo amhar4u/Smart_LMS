@@ -4,10 +4,10 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map, shareReplay, filter } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -47,6 +47,38 @@ export class AdminLayout implements OnInit {
       this.router.navigate(['/auth/login']);
       return;
     }
+
+    // Subscribe to router events to keep user management expanded on relevant pages
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.checkAndExpandUserManagement();
+    });
+
+    // Initial check for current route
+    this.checkAndExpandUserManagement();
+  }
+
+  hasActiveUserManagementChild(): boolean {
+    const currentUrl = this.router.url;
+    const userManagementRoutes = [
+      '/admin/manage-students',
+      '/admin/manage-lecturers', 
+      '/admin/manage-admins'
+    ];
+    return userManagementRoutes.includes(currentUrl);
+  }
+
+  checkAndExpandUserManagement(): void {
+    // Keep user management expanded if on any user management page
+    const userManagementRoutes = [
+      '/admin/manage-students',
+      '/admin/manage-lecturers', 
+      '/admin/manage-admins'
+    ];
+    
+    const currentUrl = this.router.url;
+    this.userManagementExpanded = userManagementRoutes.some(route => currentUrl.includes(route));
   }
 
   toggleUserManagement() {

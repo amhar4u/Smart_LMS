@@ -28,7 +28,7 @@
         </div>
 
         <!-- User Management -->
-        <div class="nav-item expandable" [class.expanded]="userManagementExpanded">
+        <div class="nav-item expandable" [class.expanded]="userManagementExpanded" [class.has-active-child]="hasActiveUserManagementChild()">
           <div class="nav-content" (click)="toggleUserManagement()">
             <mat-icon class="nav-icon">people</mat-icon>
             <span class="nav-text">User Management</span>

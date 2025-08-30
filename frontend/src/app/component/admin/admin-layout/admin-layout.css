@@ -63,6 +63,11 @@
   border-left: 4px solid #2196F3;
 }
 
+.nav-item.has-active-child {
+  background: #e3f2fd;
+  border-left: 4px solid #2196F3;
+}
+
 .nav-item.expandable.expanded {
   background: #f5f5f5;
 }
