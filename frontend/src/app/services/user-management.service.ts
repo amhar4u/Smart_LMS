@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 // Using fixed API URL since environment is not available
 // import { environment } from '../../environments/environment';
 
@@ -63,16 +64,28 @@ export class UserManagementService {
   // Cache for users by role
   private usersCache = new Map<string, BehaviorSubject<User[]>>();
   
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private authService: AuthService) {
+    console.log('🚀 [UserService] Initializing UserManagementService');
+    
     // Initialize cache for each role
     this.usersCache.set('admin', new BehaviorSubject<User[]>([]));
     this.usersCache.set('student', new BehaviorSubject<User[]>([]));
     this.usersCache.set('teacher', new BehaviorSubject<User[]>([]));
     
-    // Load initial data for all roles
-    this.loadUsersByRole('admin');
-    this.loadUsersByRole('student');
-    this.loadUsersByRole('teacher');
+    console.log('💾 [UserService] Cache initialized for all roles');
+    
+    // Load initial data for all roles - but only if user is authenticated
+    console.log('📥 [UserService] Loading initial data for all roles');
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        console.log('👤 [UserService] User authenticated, loading data');
+        this.loadUsersByRole('admin');
+        this.loadUsersByRole('student');
+        this.loadUsersByRole('teacher');
+      } else {
+        console.log('❌ [UserService] No authenticated user, skipping data load');
+      }
+    });
   }
 
   // Get users by role from cache (observable)
@@ -87,19 +100,24 @@ export class UserManagementService {
 
   // Load users by role from backend
   private loadUsersByRole(role: 'admin' | 'student' | 'teacher'): void {
+    console.log(`📥 [UserService] Loading users for role: ${role}`);
+    
     this.fetchUsersByRole(role).subscribe({
       next: (users) => {
+        console.log(`✅ [UserService] Successfully loaded ${users.length} users for role: ${role}`);
         const cache = this.usersCache.get(role);
         if (cache) {
           cache.next(users);
+          console.log(`💾 [UserService] Cache updated for role: ${role}`);
         }
       },
       error: (error) => {
-        console.error(`Failed to load ${role} users:`, error);
+        console.error(`❌ [UserService] Failed to load ${role} users:`, error);
         // Set empty array on error
         const cache = this.usersCache.get(role);
         if (cache) {
           cache.next([]);
+          console.log(`💾 [UserService] Cache cleared for role: ${role} due to error`);
         }
       }
     });
@@ -107,16 +125,25 @@ export class UserManagementService {
 
   // Fetch users by role from backend
   private fetchUsersByRole(role: 'admin' | 'student' | 'teacher'): Observable<User[]> {
-    return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/by-role/${role}`)
+    console.log(`🔍 [UserService] Fetching users for role: ${role}`);
+    
+    const headers = this.authService.getAuthHeaders();
+    console.log(`🔐 [UserService] Using auth headers:`, headers.get('Authorization') ? 'Bearer token present' : 'No auth token');
+    
+    return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/by-role/${role}`, { headers })
       .pipe(
         map(response => {
+          console.log(`📊 [UserService] Response for ${role}:`, response);
           if (response.success && response.data.users) {
-            return response.data.users.map(user => this.transformUser(user));
+            const users = response.data.users.map(user => this.transformUser(user));
+            console.log(`✅ [UserService] Transformed ${users.length} ${role} users:`, users);
+            return users;
           }
+          console.log(`⚠️ [UserService] No users found for role: ${role}`);
           return [];
         }),
         catchError(error => {
-          console.error('Error fetching users by role:', error);
+          console.error(`❌ [UserService] Error fetching users by role ${role}:`, error);
           return of([]);
         })
       );
@@ -138,7 +165,9 @@ export class UserManagementService {
       if (options.limit) params = params.set('limit', options.limit.toString());
     }
 
-    return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/all`, { params })
+    const headers = this.authService.getAuthHeaders();
+
+    return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/all`, { params, headers })
       .pipe(
         map(response => {
           if (response.success && response.data) {
@@ -176,7 +205,7 @@ export class UserManagementService {
 
   // Transform user data for display
   private transformUser(user: any): User {
-    return {
+    const transformed = {
       ...user,
       id: user._id || user.id,
       fullName: `${user.firstName} ${user.lastName}`,
@@ -184,11 +213,23 @@ export class UserManagementService {
       createdAt: new Date(user.createdAt),
       updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined
     };
+    
+    console.log(`🔄 [UserService] Transformed user:`, {
+      id: transformed.id,
+      fullName: transformed.fullName,
+      role: transformed.role,
+      email: transformed.email,
+      status: transformed.status
+    });
+    
+    return transformed;
   }
 
   // Update user
   updateUser(userId: string, updates: Partial<User>): Observable<User | null> {
-    return this.http.put<ApiResponse<{ user: User }>>(`${this.baseUrl}/users/profile`, updates)
+    const headers = this.authService.getAuthHeaders();
+    
+    return this.http.put<ApiResponse<{ user: User }>>(`${this.baseUrl}/users/${userId}`, updates, { headers })
       .pipe(
         map(response => {
           if (response.success && response.data.user) {
@@ -206,9 +247,33 @@ export class UserManagementService {
       );
   }
 
+  // Create new user
+  createUser(userData: Partial<User>): Observable<User | null> {
+    const headers = this.authService.getAuthHeaders();
+    
+    return this.http.post<ApiResponse<{ user: User }>>(`${this.baseUrl}/users`, userData, { headers })
+      .pipe(
+        map(response => {
+          if (response.success && response.data.user) {
+            const newUser = this.transformUser(response.data.user);
+            // Refresh cache for the user's role
+            this.refreshUsersByRole(newUser.role);
+            return newUser;
+          }
+          return null;
+        }),
+        catchError(error => {
+          console.error('Error creating user:', error);
+          return of(null);
+        })
+      );
+  }
+
   // Delete user (if needed)
   deleteUser(userId: string, userRole: 'admin' | 'student' | 'teacher'): Observable<boolean> {
-    return this.http.delete<ApiResponse<any>>(`${this.baseUrl}/users/${userId}`)
+    const headers = this.authService.getAuthHeaders();
+    
+    return this.http.delete<ApiResponse<any>>(`${this.baseUrl}/users/${userId}`, { headers })
       .pipe(
         map(response => {
           if (response.success) {
@@ -277,7 +342,9 @@ export class UserManagementService {
 
   // User approval methods
   approveUser(userId: string): Observable<ApiResponse<User>> {
-    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/approve`, {}).pipe(
+    const headers = this.authService.getAuthHeaders();
+    
+    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/approve`, {}, { headers }).pipe(
       tap(() => this.refreshUsers()),
       catchError((error) => {
         console.error('Error approving user:', error);
@@ -287,7 +354,9 @@ export class UserManagementService {
   }
 
   rejectUser(userId: string): Observable<ApiResponse<User>> {
-    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/reject`, {}).pipe(
+    const headers = this.authService.getAuthHeaders();
+    
+    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/reject`, {}, { headers }).pipe(
       tap(() => this.refreshUsers()),
       catchError((error) => {
         console.error('Error rejecting user:', error);
@@ -302,7 +371,9 @@ export class UserManagementService {
       params = params.set('role', role);
     }
     
-    return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/pending`, { params }).pipe(
+    const headers = this.authService.getAuthHeaders();
+    
+    return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/pending`, { params, headers }).pipe(
       map(response => response.success ? response.data : { users: [] }),
       catchError((error) => {
         console.error('Error getting pending users:', error);

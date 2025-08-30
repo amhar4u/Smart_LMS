@@ -8,7 +8,6 @@ import { RouterModule, Router } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { UserManagementService } from '../../../services/user-management.service';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -28,16 +27,10 @@ import { AuthService } from '../../../services/auth.service';
 export class AdminLayout implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private router = inject(Router);
-  private userManagementService = inject(UserManagementService);
   private authService = inject(AuthService);
 
   // Navigation state
   userManagementExpanded = false;
-  
-  // Counters for dashboard
-  studentCount = 0;
-  lecturerCount = 0;
-  adminCount = 0;
 
   // Current user
   currentUser$ = this.authService.currentUser$;
@@ -54,8 +47,6 @@ export class AdminLayout implements OnInit {
       this.router.navigate(['/auth/login']);
       return;
     }
-    
-    this.loadUserCounts();
   }
 
   toggleUserManagement() {
@@ -69,22 +60,5 @@ export class AdminLayout implements OnInit {
   logout() {
     this.authService.logout();
     this.router.navigate(['/auth/login']);
-  }
-
-  private loadUserCounts() {
-    // Load student count
-    this.userManagementService.getUsersByRole('student').subscribe(students => {
-      this.studentCount = students.length;
-    });
-
-    // Load lecturer count  
-    this.userManagementService.getUsersByRole('teacher').subscribe(lecturers => {
-      this.lecturerCount = lecturers.length;
-    });
-
-    // Load admin count
-    this.userManagementService.getUsersByRole('admin').subscribe(admins => {
-      this.adminCount = admins.length;
-    });
   }
 }
