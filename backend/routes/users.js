@@ -84,8 +84,12 @@ router.get('/by-role/:role', auth, async (req, res) => {
   try {
     const { role } = req.params;
     
+    console.log(`📋 [GET /users/by-role/${role}] Request received`);
+    console.log(`👤 User ID from auth: ${req.user?.userId}`);
+    
     // Validate role
     if (!['admin', 'student', 'teacher'].includes(role)) {
+      console.log(`❌ Invalid role: ${role}`);
       return res.status(400).json({
         success: false,
         message: 'Invalid role. Must be admin, student, or teacher'
@@ -93,9 +97,13 @@ router.get('/by-role/:role', auth, async (req, res) => {
     }
 
     // Fetch users by role
+    console.log(`🔍 Searching for users with role: ${role}`);
     const users = await User.find({ role })
       .select('-password')
       .sort({ createdAt: -1 });
+
+    console.log(`✅ Found ${users.length} users with role: ${role}`);
+    console.log(`📝 Users found:`, users.map(u => ({ id: u._id, email: u.email, firstName: u.firstName, lastName: u.lastName })));
 
     res.status(200).json({
       success: true,
@@ -105,7 +113,7 @@ router.get('/by-role/:role', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get users by role error:', error);
+    console.error('❌ Get users by role error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch users',
@@ -299,6 +307,216 @@ router.get('/pending', auth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch pending users',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// @route   POST /api/users
+// @desc    Create a new user (Admin only)
+// @access  Private (Admin only)
+router.post('/', auth, async (req, res) => {
+  try {
+    const { firstName, lastName, email, role, phone, password, ...roleSpecificData } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !role || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields: firstName, lastName, email, role, password'
+      });
+    }
+
+    // Validate role
+    if (!['admin', 'student', 'teacher'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role. Must be admin, student, or teacher'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create user data object
+    const userData = {
+      firstName,
+      lastName,
+      email,
+      role,
+      phone,
+      password,
+      isActive: true,
+      status: 'Active',
+      ...roleSpecificData
+    };
+
+    // Create the user
+    const user = new User(userData);
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      data: {
+        user: user.getPublicProfile()
+      }
+    });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create user',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// @route   PUT /api/users/:id
+// @desc    Update user by ID (Admin only)
+// @access  Private (Admin only)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Remove sensitive fields that shouldn't be updated through this route
+    delete updates.password;
+    delete updates._id;
+    delete updates.__v;
+
+    // Find and update user
+    const user = await User.findByIdAndUpdate(
+      id,
+      { ...updates, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      data: {
+        user: user.getPublicProfile()
+      }
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update user',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// @route   DELETE /api/users/:id
+// @desc    Delete user by ID (Admin only)
+// @access  Private (Admin only)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find and delete user
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+      data: {
+        deletedUser: user.getPublicProfile()
+      }
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete user',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// @route   GET /api/users/search
+// @desc    Search users with pagination and filtering
+// @access  Private (Admin only)
+router.get('/search', auth, async (req, res) => {
+  try {
+    const { query, role, status, page = 1, limit = 10 } = req.query;
+
+    // Build search query
+    let searchQuery = {};
+
+    if (role && ['admin', 'student', 'teacher'].includes(role)) {
+      searchQuery.role = role;
+    }
+
+    if (status) {
+      if (status === 'active') {
+        searchQuery.isActive = true;
+      } else if (status === 'inactive') {
+        searchQuery.isActive = false;
+      } else {
+        searchQuery.status = status;
+      }
+    }
+
+    if (query) {
+      searchQuery.$or = [
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+        { studentId: { $regex: query, $options: 'i' } },
+        { teacherId: { $regex: query, $options: 'i' } },
+        { employeeId: { $regex: query, $options: 'i' } }
+      ];
+    }
+
+    // Get total count
+    const total = await User.countDocuments(searchQuery);
+
+    // Fetch users with pagination
+    const users = await User.find(searchQuery)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users,
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        count: users.length
+      }
+    });
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search users',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
