@@ -128,7 +128,11 @@ export interface UserDialogData {
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Semester</mat-label>
-              <input matInput formControlName="semester" [readonly]="data.mode === 'view'">
+              <mat-select formControlName="semester" [disabled]="data.mode === 'view'">
+                <mat-option *ngFor="let semester of semesters" [value]="semester">
+                  {{ semester }}
+                </mat-option>
+              </mat-select>
             </mat-form-field>
           </div>
         </div>
@@ -241,6 +245,17 @@ export interface UserDialogData {
 })
 export class UserDialogComponent implements OnInit {
   userForm: FormGroup;
+
+  semesters = [
+    'Semester 1',
+    'Semester 2',
+    'Semester 3',
+    'Semester 4',
+    'Semester 5',
+    'Semester 6',
+    'Semester 7',
+    'Semester 8'
+  ];
 
   constructor(
     private fb: FormBuilder,

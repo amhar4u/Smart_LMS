@@ -37,7 +37,7 @@ import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, ma
   styleUrl: './manage-students.css'
 })
 export class ManageStudents implements OnInit, OnDestroy {
-  displayedColumns: string[] = ['id', 'name', 'email', 'course', 'status', 'createdAt', 'actions'];
+  displayedColumns: string[] = ['id', 'name', 'email', 'course', 'semester', 'status', 'createdAt', 'actions'];
   students$: Observable<User[]>;
   searchControl = new FormControl('');
   isLoading$ = new BehaviorSubject<boolean>(false);
