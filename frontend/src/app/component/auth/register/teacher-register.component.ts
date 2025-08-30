@@ -17,6 +17,7 @@ import { LoadingService } from '../../../services/loading.service';
 import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
 import { ValidationService } from '../../../services/validation.service';
 import { TeacherRegistration } from '../../../models/user.model';
+import { CourseService, Course } from '../../../services/course.service';
 
 @Component({
   selector: 'app-teacher-register',
@@ -46,27 +47,8 @@ export class TeacherRegisterComponent implements OnInit {
   hidePassword = true;
   hideConfirmPassword = true;
 
-  departments = [
-    'Computer Science',
-    'Information Technology',
-    'Software Engineering',
-    'Data Science',
-    'Cybersecurity',
-    'Business Administration',
-    'Marketing',
-    'Finance',
-    'Engineering',
-    'Mathematics',
-    'Physics',
-    'Chemistry',
-    'Biology',
-    'Medicine',
-    'English Literature',
-    'History',
-    'Psychology',
-    'Education',
-    'Other'
-  ];
+  departments: Course[] = [];
+  isLoadingDepartments = false;
 
   specializations = [
     'Artificial Intelligence',
@@ -100,11 +82,33 @@ export class TeacherRegisterComponent implements OnInit {
     private authService: AuthService,
     private loadingService: LoadingService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private courseService: CourseService
   ) {}
 
   ngOnInit(): void {
     this.initializeForms();
+    this.loadDepartments();
+  }
+
+  loadDepartments(): void {
+    this.isLoadingDepartments = true;
+    this.courseService.getCourses().subscribe({
+      next: (response) => {
+        this.isLoadingDepartments = false;
+        if (response.success) {
+          this.departments = response.data;
+        }
+      },
+      error: (error) => {
+        this.isLoadingDepartments = false;
+        console.error('Error loading departments:', error);
+        this.snackBar.open('Error loading departments. Please refresh the page.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
   }
 
   initializeForms(): void {
