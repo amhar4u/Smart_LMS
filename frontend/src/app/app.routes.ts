@@ -56,8 +56,9 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
-    path: 'admin/courses',
-    redirectTo: 'admin/dashboard'
+    path: 'admin/manage-courses',
+    loadComponent: () => import('./component/admin/manage-courses/manage-courses.component').then(m => m.ManageCoursesComponent),
+    canActivate: [adminGuard]
   },
   {
     path: 'admin/schedules',
