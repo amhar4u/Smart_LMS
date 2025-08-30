@@ -181,18 +181,24 @@ Default admin credentials will be displayed after seeding.
   }
 };
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Promise Rejection:', err);
-  mongoose.connection.close();
-  process.exit(1);
-});
+// Export the seedAdmins function for use in other seeders
+module.exports = seedAdmins;
 
-// Handle SIGINT (Ctrl+C)
-process.on('SIGINT', () => {
-  console.log('\n⚠️  Process interrupted by user');
-  mongoose.connection.close();
-  process.exit(0);
-});
+// Only run main if this file is executed directly
+if (require.main === module) {
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err) => {
+    console.error('❌ Unhandled Promise Rejection:', err);
+    mongoose.connection.close();
+    process.exit(1);
+  });
 
-main();
+  // Handle SIGINT (Ctrl+C)
+  process.on('SIGINT', () => {
+    console.log('\n⚠️  Process interrupted by user');
+    mongoose.connection.close();
+    process.exit(0);
+  });
+
+  main();
+}
