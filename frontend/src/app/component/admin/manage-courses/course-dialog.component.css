@@ -1,0 +1,229 @@
+/* Course Dialog Styles */
+.course-dialog {
+  min-width: 500px;
+  max-width: 600px;
+  padding: 0;
+}
+
+.dialog-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  margin: -24px -24px 24px -24px;
+  border-radius: 4px 4px 0 0;
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.dialog-title mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.dialog-content {
+  padding: 0 24px 24px 24px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-field {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-field mat-form-field {
+  width: 100%;
+}
+
+.form-field .mat-mdc-form-field {
+  width: 100%;
+}
+
+.status-field {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.status-field mat-slide-toggle {
+  margin-left: 16px;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 24px;
+  margin: 24px -24px -24px -24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.cancel-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  min-width: 100px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background: #5a6268;
+}
+
+.save-button {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  min-width: 100px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+.save-button:disabled {
+  background: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Form field enhancements */
+.mat-mdc-form-field {
+  font-size: 14px;
+}
+
+.mat-mdc-form-field-label {
+  color: #495057;
+  font-weight: 500;
+}
+
+.mat-mdc-form-field-underline {
+  background-color: #dee2e6;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-form-field-underline {
+  background-color: #667eea;
+}
+
+.mat-mdc-form-field.mat-form-field-invalid .mat-mdc-form-field-underline {
+  background-color: #dc3545;
+}
+
+/* Error styling */
+.mat-mdc-form-field-error {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Select dropdown styling */
+.mat-mdc-select-panel {
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.mat-mdc-option {
+  height: 48px;
+  line-height: 48px;
+  padding: 0 16px;
+  transition: background-color 0.2s ease;
+}
+
+.mat-mdc-option:hover {
+  background-color: #f8f9fa;
+}
+
+.mat-mdc-option.mat-mdc-option-active {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .course-dialog {
+    min-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .dialog-header {
+    padding: 16px;
+    margin: -24px -24px 16px -24px;
+  }
+  
+  .dialog-title {
+    font-size: 20px;
+  }
+  
+  .dialog-content {
+    padding: 0 16px 16px 16px;
+  }
+  
+  .dialog-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+    padding: 16px;
+    margin: 16px -24px -24px -24px;
+  }
+  
+  .cancel-button,
+  .save-button {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* Loading state for dialog */
+.dialog-loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.dialog-loading .save-button {
+  position: relative;
+}
+
+.dialog-loading .save-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
