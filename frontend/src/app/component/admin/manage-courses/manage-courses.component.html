@@ -1,0 +1,161 @@
+<app-admin-layout>
+  <div class="manage-courses-container">
+    <app-loading-spinner></app-loading-spinner>
+    
+    <mat-card class="header-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>school</mat-icon>
+          Manage Courses
+        </mat-card-title>
+        <mat-card-subtitle>
+          Create, edit, and manage courses for the Learning Management System
+        </mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+
+    <!-- Filters and Search -->
+    <mat-card class="filters-card">
+      <mat-card-content>
+        <div class="filters-container">
+          <div class="search-section">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search courses</mat-label>
+              <input matInput [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" placeholder="Search by name, code, or description">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Filter by Category</mat-label>
+              <mat-select [(ngModel)]="selectedCategory" (selectionChange)="onCategoryFilter()">
+                <mat-option value="">All Categories</mat-option>
+                <mat-option *ngFor="let category of categories" [value]="category">
+                  {{ category }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="onSearch()">
+              <mat-icon>search</mat-icon>
+              Search
+            </button>
+            <button mat-stroked-button (click)="clearFilters()">
+              <mat-icon>clear</mat-icon>
+              Clear
+            </button>
+            <button mat-raised-button color="primary" (click)="showAddForm()" class="add-btn">
+              <mat-icon>add</mat-icon>
+              Add Course
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  <!-- Courses Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" class="courses-table">
+          <!-- Code Column -->
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Code</th>
+            <td mat-cell *matCellDef="let course">
+              <span class="course-code">{{ course.code }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let course">
+              <span class="course-name">{{ course.name }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Category Column -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let course">
+              <mat-chip [color]="getCategoryColor(course.category)" selected>
+                {{ course.category }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Description Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let course" class="description-cell">
+              <span [matTooltip]="course.description || 'No description'" class="description-text">
+                {{ course.description || 'No description' }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let course">
+              <mat-chip [color]="course.isActive ? 'primary' : 'warn'" selected>
+                {{ course.isActive ? 'Active' : 'Inactive' }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Created Date Column -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Created</th>
+            <td mat-cell *matCellDef="let course">
+              {{ course.createdAt | date:'MMM d, y' }}
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let course" class="actions-cell">
+              <button mat-icon-button [matTooltip]="'Edit course'" (click)="editCourse(course)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button [matTooltip]="course.isActive ? 'Deactivate course' : 'Activate course'" 
+                      (click)="toggleCourseStatus(course)">
+                <mat-icon>{{ course.isActive ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <button mat-icon-button [matTooltip]="'Delete course'" (click)="deleteCourse(course)" color="warn">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- No Data Message -->
+        <div *ngIf="dataSource.data.length === 0" class="no-data">
+          <mat-icon>school</mat-icon>
+          <p>No courses found</p>
+          <button mat-raised-button color="primary" (click)="showAddForm()">
+            <mat-icon>add</mat-icon>
+            Add First Course
+          </button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <mat-paginator 
+        *ngIf="dataSource.data.length > 0"
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        [pageIndex]="currentPage - 1"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+  </div>
+</app-admin-layout>
