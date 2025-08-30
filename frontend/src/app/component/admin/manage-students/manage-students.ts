@@ -7,13 +7,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminLayout } from '../admin-layout/admin-layout';
 import { UserManagementService, User } from '../../../services/user-management.service';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, map } from 'rxjs/operators';
+import { UserDialogComponent, UserDialogData } from '../../../shared/user-dialog/user-dialog.component';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog';
+import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, map, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manage-students',
@@ -43,15 +45,20 @@ export class ManageStudents implements OnInit, OnDestroy {
 
   constructor(
     private userService: UserManagementService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
-    // Setup live search
+    console.log('🚀 [ManageStudents] Component initializing');
+    
+    // Setup live search with better error handling
     this.students$ = this.searchControl.valueChanges.pipe(
       startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(searchTerm => {
+        console.log(`🔍 [ManageStudents] Search term: "${searchTerm}"`);
         this.isLoading$.next(true);
+        
         if (searchTerm && searchTerm.trim()) {
           return this.userService.searchUsers(searchTerm.trim(), 'student');
         } else {
@@ -59,15 +66,27 @@ export class ManageStudents implements OnInit, OnDestroy {
         }
       }),
       map(users => {
+        console.log(`✅ [ManageStudents] Received ${users.length} students:`, users);
         this.isLoading$.next(false);
         return users;
+      }),
+      catchError(error => {
+        console.error('❌ [ManageStudents] Error loading students:', error);
+        this.isLoading$.next(false);
+        this.snackBar.open('Error loading students. Please try again.', 'Close', {
+          duration: 5000
+        });
+        return of([]);
       }),
       takeUntil(this.destroy$)
     );
   }
 
   ngOnInit(): void {
-    // Initial load - this will be handled by the search control with empty string
+    console.log('🎯 [ManageStudents] Component initialized');
+    // Initial load will be handled by the search control with empty string
+    // Force an initial load
+    this.refreshStudents();
   }
 
   ngOnDestroy(): void {
@@ -76,80 +95,134 @@ export class ManageStudents implements OnInit, OnDestroy {
   }
 
   addStudent(): void {
-    // Implement add student dialog
-    this.snackBar.open('Add Student functionality will be implemented', 'Close', {
-      duration: 3000
+    const dialogData: UserDialogData = {
+      mode: 'create',
+      role: 'student'
+    };
+
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '700px',
+      data: dialogData,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.createUser(result).subscribe({
+          next: (newUser) => {
+            if (newUser) {
+              this.snackBar.open('Student created successfully', 'Close', {
+                duration: 3000
+              });
+              this.refreshStudents();
+            } else {
+              this.snackBar.open('Failed to create student', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error creating student:', error);
+            this.snackBar.open('Error creating student', 'Close', { duration: 3000 });
+          }
+        });
+      }
     });
   }
 
   editStudent(student: User): void {
-    if (confirm(`Are you sure you want to update ${student.fullName || `${student.firstName} ${student.lastName}`}?`)) {
-      // Example update - toggle status
-      const updates: Partial<User> = {
-        isActive: !student.isActive
-      };
-      
-      const studentId = student._id || student.id;
-      if (!studentId) {
-        this.snackBar.open('Student ID not found', 'Close', { duration: 3000 });
-        return;
-      }
-      
-      this.userService.updateUser(studentId, updates).subscribe({
-        next: (updatedUser: User | null) => {
-          if (updatedUser) {
-            this.snackBar.open(`${student.fullName || `${student.firstName} ${student.lastName}`} updated successfully`, 'Close', {
-              duration: 3000
-            });
-            // Refresh the students list
-            this.refreshStudents();
-          } else {
-            this.snackBar.open('Failed to update student', 'Close', { duration: 3000 });
-          }
-        },
-        error: (error: any) => {
-          console.error('Error updating student:', error);
-          this.snackBar.open('Error updating student', 'Close', { duration: 3000 });
+    const dialogData: UserDialogData = {
+      user: student,
+      mode: 'edit',
+      role: 'student'
+    };
+
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '700px',
+      data: dialogData,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const studentId = student._id || student.id;
+        if (!studentId) {
+          this.snackBar.open('Student ID not found', 'Close', { duration: 3000 });
+          return;
         }
-      });
-    }
+
+        this.userService.updateUser(studentId, result).subscribe({
+          next: (updatedUser) => {
+            if (updatedUser) {
+              this.snackBar.open('Student updated successfully', 'Close', {
+                duration: 3000
+              });
+              this.refreshStudents();
+            } else {
+              this.snackBar.open('Failed to update student', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error updating student:', error);
+            this.snackBar.open('Error updating student', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
   viewStudent(student: User): void {
-    const name = student.fullName || `${student.firstName} ${student.lastName}`;
-    this.snackBar.open(`Viewing ${name} - Full view dialog will be implemented`, 'Close', {
-      duration: 3000
+    const dialogData: UserDialogData = {
+      user: student,
+      mode: 'view',
+      role: 'student'
+    };
+
+    this.dialog.open(UserDialogComponent, {
+      width: '700px',
+      data: dialogData
     });
   }
 
   deleteStudent(student: User): void {
     const name = student.fullName || `${student.firstName} ${student.lastName}`;
-    if (confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
-      const studentId = student._id || student.id;
-      if (!studentId) {
-        this.snackBar.open('Student ID not found', 'Close', { duration: 3000 });
-        return;
+    
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Student',
+        message: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
       }
-      
-      this.userService.deleteUser(studentId, 'student').subscribe({
-        next: (success: boolean) => {
-          if (success) {
-            this.snackBar.open(`${name} deleted successfully`, 'Close', {
-              duration: 3000
-            });
-            this.refreshStudents();
-          } else {
-            this.snackBar.open('Failed to delete student', 'Close', {
-              duration: 3000
-            });
-          }
-        },
-        error: (error: any) => {
-          console.error('Error deleting student:', error);
-          this.snackBar.open('Error deleting student', 'Close', { duration: 3000 });
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const studentId = student._id || student.id;
+        if (!studentId) {
+          this.snackBar.open('Student ID not found', 'Close', { duration: 3000 });
+          return;
         }
-      });
-    }
+        
+        this.userService.deleteUser(studentId, 'student').subscribe({
+          next: (success) => {
+            if (success) {
+              this.snackBar.open(`${name} deleted successfully`, 'Close', {
+                duration: 3000
+              });
+              this.refreshStudents();
+            } else {
+              this.snackBar.open('Failed to delete student', 'Close', {
+                duration: 3000
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting student:', error);
+            this.snackBar.open('Error deleting student', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
   exportStudents(): void {
@@ -184,9 +257,14 @@ export class ManageStudents implements OnInit, OnDestroy {
   }
 
   private refreshStudents(): void {
+    console.log('🔄 [ManageStudents] Refreshing students list');
     // Force refresh by triggering the search control
     this.userService.refreshUsersByRole('student');
     const currentSearchTerm = this.searchControl.value || '';
-    this.searchControl.setValue(currentSearchTerm);
+    // Use updateValueAndValidity to trigger the search even with the same value
+    this.searchControl.setValue('');
+    setTimeout(() => {
+      this.searchControl.setValue(currentSearchTerm);
+    }, 100);
   }
 }
