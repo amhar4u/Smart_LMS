@@ -149,15 +149,7 @@ router.post('/register/teacher', [
   body('department')
     .trim()
     .notEmpty()
-    .withMessage('Department is required'),
-  body('specialization')
-    .trim()
-    .notEmpty()
-    .withMessage('Specialization is required'),
-  body('experience')
-    .optional()
-    .isInt({ min: 0 })
-    .withMessage('Experience must be a positive number')
+    .withMessage('Department is required')
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -177,9 +169,7 @@ router.post('/register/teacher', [
       password,
       phone,
       employeeId,
-      department,
-      specialization,
-      experience
+      department
     } = req.body;
 
     // Check if user already exists
@@ -200,9 +190,7 @@ router.post('/register/teacher', [
       phone,
       role: 'teacher',
       employeeId: employeeId || undefined,
-      department,
-      specialization,
-      experience: experience || 0
+      department
     });
 
     await user.save();
