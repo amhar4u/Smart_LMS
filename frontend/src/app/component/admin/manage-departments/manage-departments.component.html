@@ -1,0 +1,247 @@
+<div class="manage-departments-container">
+  <mat-card class="header-card">
+    <mat-card-header>
+      <div class="header-content">
+        <div class="title-section">
+          <mat-icon class="header-icon">business</mat-icon>
+          <div>
+            <h1>Manage Departments</h1>
+            <p>Create, edit, and manage academic departments</p>
+          </div>
+        </div>
+        <div class="action-section">
+          <button mat-raised-button color="primary" (click)="showAddForm()" class="add-button">
+            <mat-icon>add</mat-icon>
+            Add Department
+          </button>
+        </div>
+      </div>
+    </mat-card-header>
+  </mat-card>
+
+  <!-- Add/Edit Form -->
+  <mat-card *ngIf="showForm" class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ isEditing ? 'edit' : 'add' }}</mat-icon>
+        {{ isEditing ? 'Edit' : 'Add' }} Department
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="departmentForm" (ngSubmit)="onSubmit()" class="department-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Department Name</mat-label>
+            <input matInput formControlName="name" placeholder="Enter department name" required>
+            <mat-error>{{ getFormErrorMessage('name') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Department Code</mat-label>
+            <input matInput formControlName="code" placeholder="Enter department code" required>
+            <mat-error>{{ getFormErrorMessage('code') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Faculty</mat-label>
+            <input matInput formControlName="faculty" placeholder="Enter faculty name">
+            <mat-error>{{ getFormErrorMessage('faculty') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Established Year</mat-label>
+            <input matInput type="number" formControlName="establishedYear" placeholder="Enter established year">
+            <mat-error>{{ getFormErrorMessage('establishedYear') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="3" placeholder="Enter department description"></textarea>
+          <mat-error>{{ getFormErrorMessage('description') }}</mat-error>
+        </mat-form-field>
+
+        <div formGroupName="contactInfo" class="contact-section">
+          <h3>Contact Information</h3>
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" placeholder="Enter department email">
+              <mat-icon matSuffix>email</mat-icon>
+              <mat-error>{{ getFormErrorMessage('contactInfo.email') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Phone</mat-label>
+              <input matInput formControlName="phone" placeholder="Enter department phone">
+              <mat-icon matSuffix>phone</mat-icon>
+              <mat-error>{{ getFormErrorMessage('contactInfo.phone') }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Office Location</mat-label>
+            <input matInput formControlName="office" placeholder="Enter office location">
+            <mat-icon matSuffix>location_on</mat-icon>
+            <mat-error>{{ getFormErrorMessage('contactInfo.office') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button mat-button type="button" (click)="cancelForm()" class="cancel-button">
+            <mat-icon>cancel</mat-icon>
+            Cancel
+          </button>
+          <button mat-raised-button color="primary" type="submit" 
+                  [disabled]="departmentForm.invalid || isSubmitting" class="submit-button">
+            <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+            {{ isEditing ? 'Update' : 'Create' }} Department
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Search and Filter -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-section">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search Departments</mat-label>
+          <input matInput [(ngModel)]="searchTerm" (input)="onSearchChange()" 
+                 placeholder="Search by name, code, or description">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filter by Faculty</mat-label>
+          <mat-select [(value)]="selectedFaculty" (selectionChange)="onFacultyFilterChange()">
+            <mat-option value="">All Faculties</mat-option>
+            <mat-option *ngFor="let faculty of faculties" [value]="faculty">
+              {{ faculty }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button (click)="clearFilters()" class="clear-button">
+          <mat-icon>clear</mat-icon>
+          Clear Filters
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Data Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="filteredDepartments.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize)" 
+               matSort (matSortChange)="sortData($event)" class="departments-table">
+          
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
+            <td mat-cell *matCellDef="let department">
+              <div class="department-name">
+                <strong>{{ department.name }}</strong>
+                <span *ngIf="department.description" class="description">{{ department.description }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Code Column -->
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Code </th>
+            <td mat-cell *matCellDef="let department">
+              <mat-chip color="primary" selected>{{ department.code }}</mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Faculty Column -->
+          <ng-container matColumnDef="faculty">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Faculty </th>
+            <td mat-cell *matCellDef="let department">
+              {{ department.faculty || 'N/A' }}
+            </td>
+          </ng-container>
+
+          <!-- Established Year Column -->
+          <ng-container matColumnDef="establishedYear">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Established </th>
+            <td mat-cell *matCellDef="let department">
+              {{ department.establishedYear || 'N/A' }}
+            </td>
+          </ng-container>
+
+          <!-- Teacher Count Column -->
+          <ng-container matColumnDef="teacherCount">
+            <th mat-header-cell *matHeaderCellDef> Teachers </th>
+            <td mat-cell *matCellDef="let department">
+              <span class="count-badge">{{ department.teacherCount || 0 }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Student Count Column -->
+          <ng-container matColumnDef="studentCount">
+            <th mat-header-cell *matHeaderCellDef> Students </th>
+            <td mat-cell *matCellDef="let department">
+              <span class="count-badge">{{ department.studentCount || 0 }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef> Status </th>
+            <td mat-cell *matCellDef="let department">
+              <mat-chip [color]="department.isActive ? 'primary' : 'warn'" selected>
+                {{ department.isActive ? 'Active' : 'Inactive' }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef> Actions </th>
+            <td mat-cell *matCellDef="let department">
+              <div class="action-buttons">
+                <button mat-icon-button color="primary" (click)="editDepartment(department)"
+                        matTooltip="Edit Department">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteDepartment(department)"
+                        matTooltip="Delete Department">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- No Data Message -->
+        <div *ngIf="filteredDepartments.length === 0 && !isLoading" class="no-data">
+          <mat-icon>business</mat-icon>
+          <h3>No departments found</h3>
+          <p>{{ searchTerm || selectedFaculty ? 'Try adjusting your filters' : 'Start by adding your first department' }}</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <mat-paginator 
+        [length]="totalCount"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Loading Spinner -->
+<app-loading-spinner *ngIf="isLoading"></app-loading-spinner>

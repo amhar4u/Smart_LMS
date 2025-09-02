@@ -1,0 +1,142 @@
+<app-admin-layout>
+  <div class="manage-departments-container">
+    <app-loading-spinner></app-loading-spinner>
+    
+    <mat-card class="header-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>account_balance</mat-icon>
+          Manage Departments
+        </mat-card-title>
+        <mat-card-subtitle>
+          Create, edit, and manage academic departments
+        </mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+
+    <!-- Search and Actions -->
+    <mat-card class="filters-card">
+      <mat-card-content>
+        <div class="filters-container">
+          <div class="search-section">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search departments</mat-label>
+              <input matInput [(ngModel)]="searchTerm" (keyup)="applyFilter()" (keyup.enter)="applyFilter()" placeholder="Search by name, code, or description">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="applyFilter()">
+              <mat-icon>search</mat-icon>
+              Search
+            </button>
+            <button mat-stroked-button (click)="clearSearch()">
+              <mat-icon>clear</mat-icon>
+              Clear
+            </button>
+            <button mat-raised-button color="primary" (click)="showAddForm()" class="add-btn">
+              <mat-icon>add</mat-icon>
+              Add Department
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Departments Table -->
+    <mat-card class="table-card">
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="dataSource" matSort class="departments-table">
+
+            <!-- Code Column -->
+            <ng-container matColumnDef="code">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+              <td mat-cell *matCellDef="let department">
+                <span class="department-code">{{ department.code }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Department Name</th>
+              <td mat-cell *matCellDef="let department">
+                <div class="department-name">
+                  <span class="name">{{ department.name }}</span>
+                  <span class="description" *ngIf="department.description">{{ department.description }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Description Column -->
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>Description</th>
+              <td mat-cell *matCellDef="let department">
+                <span class="description-text" [matTooltip]="department.description || 'No description'">
+                  {{ department.description || 'No description' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Established Year Column -->
+            <ng-container matColumnDef="establishedYear">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Established</th>
+              <td mat-cell *matCellDef="let department">
+                <span class="year">{{ department.establishedYear || 'N/A' }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Contact Info Column -->
+            <ng-container matColumnDef="contactInfo">
+              <th mat-header-cell *matHeaderCellDef>Contact Info</th>
+              <td mat-cell *matCellDef="let department">
+                <div class="contact-info" [matTooltip]="getContactInfo(department)">
+                  <mat-icon class="contact-icon">contact_mail</mat-icon>
+                  <span class="contact-text">{{ getContactInfo(department) }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="isActive">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+              <td mat-cell *matCellDef="let department">
+                <mat-chip-set>
+                  <mat-chip [class]="department.isActive ? 'status-active' : 'status-inactive'">
+                    <mat-icon>{{ department.isActive ? 'check_circle' : 'cancel' }}</mat-icon>
+                    {{ department.isActive ? 'Active' : 'Inactive' }}
+                  </mat-chip>
+                </mat-chip-set>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let department">
+                <div class="action-buttons-cell">
+                  <button mat-icon-button color="primary" (click)="editDepartment(department)" matTooltip="Edit Department">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteDepartment(department)" matTooltip="Delete Department">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="department-row"></tr>
+          </table>
+
+          <mat-paginator 
+            [pageSizeOptions]="[10, 25, 50, 100]" 
+            [pageSize]="10"
+            showFirstLastButtons>
+          </mat-paginator>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</app-admin-layout>

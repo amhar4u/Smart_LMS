@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const User = require('../models/User');
+const Department = require('../models/Department');
 
 // Load environment variables
 dotenv.config();
@@ -36,7 +37,7 @@ const adminData = [
     password: 'admin123',
     phone: '+1234567890',
     role: 'admin',
-    status: 'Active',
+    status: 'approved',
     isActive: true,
     employeeId: 'EMP-ADMIN-001',
     department: 'Administration',
@@ -105,8 +106,30 @@ const seedAdmins = async () => {
 
 const seedAdminsData = async () => {
   try {
+    // First, ensure Administration department exists
+    console.log('🏢 Ensuring Administration department exists...');
+    let adminDepartment = await Department.findOne({ code: 'ADMIN' });
+    
+    if (!adminDepartment) {
+      adminDepartment = await Department.create({
+        name: 'Administration',
+        code: 'ADMIN',
+        description: 'Administrative department for system management',
+        isActive: true
+      });
+      console.log('✅ Created Administration department');
+    } else {
+      console.log('✅ Administration department already exists');
+    }
+
+    // Update admin data to use department ObjectId instead of string
+    const updatedAdminData = adminData.map(admin => ({
+      ...admin,
+      department: adminDepartment._id
+    }));
+    
     // Hash passwords
-    const hashedAdminData = await hashPasswords([...adminData]);
+    const hashedAdminData = await hashPasswords([...updatedAdminData]);
     
     // Insert admin users
     const createdAdmins = await User.insertMany(hashedAdminData);

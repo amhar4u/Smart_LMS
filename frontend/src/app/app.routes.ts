@@ -61,6 +61,16 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'admin/manage-departments',
+    loadComponent: () => import('./component/admin/manage-departments/manage-departments').then(m => m.ManageDepartments),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/manage-semesters',
+    loadComponent: () => import('./component/admin/manage-semesters/manage-semesters').then(m => m.ManageSemesters),
+    canActivate: [adminGuard]
+  },
+  {
     path: 'admin/schedules',
     redirectTo: 'admin/dashboard'
   },
