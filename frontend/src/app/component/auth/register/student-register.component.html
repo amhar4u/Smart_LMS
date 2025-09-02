@@ -127,12 +127,27 @@
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Department</mat-label>
+                <mat-select formControlName="department" required [disabled]="isLoadingDepartments">
+                  <mat-option *ngIf="isLoadingDepartments" disabled>
+                    Loading departments...
+                  </mat-option>
+                  <mat-option *ngFor="let department of departments" [value]="department._id">
+                    {{ department.name }} ({{ department.code }})
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="academicInfoForm.get('department')?.invalid && academicInfoForm.get('department')?.touched">
+                  {{ getErrorMessage(academicInfoForm, 'department') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Course/Program</mat-label>
                 <mat-select formControlName="course" required [disabled]="isLoadingCourses">
                   <mat-option *ngIf="isLoadingCourses" disabled>
                     Loading courses...
                   </mat-option>
-                  <mat-option *ngFor="let course of courses" [value]="course.name">
+                  <mat-option *ngFor="let course of courses" [value]="course._id">
                     {{ course.name }} ({{ course.code }})
                   </mat-option>
                 </mat-select>
@@ -143,9 +158,12 @@
 
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Current Semester</mat-label>
-                <mat-select formControlName="semester" required>
-                  <mat-option *ngFor="let semester of semesters" [value]="semester">
-                    {{ semester }}
+                <mat-select formControlName="semester" required [disabled]="isLoadingSemesters">
+                  <mat-option *ngIf="isLoadingSemesters" disabled>
+                    Loading semesters...
+                  </mat-option>
+                  <mat-option *ngFor="let semester of semesters" [value]="semester._id">
+                    {{ semester.name }} ({{ semester.code }})
                   </mat-option>
                 </mat-select>
                 <mat-error *ngIf="academicInfoForm.get('semester')?.invalid && academicInfoForm.get('semester')?.touched">

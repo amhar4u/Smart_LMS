@@ -18,6 +18,8 @@ import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading
 import { ValidationService } from '../../../services/validation.service';
 import { StudentRegistration } from '../../../models/user.model';
 import { CourseService, Course } from '../../../services/course.service';
+import { DepartmentService, Department } from '../../../services/department.service';
+import { SemesterService, Semester } from '../../../services/semester.service';
 
 @Component({
   selector: 'app-student-register',
@@ -48,18 +50,11 @@ export class StudentRegisterComponent implements OnInit {
   hideConfirmPassword = true;
 
   courses: Course[] = [];
+  departments: Department[] = [];
+  semesters: Semester[] = [];
   isLoadingCourses = false;
-
-  semesters = [
-    'Semester 1',
-    'Semester 2',
-    'Semester 3',
-    'Semester 4',
-    'Semester 5',
-    'Semester 6',
-    'Semester 7',
-    'Semester 8'
-  ];
+  isLoadingDepartments = false;
+  isLoadingSemesters = false;
 
   constructor(
     private fb: FormBuilder,
@@ -67,12 +62,26 @@ export class StudentRegisterComponent implements OnInit {
     private loadingService: LoadingService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private courseService: CourseService
+    private courseService: CourseService,
+    private departmentService: DepartmentService,
+    private semesterService: SemesterService
   ) {}
 
   ngOnInit(): void {
     this.initializeForms();
-    this.loadCourses();
+    this.loadDepartments();
+    this.loadSemesters();
+    
+    // Watch for department changes to load relevant courses
+    this.academicInfoForm.get('department')?.valueChanges.subscribe(departmentId => {
+      if (departmentId) {
+        this.loadCoursesByDepartment(departmentId);
+      } else {
+        this.courses = [];
+      }
+      // Reset course selection when department changes
+      this.academicInfoForm.get('course')?.setValue('');
+    });
   }
 
   loadCourses(): void {
@@ -95,6 +104,66 @@ export class StudentRegisterComponent implements OnInit {
     });
   }
 
+  loadCoursesByDepartment(departmentId: string): void {
+    this.isLoadingCourses = true;
+    this.courseService.getCoursesByDepartment(departmentId).subscribe({
+      next: (response) => {
+        this.isLoadingCourses = false;
+        if (response.success) {
+          this.courses = response.data;
+        }
+      },
+      error: (error) => {
+        this.isLoadingCourses = false;
+        console.error('Error loading courses by department:', error);
+        this.snackBar.open('Error loading courses for selected department.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  loadDepartments(): void {
+    this.isLoadingDepartments = true;
+    this.departmentService.getDepartments().subscribe({
+      next: (response) => {
+        this.isLoadingDepartments = false;
+        if (response.success) {
+          this.departments = response.data;
+        }
+      },
+      error: (error) => {
+        this.isLoadingDepartments = false;
+        console.error('Error loading departments:', error);
+        this.snackBar.open('Error loading departments. Please refresh the page.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  loadSemesters(): void {
+    this.isLoadingSemesters = true;
+    this.semesterService.getSemesters().subscribe({
+      next: (response) => {
+        this.isLoadingSemesters = false;
+        if (response.success) {
+          this.semesters = response.data;
+        }
+      },
+      error: (error) => {
+        this.isLoadingSemesters = false;
+        console.error('Error loading semesters:', error);
+        this.snackBar.open('Error loading semesters. Please refresh the page.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
   initializeForms(): void {
     this.personalInfoForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
@@ -110,6 +179,7 @@ export class StudentRegisterComponent implements OnInit {
 
     this.academicInfoForm = this.fb.group({
       studentId: [''],
+      department: ['', Validators.required],
       course: ['', Validators.required],
       semester: ['', Validators.required]
     });

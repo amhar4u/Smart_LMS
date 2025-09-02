@@ -132,7 +132,7 @@
                   <mat-option *ngIf="isLoadingDepartments" disabled>
                     Loading departments...
                   </mat-option>
-                  <mat-option *ngFor="let dept of departments" [value]="dept.name">
+                  <mat-option *ngFor="let dept of departments" [value]="dept._id">
                     {{ dept.name }} ({{ dept.code }})
                   </mat-option>
                 </mat-select>
@@ -141,29 +141,7 @@
                 </mat-error>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Specialization</mat-label>
-                <mat-select formControlName="specialization" required>
-                  <mat-option *ngFor="let spec of specializations" [value]="spec">
-                    {{ spec }}
-                  </mat-option>
-                </mat-select>
-                <mat-error *ngIf="professionalInfoForm.get('specialization')?.invalid && professionalInfoForm.get('specialization')?.touched">
-                  {{ getErrorMessage(professionalInfoForm, 'specialization') }}
-                </mat-error>
-              </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Experience Level</mat-label>
-                <mat-select formControlName="experience" required>
-                  <mat-option *ngFor="let exp of experienceRanges" [value]="exp.value">
-                    {{ exp.label }}
-                  </mat-option>
-                </mat-select>
-                <mat-error *ngIf="professionalInfoForm.get('experience')?.invalid && professionalInfoForm.get('experience')?.touched">
-                  {{ getErrorMessage(professionalInfoForm, 'experience') }}
-                </mat-error>
-              </mat-form-field>
 
               <div class="info-note">
                 <mat-icon>info</mat-icon>

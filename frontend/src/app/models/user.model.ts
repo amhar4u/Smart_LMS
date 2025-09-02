@@ -25,8 +25,9 @@ export interface StudentRegistration {
   confirmPassword: string;
   phone?: string;
   studentId?: string;
-  course?: string;
-  semester?: string;
+  department: string;
+  course: string;
+  semester: string;
 }
 
 export interface TeacherRegistration {
@@ -38,8 +39,6 @@ export interface TeacherRegistration {
   phone?: string;
   employeeId?: string;
   department: string;
-  specialization: string;
-  experience?: number;
 }
 
 export interface LoginRequest {

@@ -17,7 +17,7 @@ import { LoadingService } from '../../../services/loading.service';
 import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
 import { ValidationService } from '../../../services/validation.service';
 import { TeacherRegistration } from '../../../models/user.model';
-import { CourseService, Course } from '../../../services/course.service';
+import { DepartmentService, Department } from '../../../services/department.service';
 
 @Component({
   selector: 'app-teacher-register',
@@ -47,35 +47,8 @@ export class TeacherRegisterComponent implements OnInit {
   hidePassword = true;
   hideConfirmPassword = true;
 
-  departments: Course[] = [];
+  departments: Department[] = [];
   isLoadingDepartments = false;
-
-  specializations = [
-    'Artificial Intelligence',
-    'Machine Learning',
-    'Web Development',
-    'Mobile Development',
-    'Database Management',
-    'Network Security',
-    'Digital Marketing',
-    'Financial Analysis',
-    'Project Management',
-    'Research Methodology',
-    'Curriculum Development',
-    'Educational Technology',
-    'Data Analysis',
-    'Cloud Computing',
-    'Other'
-  ];
-
-  experienceRanges = [
-    { value: 0, label: 'Fresh Graduate' },
-    { value: 1, label: '1-2 years' },
-    { value: 3, label: '3-5 years' },
-    { value: 6, label: '6-10 years' },
-    { value: 11, label: '11-15 years' },
-    { value: 16, label: '16+ years' }
-  ];
 
   constructor(
     private fb: FormBuilder,
@@ -83,7 +56,7 @@ export class TeacherRegisterComponent implements OnInit {
     private loadingService: LoadingService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private courseService: CourseService
+    private departmentService: DepartmentService
   ) {}
 
   ngOnInit(): void {
@@ -93,7 +66,7 @@ export class TeacherRegisterComponent implements OnInit {
 
   loadDepartments(): void {
     this.isLoadingDepartments = true;
-    this.courseService.getCourses().subscribe({
+    this.departmentService.getDepartments().subscribe({
       next: (response) => {
         this.isLoadingDepartments = false;
         if (response.success) {
@@ -126,9 +99,7 @@ export class TeacherRegisterComponent implements OnInit {
 
     this.professionalInfoForm = this.fb.group({
       employeeId: [''],
-      department: ['', Validators.required],
-      specialization: ['', Validators.required],
-      experience: ['', Validators.required]
+      department: ['', Validators.required]
     });
   }
 
