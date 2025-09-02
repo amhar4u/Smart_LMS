@@ -7,17 +7,8 @@ dotenv.config();
 // Import seeders
 const adminSeeder = require('./adminSeeder');
 const courseSeeder = require('./courseSeeder');
-
-// Import other seeders here when created
-// const studentSeeder = require('./studentSeeder');
-// const teacherSeeder = require('./teacherSeeder');
-
-const seeders = {
-  admin: adminSeeder,
-  courses: courseSeeder,
-  // student: studentSeeder,
-  // teacher: teacherSeeder,
-};
+const departmentSeeder = require('./departmentSeeder');
+const semesterSeeder = require('./semesterSeeder');
 
 // Main seeder function
 const runSeeders = async () => {
@@ -33,7 +24,6 @@ const runSeeders = async () => {
     const args = process.argv.slice(2);
     
     if (args.includes('--help') || args.includes('-h')) {
-      if (args.includes('--help') || args.includes('-h')) {
       console.log(`
 📖 Smart LMS Database Seeder Usage:
 
@@ -41,16 +31,21 @@ Run all seeders:     node seeders/index.js
 
 Individual Seeder Usage:
 -----------------------
-node seeders/adminSeeder.js          - Seed admin users
-node seeders/adminSeeder.js --clear  - Clear admin users
+node seeders/index.js --admin         - Seed admin users
+node seeders/index.js --courses       - Seed courses
+node seeders/index.js --departments   - Seed departments
+node seeders/index.js --semesters     - Seed semesters
+
+Available Commands:
+--help, -h           Show this help message
 
 Available Seeders:
 - admin: Seed admin users
-- courses: Seed course/department data
+- courses: Seed course data
+- departments: Seed department data
+- semesters: Seed semester data
       `);
       await mongoose.connection.close();
-      process.exit(0);
-    }
       process.exit(0);
     }
     
@@ -60,7 +55,6 @@ Available Seeders:
       console.log('✅ Admin seeder completed!');
       await mongoose.connection.close();
       process.exit(0);
-      return;
     }
     
     if (args.includes('--courses')) {
@@ -69,59 +63,47 @@ Available Seeders:
       console.log('✅ Courses seeder completed!');
       await mongoose.connection.close();
       process.exit(0);
-      return;
+    }
+    
+    if (args.includes('--departments')) {
+      console.log('Running departments seeder...');
+      await departmentSeeder.seedDepartments();
+      console.log('✅ Departments seeder completed!');
+      await mongoose.connection.close();
+      process.exit(0);
+    }
+    
+    if (args.includes('--semesters')) {
+      console.log('Running semesters seeder...');
+      await semesterSeeder.seedSemesters();
+      console.log('✅ Semesters seeder completed!');
+      await mongoose.connection.close();
+      process.exit(0);
     }
     
     // If no specific seeder is mentioned, run all
     if (args.length === 0) {
       console.log('Running all seeders...');
+      console.log('\n1. Seeding departments...');
+      await departmentSeeder.seedDepartments();
+      
+      console.log('\n2. Seeding semesters...');
+      await semesterSeeder.seedSemesters();
+      
+      console.log('\n3. Seeding admin users...');
       await adminSeeder();
+      
+      console.log('\n4. Seeding courses...');
       await courseSeeder();
-      console.log('✅ All seeders completed successfully!');
+      
+      console.log('\n✅ All seeders completed successfully!');
       await mongoose.connection.close();
       process.exit(0);
-      return;
     }
     
-    if (args.includes('--clear')) {
-      console.log('⚠️  This will clear ALL data from the database!');
-      const readline = require('readline');
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
-      
-      rl.question('Are you sure you want to continue? (y/N): ', (answer) => {
-        rl.close();
-        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
-          // Clear all data
-          console.log('🗑️  Clearing all data...');
-          // Add clearing logic here
-          console.log('✅ All data cleared');
-        } else {
-          console.log('❌ Operation cancelled');
-        }
-        process.exit(0);
-      });
-      return;
-    }
-    
-    // Default: show available options
-    console.log(`
-Available commands:
---admin     Run admin seeder
---courses   Run courses seeder
---clear     Clear all data
---help      Show this help message
-
-To run individual seeders:
-node seeders/adminSeeder.js
-node seeders/courseSeeder.js
-
-To run all seeders:
-node seeders/index.js
-    `);
+    console.log(`Unknown argument(s): ${args.join(', ')}\nUse --help to see available options.`);
     await mongoose.connection.close();
+    process.exit(1);
     
   } catch (error) {
     console.error('❌ Error in seeder:', error);
@@ -130,9 +112,6 @@ node seeders/index.js
   }
 };
 
-// Run the seeders
-runSeeders();
-
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled Promise Rejection:', err);
@@ -140,9 +119,15 @@ process.on('unhandledRejection', (err) => {
 });
 
 // Handle SIGINT (Ctrl+C)
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('\n⚠️  Process interrupted by user');
+  try {
+    await mongoose.connection.close();
+  } catch (err) {
+    console.error('Error closing database connection:', err);
+  }
   process.exit(0);
 });
 
+// Run the seeders
 runSeeders();
