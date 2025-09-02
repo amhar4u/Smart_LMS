@@ -41,6 +41,65 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @route   GET /api/semesters/current
+// @desc    Get current semester
+// @access  Public
+router.get('/current', async (req, res) => {
+  try {
+    console.log('📅 [SEMESTERS] Fetching current semester');
+
+    const currentSemester = await Semester.getCurrentSemester();
+
+    if (!currentSemester) {
+      return res.status(404).json({
+        success: false,
+        message: 'No current semester found'
+      });
+    }
+
+    console.log(`✅ [SEMESTERS] Found current semester: ${currentSemester.name}`);
+
+    res.json({
+      success: true,
+      data: currentSemester
+    });
+  } catch (error) {
+    console.error('❌ [SEMESTERS] Error fetching current semester:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching current semester',
+      error: error.message
+    });
+  }
+});
+
+// @route   GET /api/semesters/year/:year
+// @desc    Get semesters by year
+// @access  Public
+router.get('/year/:year', async (req, res) => {
+  try {
+    const year = parseInt(req.params.year);
+    console.log(`📅 [SEMESTERS] Fetching semesters for year: ${year}`);
+
+    const semesters = await Semester.getSemestersByYear(year);
+
+    console.log(`✅ [SEMESTERS] Found ${semesters.length} semesters for year ${year}`);
+
+    res.json({
+      success: true,
+      data: semesters,
+      count: semesters.length
+    });
+  } catch (error) {
+    console.error('❌ [SEMESTERS] Error fetching semesters by year:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching semesters by year',
+      error: error.message
+    });
+  }
+});
+
 // @route   GET /api/semesters/:id
 // @desc    Get semester by ID
 // @access  Public
@@ -84,57 +143,80 @@ router.post('/', auth, requireAdmin, async (req, res) => {
     const {
       name,
       code,
-      order,
+      year,
+      type,
+      startDate,
+      endDate,
+      registrationStartDate,
+      registrationEndDate,
       description,
-      duration,
-      creditRange
+      isActive,
+      isCurrent
     } = req.body;
 
-    // Check if semester with same name, code, or order already exists
+    // Check if semester with same code already exists
     const existingSemester = await Semester.findOne({
-      $or: [
-        { name: new RegExp(`^${name}$`, 'i') },
-        { code: code.toUpperCase() },
-        { order: order }
-      ]
+      code: code.toUpperCase()
     });
 
     if (existingSemester) {
-      let conflictField = 'name';
-      if (existingSemester.code === code.toUpperCase()) conflictField = 'code';
-      if (existingSemester.order === order) conflictField = 'order';
-      
       return res.status(400).json({
         success: false,
-        message: `Semester with this ${conflictField} already exists`
+        message: 'Semester with this code already exists'
       });
     }
 
-    const semester = new Semester({
-      name: name.trim(),
-      code: code.toUpperCase().trim(),
-      order,
-      description: description?.trim(),
-      duration,
-      creditRange: creditRange || { min: 12, max: 24 }
+    // Check if semester with same year and type already exists
+    const existingYearType = await Semester.findOne({
+      year,
+      type: type.toLowerCase()
     });
 
+    if (existingYearType) {
+      return res.status(400).json({
+        success: false,
+        message: `A ${type} semester for year ${year} already exists`
+      });
+    }
+
+    const semesterData = {
+      name: name.trim(),
+      code: code.toUpperCase().trim(),
+      year,
+      type: type.toLowerCase(),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      description: description?.trim(),
+      isActive: isActive !== undefined ? isActive : true,
+      isCurrent: isCurrent || false
+    };
+
+    // Add registration dates if provided
+    if (registrationStartDate) {
+      semesterData.registrationStartDate = new Date(registrationStartDate);
+    }
+    if (registrationEndDate) {
+      semesterData.registrationEndDate = new Date(registrationEndDate);
+    }
+
+    const semester = new Semester(semesterData);
     await semester.save();
 
-    console.log(`✅ [SEMESTERS] Semester created successfully: ${semester.name}`);
+    console.log(`✅ [SEMESTERS] Created semester: ${semester.name} (${semester.code})`);
 
     res.status(201).json({
       success: true,
-      message: 'Semester created successfully',
-      data: semester
+      data: semester,
+      message: 'Semester created successfully'
     });
   } catch (error) {
     console.error('❌ [SEMESTERS] Error creating semester:', error);
     
-    if (error.code === 11000) {
+    if (error.name === 'ValidationError') {
       return res.status(400).json({
         success: false,
-        message: 'Semester with this name, code, or order already exists'
+        message: 'Validation error',
+        errors: Object.values(error.errors).map(err => err.message)
       });
     }
 
@@ -156,11 +238,15 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
     const {
       name,
       code,
-      order,
+      year,
+      type,
+      startDate,
+      endDate,
+      registrationStartDate,
+      registrationEndDate,
       description,
-      duration,
-      creditRange,
-      isActive
+      isActive,
+      isCurrent
     } = req.body;
 
     const semester = await Semester.findById(req.params.id);
@@ -172,25 +258,36 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
       });
     }
 
-    // Check if new name, code, or order conflicts with existing semesters
-    if (name || code || order !== undefined) {
+    // Check if new code conflicts with existing semesters
+    if (code && code !== semester.code) {
       const existingSemester = await Semester.findOne({
         _id: { $ne: req.params.id },
-        $or: [
-          ...(name ? [{ name: new RegExp(`^${name}$`, 'i') }] : []),
-          ...(code ? [{ code: code.toUpperCase() }] : []),
-          ...(order !== undefined ? [{ order: order }] : [])
-        ]
+        code: code.toUpperCase()
       });
 
       if (existingSemester) {
-        let conflictField = 'name';
-        if (code && existingSemester.code === code.toUpperCase()) conflictField = 'code';
-        if (order !== undefined && existingSemester.order === order) conflictField = 'order';
-        
         return res.status(400).json({
           success: false,
-          message: `Semester with this ${conflictField} already exists`
+          message: 'Semester with this code already exists'
+        });
+      }
+    }
+
+    // Check if new year and type combination conflicts
+    if ((year && year !== semester.year) || (type && type !== semester.type)) {
+      const checkYear = year || semester.year;
+      const checkType = type || semester.type;
+      
+      const existingYearType = await Semester.findOne({
+        _id: { $ne: req.params.id },
+        year: checkYear,
+        type: checkType.toLowerCase()
+      });
+
+      if (existingYearType) {
+        return res.status(400).json({
+          success: false,
+          message: `A ${checkType} semester for year ${checkYear} already exists`
         });
       }
     }
@@ -198,11 +295,15 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
     // Update fields
     if (name) semester.name = name.trim();
     if (code) semester.code = code.toUpperCase().trim();
-    if (order !== undefined) semester.order = order;
+    if (year) semester.year = year;
+    if (type) semester.type = type.toLowerCase();
+    if (startDate) semester.startDate = new Date(startDate);
+    if (endDate) semester.endDate = new Date(endDate);
+    if (registrationStartDate) semester.registrationStartDate = new Date(registrationStartDate);
+    if (registrationEndDate) semester.registrationEndDate = new Date(registrationEndDate);
     if (description !== undefined) semester.description = description?.trim();
-    if (duration) semester.duration = duration;
-    if (creditRange) semester.creditRange = { ...semester.creditRange, ...creditRange };
     if (isActive !== undefined) semester.isActive = isActive;
+    if (isCurrent !== undefined) semester.isCurrent = isCurrent;
 
     await semester.save();
 
@@ -219,7 +320,7 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'Semester with this name, code, or order already exists'
+        message: 'Semester with this code already exists'
       });
     }
 
@@ -314,14 +415,14 @@ router.get('/:id/students', auth, async (req, res) => {
   }
 });
 
-// @route   GET /api/semesters/order/:order
-// @desc    Get semester by order number
-// @access  Public
-router.get('/order/:order', async (req, res) => {
+// @route   PUT /api/semesters/:id/current
+// @desc    Set semester as current
+// @access  Private (Admin only)
+router.put('/:id/current', auth, requireAdmin, async (req, res) => {
   try {
-    console.log(`📅 [SEMESTERS] Fetching semester with order: ${req.params.order}`);
+    console.log(`📅 [SEMESTERS] Setting semester as current: ${req.params.id}`);
 
-    const semester = await Semester.getSemesterByOrder(parseInt(req.params.order));
+    const semester = await Semester.findById(req.params.id);
 
     if (!semester) {
       return res.status(404).json({
@@ -330,17 +431,29 @@ router.get('/order/:order', async (req, res) => {
       });
     }
 
-    console.log(`✅ [SEMESTERS] Found semester: ${semester.name}`);
+    if (!semester.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot set inactive semester as current'
+      });
+    }
+
+    // Set this semester as current (the pre-save middleware will handle unsetting others)
+    semester.isCurrent = true;
+    await semester.save();
+
+    console.log(`✅ [SEMESTERS] Semester set as current: ${semester.name}`);
 
     res.json({
       success: true,
+      message: 'Semester set as current successfully',
       data: semester
     });
   } catch (error) {
-    console.error('❌ [SEMESTERS] Error fetching semester:', error);
+    console.error('❌ [SEMESTERS] Error setting current semester:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching semester',
+      message: 'Error setting current semester',
       error: error.message
     });
   }
