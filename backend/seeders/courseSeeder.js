@@ -1,114 +1,142 @@
 const Course = require('../models/Course');
 const User = require('../models/User');
+const Department = require('../models/Department');
 
 const defaultCourses = [
   {
     name: 'Computer Science',
-    code: 'CS',
+    code: 'CS101',
     description: 'Comprehensive program covering programming, algorithms, data structures, and software engineering.',
-    category: 'Technology'
+    category: 'Technology',
+    departmentCode: 'CS',
+    credits: 4,
+    duration: 'semester'
   },
   {
     name: 'Information Technology',
-    code: 'IT',
+    code: 'IT101',
     description: 'Focus on information systems, networking, and technology management.',
-    category: 'Technology'
+    category: 'Technology',
+    departmentCode: 'IT',
+    credits: 3,
+    duration: 'semester'
   },
   {
     name: 'Software Engineering',
-    code: 'SE',
+    code: 'CS201',
     description: 'Advanced software development methodologies, project management, and system design.',
-    category: 'Technology'
+    category: 'Technology',
+    departmentCode: 'CS',
+    credits: 4,
+    duration: 'semester'
   },
   {
     name: 'Data Science',
-    code: 'DS',
+    code: 'CS301',
     description: 'Statistical analysis, machine learning, and big data analytics.',
-    category: 'Technology'
+    category: 'Technology',
+    departmentCode: 'CS',
+    credits: 4,
+    duration: 'semester'
   },
   {
     name: 'Cybersecurity',
-    code: 'CYB',
+    code: 'IT201',
     description: 'Information security, ethical hacking, and digital forensics.',
-    category: 'Technology'
+    category: 'Technology',
+    departmentCode: 'IT',
+    credits: 3,
+    duration: 'semester'
   },
   {
     name: 'Business Administration',
-    code: 'BA',
+    code: 'BA101',
     description: 'Management principles, business strategy, and organizational behavior.',
-    category: 'Business'
+    category: 'Business',
+    departmentCode: 'BA',
+    credits: 3,
+    duration: 'semester'
   },
   {
     name: 'Marketing',
-    code: 'MKT',
+    code: 'BA201',
     description: 'Digital marketing, consumer behavior, and brand management.',
-    category: 'Business'
+    category: 'Business',
+    departmentCode: 'BA',
+    credits: 3,
+    duration: 'semester'
   },
   {
     name: 'Finance',
-    code: 'FIN',
+    code: 'BA301',
     description: 'Financial analysis, investment strategies, and corporate finance.',
-    category: 'Business'
+    category: 'Business',
+    departmentCode: 'BA',
+    credits: 3,
+    duration: 'semester'
   },
   {
     name: 'Mechanical Engineering',
-    code: 'ME',
+    code: 'ME101',
     description: 'Design, manufacturing, and maintenance of mechanical systems.',
-    category: 'Engineering'
+    category: 'Engineering',
+    departmentCode: 'ME',
+    credits: 4,
+    duration: 'semester'
   },
   {
     name: 'Electrical Engineering',
-    code: 'EE',
+    code: 'EE101',
     description: 'Electrical systems, power generation, and electronics.',
-    category: 'Engineering'
+    category: 'Engineering',
+    departmentCode: 'EE',
+    credits: 4,
+    duration: 'semester'
   },
   {
     name: 'Mathematics',
-    code: 'MATH',
+    code: 'MATH101',
     description: 'Pure and applied mathematics, statistics, and mathematical modeling.',
-    category: 'Science'
+    category: 'Science',
+    departmentCode: 'MATH',
+    credits: 3,
+    duration: 'semester'
   },
   {
     name: 'Physics',
-    code: 'PHYS',
+    code: 'PHYS101',
     description: 'Theoretical and experimental physics, quantum mechanics, and astrophysics.',
-    category: 'Science'
+    category: 'Science',
+    departmentCode: 'PHYS',
+    credits: 4,
+    duration: 'semester'
   },
   {
-    name: 'Chemistry',
-    code: 'CHEM',
-    description: 'Organic, inorganic, and physical chemistry with laboratory work.',
-    category: 'Science'
-  },
-  {
-    name: 'Biology',
-    code: 'BIO',
-    description: 'Life sciences, genetics, ecology, and biotechnology.',
-    category: 'Science'
-  },
-  {
-    name: 'Medicine',
-    code: 'MED',
-    description: 'Medical sciences, clinical practice, and healthcare management.',
-    category: 'Medicine'
+    name: 'Civil Engineering',
+    code: 'CE101',
+    description: 'Construction, infrastructure design, and project management.',
+    category: 'Engineering',
+    departmentCode: 'CE',
+    credits: 4,
+    duration: 'semester'
   },
   {
     name: 'English Literature',
-    code: 'ENG',
+    code: 'ENG101',
     description: 'Literary analysis, creative writing, and communication skills.',
-    category: 'Arts'
-  },
-  {
-    name: 'History',
-    code: 'HIST',
-    description: 'World history, historical research methods, and cultural studies.',
-    category: 'Arts'
+    category: 'Arts',
+    departmentCode: 'ENG',
+    credits: 3,
+    duration: 'semester'
   },
   {
     name: 'Psychology',
-    code: 'PSY',
+    code: 'PSY101',
     description: 'Human behavior, cognitive psychology, and research methods.',
-    category: 'Science'
+    category: 'Science',
+    departmentCode: 'PSY',
+    credits: 3,
+    duration: 'semester'
   }
 ];
 
@@ -134,12 +162,47 @@ async function seedCourses() {
       return;
     }
 
-    // Create courses with admin as creator
-    const coursesToCreate = defaultCourses.map(course => ({
-      ...course,
-      createdBy: adminUser._id,
-      isActive: true
-    }));
+    // Get all departments to map courses to departments
+    const departments = await Department.find({ isActive: true });
+    console.log(`✅ Found ${departments.length} departments`);
+
+    if (departments.length === 0) {
+      console.log('❌ No departments found. Please run the department seeder first.');
+      return;
+    }
+
+    // Create a map of department codes to department IDs
+    const departmentMap = {};
+    departments.forEach(dept => {
+      departmentMap[dept.code] = dept._id;
+    });
+
+    // Create courses with admin as creator and proper department assignment
+    const coursesToCreate = [];
+    
+    for (const course of defaultCourses) {
+      const departmentId = departmentMap[course.departmentCode];
+      
+      if (departmentId) {
+        coursesToCreate.push({
+          name: course.name,
+          code: course.code,
+          description: course.description,
+          department: departmentId,
+          credits: course.credits,
+          duration: course.duration,
+          createdBy: adminUser._id,
+          isActive: true
+        });
+      } else {
+        console.log(`⚠️  Department ${course.departmentCode} not found for course ${course.name}`);
+      }
+    }
+
+    if (coursesToCreate.length === 0) {
+      console.log('❌ No courses could be created due to missing departments.');
+      return;
+    }
 
     const createdCourses = await Course.insertMany(coursesToCreate);
 
