@@ -47,6 +47,7 @@
   align-items: flex-end;
   gap: 16px;
   flex-wrap: wrap;
+  padding: 4px;
 }
 
 .search-section {
@@ -54,11 +55,17 @@
   gap: 16px;
   flex: 1;
   min-width: 300px;
+  align-items: flex-end;
 }
 
 .search-field {
   flex: 2;
   min-width: 200px;
+}
+
+.search-field .mat-mdc-form-field,
+.filter-field .mat-mdc-form-field {
+  height: 48px;
 }
 
 .filter-field {
@@ -70,6 +77,20 @@
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-shrink: 0;
+  height: 48px;
+}
+
+.action-buttons button {
+  height: 48px;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .create-button {
@@ -103,6 +124,11 @@
 .refresh-button:hover {
   background: #218838;
   transform: translateY(-1px);
+}
+
+/* Form field height consistency */
+.mat-mdc-form-field {
+  height: 48px;
 }
 
 .table-card {

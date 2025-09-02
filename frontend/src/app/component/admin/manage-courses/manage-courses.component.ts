@@ -16,6 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { CourseService, Course } from '../../../services/course.service';
+import { DepartmentService, Department } from '../../../services/department.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { LoadingService } from '../../../services/loading.service';
 import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
@@ -42,7 +43,6 @@ import { AdminLayout } from '../admin-layout/admin-layout';
     MatTooltipModule,
     MatFormFieldModule,
     LoadingSpinnerComponent,
-    CourseDialogComponent,
     AdminLayout
   ],
   templateUrl: './manage-courses.component.html',
@@ -52,7 +52,7 @@ export class ManageCoursesComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  displayedColumns: string[] = ['code', 'name', 'category', 'description', 'isActive', 'createdAt', 'actions'];
+  displayedColumns: string[] = ['code', 'name', 'department', 'description', 'isActive', 'createdAt', 'actions'];
   dataSource = new MatTableDataSource<Course>();
   
   // Pagination
@@ -63,11 +63,12 @@ export class ManageCoursesComponent implements OnInit {
   
   // Filters
   searchTerm = '';
-  selectedCategory = '';
-  categories: string[] = [];
+  selectedDepartment = '';
+  departments: Department[] = [];
 
   constructor(
     private courseService: CourseService,
+    private departmentService: DepartmentService,
     private confirmationService: ConfirmationService,
     private loadingService: LoadingService,
     private snackBar: MatSnackBar,
@@ -75,8 +76,21 @@ export class ManageCoursesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.categories = this.courseService.getCourseCategories();
+    this.loadDepartments();
     this.loadCourses();
+  }
+
+  loadDepartments(): void {
+    this.departmentService.getDepartments().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.departments = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading departments:', error);
+      }
+    });
   }
 
   loadCourses(): void {
@@ -86,7 +100,8 @@ export class ManageCoursesComponent implements OnInit {
       this.currentPage,
       this.pageSize,
       this.searchTerm,
-      this.selectedCategory
+      '', // category - empty since we removed it
+      this.selectedDepartment
     ).subscribe({
       next: (response) => {
         this.loadingService.hide();
@@ -118,14 +133,14 @@ export class ManageCoursesComponent implements OnInit {
     this.loadCourses();
   }
 
-  onCategoryFilter(): void {
+  onDepartmentFilter(): void {
     this.currentPage = 1;
     this.loadCourses();
   }
 
   clearFilters(): void {
     this.searchTerm = '';
-    this.selectedCategory = '';
+    this.selectedDepartment = '';
     this.currentPage = 1;
     this.loadCourses();
   }
@@ -134,9 +149,7 @@ export class ManageCoursesComponent implements OnInit {
     const dialogRef = this.dialog.open(CourseDialogComponent, {
       width: '600px',
       maxWidth: '90vw',
-      data: {
-        categories: this.categories
-      },
+      data: {},
       panelClass: 'course-dialog-panel'
     });
 
@@ -152,8 +165,7 @@ export class ManageCoursesComponent implements OnInit {
       width: '600px',
       maxWidth: '90vw',
       data: {
-        course: course,
-        categories: this.categories
+        course: course
       },
       panelClass: 'course-dialog-panel'
     });
@@ -287,16 +299,15 @@ export class ManageCoursesComponent implements OnInit {
     });
   }
 
-  getCategoryColor(category: string): string {
-    const colors: { [key: string]: string } = {
-      'Technology': 'primary',
-      'Business': 'accent',
-      'Science': 'warn',
-      'Engineering': 'primary',
-      'Arts': 'accent',
-      'Medicine': 'warn',
-      'Other': ''
-    };
-    return colors[category] || '';
+  getDepartmentName(department: any): string {
+    if (typeof department === 'string') {
+      // If department is just an ID, find the name from our departments array
+      const dept = this.departments.find(d => d._id === department);
+      return dept ? `${dept.name} (${dept.code})` : 'Unknown Department';
+    } else if (department && department.name) {
+      // If department is populated object
+      return `${department.name} (${department.code})`;
+    }
+    return 'No Department';
   }
 }

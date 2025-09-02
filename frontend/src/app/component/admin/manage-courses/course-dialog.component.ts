@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -10,10 +10,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 
 import { Course } from '../../../services/course.service';
+import { Department, DepartmentService } from '../../../services/department.service';
 
 export interface CourseDialogData {
   course?: Course;
-  categories: string[];
 }
 
 @Component({
@@ -55,20 +55,32 @@ export interface CourseDialogData {
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Category</mat-label>
-              <mat-select formControlName="category">
-                <mat-option *ngFor="let category of data.categories" [value]="category">
-                  {{ category }}
+              <mat-label>Department *</mat-label>
+              <mat-select formControlName="department" required>
+                <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                  {{ dept.name }} ({{ dept.code }})
                 </mat-option>
               </mat-select>
-              <mat-error>{{ getErrorMessage('category') }}</mat-error>
+              <mat-error>{{ getErrorMessage('department') }}</mat-error>
             </mat-form-field>
 
-            <div class="form-field status-field">
-              <mat-slide-toggle formControlName="isActive" color="primary">
-                Active Course
-              </mat-slide-toggle>
-            </div>
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Credits</mat-label>
+              <input matInput type="number" formControlName="credits" placeholder="Enter credits" min="1" max="10">
+              <mat-error>{{ getErrorMessage('credits') }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Duration</mat-label>
+              <mat-select formControlName="duration">
+                <mat-option value="semester">Semester</mat-option>
+                <mat-option value="year">Year</mat-option>
+                <mat-option value="trimester">Trimester</mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage('duration') }}</mat-error>
+            </mat-form-field>
           </div>
 
           <mat-form-field appearance="outline" class="full-width">
@@ -76,6 +88,12 @@ export interface CourseDialogData {
             <textarea matInput formControlName="description" rows="3" placeholder="Enter course description"></textarea>
             <mat-error>{{ getErrorMessage('description') }}</mat-error>
           </mat-form-field>
+
+          <div class="status-toggle">
+            <mat-slide-toggle formControlName="isActive" color="primary">
+              Active Course
+            </mat-slide-toggle>
+          </div>
         </form>
       </mat-dialog-content>
 
@@ -117,11 +135,8 @@ export interface CourseDialogData {
       min-width: 200px;
     }
 
-    .status-field {
-      display: flex;
-      align-items: center;
-      min-height: 56px;
-      padding: 8px 0;
+    .status-toggle {
+      padding: 16px 0 8px 0;
     }
 
     .full-width {
@@ -149,18 +164,45 @@ export interface CourseDialogData {
     }
   `]
 })
-export class CourseDialogComponent {
+export class CourseDialogComponent implements OnInit {
   courseForm!: FormGroup;
+  departments: Department[] = [];
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<CourseDialogComponent>,
+    private departmentService: DepartmentService,
     @Inject(MAT_DIALOG_DATA) public data: CourseDialogData
   ) {
     this.initializeForm();
   }
 
+  ngOnInit(): void {
+    this.loadDepartments();
+  }
+
+  loadDepartments(): void {
+    this.departmentService.getDepartments().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.departments = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading departments:', error);
+      }
+    });
+  }
+
   initializeForm(): void {
+    // Handle department value - it could be an object or a string
+    let departmentValue = '';
+    if (this.data.course?.department) {
+      departmentValue = typeof this.data.course.department === 'string' 
+        ? this.data.course.department 
+        : this.data.course.department._id;
+    }
+
     this.courseForm = this.fb.group({
       name: [
         this.data.course?.name || '', 
@@ -174,8 +216,16 @@ export class CourseDialogComponent {
         this.data.course?.description || '', 
         [Validators.maxLength(500)]
       ],
-      category: [
-        this.data.course?.category || '', 
+      department: [
+        departmentValue,
+        Validators.required
+      ],
+      credits: [
+        this.data.course?.credits || 3,
+        [Validators.required, Validators.min(1), Validators.max(10)]
+      ],
+      duration: [
+        this.data.course?.duration || 'semester',
         Validators.required
       ],
       isActive: [
@@ -196,6 +246,12 @@ export class CourseDialogComponent {
     }
     if (field.hasError('maxlength')) {
       return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} cannot exceed ${field.errors?.['maxlength']?.requiredLength} characters`;
+    }
+    if (field.hasError('min')) {
+      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${field.errors?.['min']?.min}`;
+    }
+    if (field.hasError('max')) {
+      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} cannot exceed ${field.errors?.['max']?.max}`;
     }
 
     return '';
