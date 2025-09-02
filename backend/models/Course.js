@@ -23,10 +23,21 @@ const courseSchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Description cannot exceed 500 characters']
   },
-  category: {
+  department: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    required: [true, 'Department is required for course']
+  },
+  credits: {
+    type: Number,
+    min: [1, 'Credits must be at least 1'],
+    max: [10, 'Credits cannot exceed 10'],
+    default: 3
+  },
+  duration: {
     type: String,
-    enum: ['Technology', 'Business', 'Science', 'Engineering', 'Arts', 'Medicine', 'Other'],
-    default: 'Other'
+    enum: ['semester', 'year', 'trimester'],
+    default: 'semester'
   },
   isActive: {
     type: Boolean,
@@ -53,7 +64,9 @@ const courseSchema = new mongoose.Schema({
 
 // Indexes for performance
 courseSchema.index({ category: 1 });
+courseSchema.index({ department: 1 });
 courseSchema.index({ isActive: 1 });
+courseSchema.index({ department: 1, isActive: 1 });
 
 // Pre-save middleware to update the updatedAt field
 courseSchema.pre('save', function(next) {
@@ -63,7 +76,15 @@ courseSchema.pre('save', function(next) {
 
 // Static method to get active courses
 courseSchema.statics.getActiveCourses = function() {
-  return this.find({ isActive: true }).sort({ name: 1 });
+  return this.find({ isActive: true }).populate('department').sort({ name: 1 });
+};
+
+// Static method to get courses by department
+courseSchema.statics.getCoursesByDepartment = function(departmentId) {
+  return this.find({ 
+    department: departmentId, 
+    isActive: true 
+  }).populate('department').sort({ name: 1 });
 };
 
 // Instance method to toggle active status
