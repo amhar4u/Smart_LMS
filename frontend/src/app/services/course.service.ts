@@ -9,7 +9,13 @@ export interface Course {
   name: string;
   code: string;
   description?: string;
-  category: string;
+  department: {
+    _id: string;
+    name: string;
+    code: string;
+  } | string;
+  credits?: number;
+  duration?: string;
   isActive: boolean;
   createdBy?: {
     _id: string;
@@ -51,14 +57,18 @@ export interface CreateCourseRequest {
   name: string;
   code: string;
   description?: string;
-  category: string;
+  department: string;
+  credits?: number;
+  duration?: string;
 }
 
 export interface UpdateCourseRequest {
   name?: string;
   code?: string;
   description?: string;
-  category?: string;
+  department?: string;
+  credits?: number;
+  duration?: string;
   isActive?: boolean;
 }
 
@@ -76,13 +86,22 @@ export class CourseService {
   ) {}
 
   // Get all active courses (for registration forms)
-  getCourses(): Observable<CourseResponse> {
-    return this.http.get<CourseResponse>(this.apiUrl);
+  getCourses(departmentId?: string): Observable<CourseResponse> {
+    let params = new HttpParams();
+    if (departmentId) {
+      params = params.set('department', departmentId);
+    }
+    return this.http.get<CourseResponse>(this.apiUrl, { params });
+  }
+
+  // Get courses by department
+  getCoursesByDepartment(departmentId: string): Observable<CourseResponse> {
+    return this.getCourses(departmentId);
   }
 
   // Load courses and update the subject
-  loadCourses(): void {
-    this.getCourses().subscribe({
+  loadCourses(departmentId?: string): void {
+    this.getCourses(departmentId).subscribe({
       next: (response) => {
         if (response.success) {
           this.coursesSubject.next(response.data);
@@ -105,7 +124,8 @@ export class CourseService {
     page: number = 1,
     limit: number = 10,
     search: string = '',
-    category: string = ''
+    category: string = '',
+    departmentId: string = ''
   ): Observable<CoursesAdminResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
@@ -117,6 +137,10 @@ export class CourseService {
 
     if (category && category !== 'all') {
       params = params.set('category', category);
+    }
+
+    if (departmentId && departmentId !== 'all') {
+      params = params.set('department', departmentId);
     }
 
     const headers = this.authService.getAuthHeaders();

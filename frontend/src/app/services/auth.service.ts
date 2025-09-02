@@ -101,9 +101,7 @@ export class AuthService {
       password: registration.password,
       phone: registration.phone,
       employeeId: registration.employeeId || '',
-      department: registration.department,
-      specialization: registration.specialization,
-      experience: registration.experience || 0
+      department: registration.department
     };
 
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/register/teacher`, payload).pipe(
