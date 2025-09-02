@@ -22,6 +22,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/courses', require('./routes/courses'));
+app.use('/api/departments', require('./routes/departments'));
+app.use('/api/semesters', require('./routes/semesters'));
 
 // Test route for auth
 app.get('/api/test', (req, res) => {
