@@ -55,11 +55,13 @@ const userSchema = new mongoose.Schema({
     sparse: true // Allow null values but ensure uniqueness when present
   },
   course: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
     required: function() { return this.role === 'student'; }
   },
   semester: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Semester',
     required: function() { return this.role === 'student'; }
   },
   enrollmentDate: {
@@ -78,18 +80,12 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true
   },
+  
+  // Common field for both students and teachers
   department: {
-    type: String,
-    required: function() { return this.role === 'teacher'; }
-  },
-  specialization: {
-    type: String,
-    required: function() { return this.role === 'teacher'; }
-  },
-  experience: {
-    type: Number,
-    default: 0,
-    min: [0, 'Experience cannot be negative']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    required: function() { return this.role === 'student' || this.role === 'teacher'; }
   },
   
   // Profile Information
