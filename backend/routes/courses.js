@@ -6,13 +6,22 @@ const auth = require('../middleware/auth');
 // Get all courses (public access for registration forms)
 router.get('/', async (req, res) => {
   try {
-    const courses = await Course.find({ isActive: true })
-      .select('name code description category')
+    const departmentId = req.query.department;
+    let query = { isActive: true };
+    
+    if (departmentId) {
+      query.department = departmentId;
+    }
+    
+    const courses = await Course.find(query)
+      .populate('department', 'name code')
+      .select('name code description category department credits duration')
       .sort({ name: 1 });
     
     res.json({
       success: true,
-      data: courses
+      data: courses,
+      count: courses.length
     });
   } catch (error) {
     console.error('Error fetching courses:', error);
@@ -38,7 +47,7 @@ router.get('/admin', auth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     const search = req.query.search || '';
-    const category = req.query.category || '';
+    const departmentId = req.query.department || '';
 
     // Build query
     let query = {};
@@ -49,12 +58,13 @@ router.get('/admin', auth, async (req, res) => {
         { description: { $regex: search, $options: 'i' } }
       ];
     }
-    if (category && category !== 'all') {
-      query.category = category;
+    if (departmentId && departmentId !== 'all') {
+      query.department = departmentId;
     }
 
     const courses = await Course.find(query)
       .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name code')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -127,13 +137,13 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
-    const { name, code, description, category } = req.body;
+    const { name, code, description, department, credits, duration } = req.body;
 
     // Validate required fields
-    if (!name || !code) {
+    if (!name || !code || !department) {
       return res.status(400).json({
         success: false,
-        message: 'Course name and code are required'
+        message: 'Course name, code, and department are required'
       });
     }
 
@@ -156,14 +166,16 @@ router.post('/', auth, async (req, res) => {
       name,
       code: code.toUpperCase(),
       description,
-      category,
+      department,
+      credits: credits || 3,
+      duration: duration || 'semester',
       createdBy: req.user.id
     });
 
     await course.save();
 
     // Populate the created course
-    await course.populate('createdBy', 'firstName lastName email');
+    await course.populate(['createdBy', 'department'], 'firstName lastName email name code');
 
     res.status(201).json({
       success: true,
@@ -199,7 +211,7 @@ router.put('/:id', auth, async (req, res) => {
       });
     }
 
-    const { name, code, description, category, isActive } = req.body;
+    const { name, code, description, department, credits, duration, isActive } = req.body;
 
     const course = await Course.findById(req.params.id);
 
@@ -239,13 +251,15 @@ router.put('/:id', auth, async (req, res) => {
     if (name !== undefined) course.name = name;
     if (code !== undefined) course.code = code.toUpperCase();
     if (description !== undefined) course.description = description;
-    if (category !== undefined) course.category = category;
+    if (department !== undefined) course.department = department;
+    if (credits !== undefined) course.credits = credits;
+    if (duration !== undefined) course.duration = duration;
     if (isActive !== undefined) course.isActive = isActive;
 
     await course.save();
 
     // Populate the updated course
-    await course.populate('createdBy', 'firstName lastName email');
+    await course.populate(['createdBy', 'department'], 'firstName lastName email name code');
 
     res.json({
       success: true,
