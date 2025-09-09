@@ -40,7 +40,6 @@ const adminData = [
     status: 'approved',
     isActive: true,
     employeeId: 'EMP-ADMIN-001',
-    department: 'Administration',
     qualification: 'Masters in Computer Science',
     joinDate: new Date('2025-01-01'),
     address: {
@@ -106,30 +105,8 @@ const seedAdmins = async () => {
 
 const seedAdminsData = async () => {
   try {
-    // First, ensure Administration department exists
-    console.log('🏢 Ensuring Administration department exists...');
-    let adminDepartment = await Department.findOne({ code: 'ADMIN' });
-    
-    if (!adminDepartment) {
-      adminDepartment = await Department.create({
-        name: 'Administration',
-        code: 'ADMIN',
-        description: 'Administrative department for system management',
-        isActive: true
-      });
-      console.log('✅ Created Administration department');
-    } else {
-      console.log('✅ Administration department already exists');
-    }
-
-    // Update admin data to use department ObjectId instead of string
-    const updatedAdminData = adminData.map(admin => ({
-      ...admin,
-      department: adminDepartment._id
-    }));
-    
     // Hash passwords
-    const hashedAdminData = await hashPasswords([...updatedAdminData]);
+    const hashedAdminData = await hashPasswords([...adminData]);
     
     // Insert admin users
     const createdAdmins = await User.insertMany(hashedAdminData);
@@ -143,7 +120,7 @@ const seedAdminsData = async () => {
     console.log('================================');
     adminData.forEach(admin => {
       console.log(`Email: ${admin.email}`);
-      console.log(`Password: ${admin.password.replace(admin.password, '********')} (Check source code for actual password)`);
+      console.log(`Password: admin123`);
       console.log('--------------------------------');
     });
     
