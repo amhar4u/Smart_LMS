@@ -7,10 +7,6 @@ export const routes: Routes = [
     loadComponent: () => import('./component/landing/landing.component').then(m => m.LandingComponent)
   },
   {
-    path: 'debug/auth',
-    loadComponent: () => import('./component/debug/auth-debug.component').then(m => m.AuthDebugComponent)
-  },
-  {
     path: 'auth/login',
     loadComponent: () => import('./component/auth/login/login').then(m => m.LoginComponent),
     canActivate: [preventAuthGuard]
@@ -56,27 +52,24 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
-    path: 'admin/manage-courses',
-    loadComponent: () => import('./component/admin/manage-courses/manage-courses.component').then(m => m.ManageCoursesComponent),
-    canActivate: [adminGuard]
-  },
-  {
     path: 'admin/manage-departments',
     loadComponent: () => import('./component/admin/manage-departments/manage-departments').then(m => m.ManageDepartments),
     canActivate: [adminGuard]
   },
   {
-    path: 'admin/manage-semesters',
-    loadComponent: () => import('./component/admin/manage-semesters/manage-semesters').then(m => m.ManageSemesters),
+    path: 'admin/manage-courses',
+    loadComponent: () => import('./component/admin/manage-courses/manage-courses.component').then(m => m.ManageCoursesComponent),
     canActivate: [adminGuard]
   },
   {
-    path: 'admin/schedules',
-    redirectTo: 'admin/dashboard'
+    path: 'admin/manage-batches',
+    loadComponent: () => import('./component/admin/manage-batches/manage-batches.component').then(m => m.ManageBatchesComponent),
+    canActivate: [adminGuard]
   },
   {
-    path: 'admin/promote',
-    redirectTo: 'admin/dashboard'
+    path: 'admin/manage-semesters',
+    loadComponent: () => import('./component/admin/manage-semesters/manage-semesters.component').then(m => m.ManageSemestersComponent),
+    canActivate: [adminGuard]
   },
   {
     path: '**',
