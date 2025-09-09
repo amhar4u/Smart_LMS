@@ -71,6 +71,14 @@
       <mat-card-content>
         <div class="table-container">
           <table mat-table [dataSource]="batches" class="batches-table">
+            <!-- Code Column -->
+            <ng-container matColumnDef="code">
+              <th mat-header-cell *matHeaderCellDef>Code</th>
+              <td mat-cell *matCellDef="let batch">
+                <mat-chip color="primary" selected>{{ batch.code }}</mat-chip>
+              </td>
+            </ng-container>
+
             <!-- Name Column -->
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Batch Name</th>
@@ -81,12 +89,6 @@
             <ng-container matColumnDef="course">
               <th mat-header-cell *matHeaderCellDef>Course</th>
               <td mat-cell *matCellDef="let batch">{{ batch.course?.name || 'N/A' }}</td>
-            </ng-container>
-
-            <!-- Department Column -->
-            <ng-container matColumnDef="department">
-              <th mat-header-cell *matHeaderCellDef>Department</th>
-              <td mat-cell *matCellDef="let batch">{{ batch.department?.name || 'N/A' }}</td>
             </ng-container>
 
             <!-- Year Column -->

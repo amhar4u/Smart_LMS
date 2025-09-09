@@ -57,9 +57,9 @@ export class ManageBatchesComponent implements OnInit {
   departments: Department[] = [];
   
   displayedColumns: string[] = [
+    'code', 
     'name', 
     'course', 
-    'department', 
     'year', 
     'enrollment', 
     'status',
