@@ -1,222 +1,131 @@
 const Course = require('../models/Course');
-const User = require('../models/User');
-const Department = require('../models/Department');
 
-const defaultCourses = [
+const courses = [
+  // IT Department Courses (4 courses)
   {
-    name: 'Computer Science',
-    code: 'CS101',
-    description: 'Comprehensive program covering programming, algorithms, data structures, and software engineering.',
-    category: 'Technology',
-    departmentCode: 'CS',
-    credits: 4,
-    duration: 'semester'
+    _id: "CRS201",
+    departmentId: "DPT101",
+    name: "BSc Information Technology",
+    code: "BSC-IT",
+    durationYears: 4,
+    description: "Bachelor of Science in Information Technology program covering software development, database management, and network administration.",
+    isActive: true
   },
   {
-    name: 'Information Technology',
-    code: 'IT101',
-    description: 'Focus on information systems, networking, and technology management.',
-    category: 'Technology',
-    departmentCode: 'IT',
-    credits: 3,
-    duration: 'semester'
+    _id: "CRS202",
+    departmentId: "DPT101",
+    name: "BSc Software Engineering",
+    code: "BSC-SE",
+    durationYears: 4,
+    description: "Bachelor of Science in Software Engineering focusing on software design, development methodologies, and project management.",
+    isActive: true
   },
   {
-    name: 'Software Engineering',
-    code: 'CS201',
-    description: 'Advanced software development methodologies, project management, and system design.',
-    category: 'Technology',
-    departmentCode: 'CS',
-    credits: 4,
-    duration: 'semester'
+    _id: "CRS203",
+    departmentId: "DPT101",
+    name: "BSc Data Science",
+    code: "BSC-DS",
+    durationYears: 4,
+    description: "Bachelor of Science in Data Science covering machine learning, statistics, and big data analytics.",
+    isActive: true
   },
   {
-    name: 'Data Science',
-    code: 'CS301',
-    description: 'Statistical analysis, machine learning, and big data analytics.',
-    category: 'Technology',
-    departmentCode: 'CS',
-    credits: 4,
-    duration: 'semester'
+    _id: "CRS204",
+    departmentId: "DPT101",
+    name: "BSc Cybersecurity",
+    code: "BSC-CS",
+    durationYears: 4,
+    description: "Bachelor of Science in Cybersecurity focusing on information security, ethical hacking, and digital forensics.",
+    isActive: true
+  },
+
+  // Engineering Department Courses (4 courses)
+  {
+    _id: "CRS301",
+    departmentId: "DPT102",
+    name: "BE Mechanical Engineering",
+    code: "BE-ME",
+    durationYears: 4,
+    description: "Bachelor of Engineering in Mechanical Engineering covering thermodynamics, fluid mechanics, and manufacturing.",
+    isActive: true
   },
   {
-    name: 'Cybersecurity',
-    code: 'IT201',
-    description: 'Information security, ethical hacking, and digital forensics.',
-    category: 'Technology',
-    departmentCode: 'IT',
-    credits: 3,
-    duration: 'semester'
+    _id: "CRS302",
+    departmentId: "DPT102",
+    name: "BE Civil Engineering",
+    code: "BE-CE",
+    durationYears: 4,
+    description: "Bachelor of Engineering in Civil Engineering focusing on structural design, construction, and infrastructure.",
+    isActive: true
   },
   {
-    name: 'Business Administration',
-    code: 'BA101',
-    description: 'Management principles, business strategy, and organizational behavior.',
-    category: 'Business',
-    departmentCode: 'BA',
-    credits: 3,
-    duration: 'semester'
+    _id: "CRS303",
+    departmentId: "DPT102",
+    name: "BE Electrical Engineering",
+    code: "BE-EE",
+    durationYears: 4,
+    description: "Bachelor of Engineering in Electrical Engineering covering power systems, electronics, and control systems.",
+    isActive: true
   },
   {
-    name: 'Marketing',
-    code: 'BA201',
-    description: 'Digital marketing, consumer behavior, and brand management.',
-    category: 'Business',
-    departmentCode: 'BA',
-    credits: 3,
-    duration: 'semester'
+    _id: "CRS304",
+    departmentId: "DPT102",
+    name: "BE Chemical Engineering",
+    code: "BE-ChE",
+    durationYears: 4,
+    description: "Bachelor of Engineering in Chemical Engineering focusing on process design, chemical reactions, and plant operations.",
+    isActive: true
+  },
+
+  // Medical Department Courses (4 courses)
+  {
+    _id: "CRS401",
+    departmentId: "DPT103",
+    name: "MBBS",
+    code: "MBBS",
+    durationYears: 6,
+    description: "Bachelor of Medicine and Bachelor of Surgery - comprehensive medical degree program.",
+    isActive: true
   },
   {
-    name: 'Finance',
-    code: 'BA301',
-    description: 'Financial analysis, investment strategies, and corporate finance.',
-    category: 'Business',
-    departmentCode: 'BA',
-    credits: 3,
-    duration: 'semester'
+    _id: "CRS402",
+    departmentId: "DPT103",
+    name: "BSc Nursing",
+    code: "BSC-N",
+    durationYears: 4,
+    description: "Bachelor of Science in Nursing focusing on patient care, medical procedures, and healthcare management.",
+    isActive: true
   },
   {
-    name: 'Mechanical Engineering',
-    code: 'ME101',
-    description: 'Design, manufacturing, and maintenance of mechanical systems.',
-    category: 'Engineering',
-    departmentCode: 'ME',
-    credits: 4,
-    duration: 'semester'
+    _id: "CRS403",
+    departmentId: "DPT103",
+    name: "BSc Pharmacy",
+    code: "BSC-P",
+    durationYears: 4,
+    description: "Bachelor of Science in Pharmacy covering pharmaceutical sciences, drug development, and clinical pharmacy.",
+    isActive: true
   },
   {
-    name: 'Electrical Engineering',
-    code: 'EE101',
-    description: 'Electrical systems, power generation, and electronics.',
-    category: 'Engineering',
-    departmentCode: 'EE',
-    credits: 4,
-    duration: 'semester'
-  },
-  {
-    name: 'Mathematics',
-    code: 'MATH101',
-    description: 'Pure and applied mathematics, statistics, and mathematical modeling.',
-    category: 'Science',
-    departmentCode: 'MATH',
-    credits: 3,
-    duration: 'semester'
-  },
-  {
-    name: 'Physics',
-    code: 'PHYS101',
-    description: 'Theoretical and experimental physics, quantum mechanics, and astrophysics.',
-    category: 'Science',
-    departmentCode: 'PHYS',
-    credits: 4,
-    duration: 'semester'
-  },
-  {
-    name: 'Civil Engineering',
-    code: 'CE101',
-    description: 'Construction, infrastructure design, and project management.',
-    category: 'Engineering',
-    departmentCode: 'CE',
-    credits: 4,
-    duration: 'semester'
-  },
-  {
-    name: 'English Literature',
-    code: 'ENG101',
-    description: 'Literary analysis, creative writing, and communication skills.',
-    category: 'Arts',
-    departmentCode: 'ENG',
-    credits: 3,
-    duration: 'semester'
-  },
-  {
-    name: 'Psychology',
-    code: 'PSY101',
-    description: 'Human behavior, cognitive psychology, and research methods.',
-    category: 'Science',
-    departmentCode: 'PSY',
-    credits: 3,
-    duration: 'semester'
+    _id: "CRS404",
+    departmentId: "DPT103",
+    name: "BSc Medical Laboratory Technology",
+    code: "BSC-MLT",
+    durationYears: 4,
+    description: "Bachelor of Science in Medical Laboratory Technology focusing on diagnostic testing and laboratory management.",
+    isActive: true
   }
 ];
 
-async function seedCourses() {
+const seedCourses = async () => {
   try {
-    console.log('🌱 Starting courses seeding...');
-
-    // Find an admin user to be the creator
-    const adminUser = await User.findOne({ role: 'admin' });
-    
-    if (!adminUser) {
-      console.log('❌ No admin user found. Please run the admin seeder first.');
-      return;
-    }
-
-    console.log(`✅ Found admin user: ${adminUser.email}`);
-
-    // Check if courses already exist
-    const existingCoursesCount = await Course.countDocuments();
-    
-    if (existingCoursesCount > 0) {
-      console.log(`ℹ️  Found ${existingCoursesCount} existing courses. Skipping course seeding.`);
-      return;
-    }
-
-    // Get all departments to map courses to departments
-    const departments = await Department.find({ isActive: true });
-    console.log(`✅ Found ${departments.length} departments`);
-
-    if (departments.length === 0) {
-      console.log('❌ No departments found. Please run the department seeder first.');
-      return;
-    }
-
-    // Create a map of department codes to department IDs
-    const departmentMap = {};
-    departments.forEach(dept => {
-      departmentMap[dept.code] = dept._id;
-    });
-
-    // Create courses with admin as creator and proper department assignment
-    const coursesToCreate = [];
-    
-    for (const course of defaultCourses) {
-      const departmentId = departmentMap[course.departmentCode];
-      
-      if (departmentId) {
-        coursesToCreate.push({
-          name: course.name,
-          code: course.code,
-          description: course.description,
-          department: departmentId,
-          credits: course.credits,
-          duration: course.duration,
-          createdBy: adminUser._id,
-          isActive: true
-        });
-      } else {
-        console.log(`⚠️  Department ${course.departmentCode} not found for course ${course.name}`);
-      }
-    }
-
-    if (coursesToCreate.length === 0) {
-      console.log('❌ No courses could be created due to missing departments.');
-      return;
-    }
-
-    const createdCourses = await Course.insertMany(coursesToCreate);
-
-    console.log(`✅ Successfully created ${createdCourses.length} courses:`);
-    createdCourses.forEach(course => {
-      console.log(`   - ${course.name} (${course.code})`);
-    });
-
+    await Course.deleteMany({});
+    const createdCourses = await Course.insertMany(courses);
+    console.log(`✅ ${createdCourses.length} courses seeded successfully`);
     return createdCourses;
-
   } catch (error) {
     console.error('❌ Error seeding courses:', error);
     throw error;
   }
-}
+};
 
-module.exports = seedCourses;
+module.exports = { seedCourses, courses };

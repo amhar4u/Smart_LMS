@@ -8,8 +8,7 @@ dotenv.config();
 const adminSeeder = require('./adminSeeder');
 const courseSeeder = require('./courseSeeder');
 const departmentSeeder = require('./departmentSeeder');
-const semesterSeeder = require('./semesterSeeder');
-const batchSeeder = require('./batchSeeder');
+const { seedComprehensiveData } = require('./comprehensiveDataSeeder');
 
 // Main seeder function
 const runSeeders = async () => {
@@ -35,8 +34,7 @@ Individual Seeder Usage:
 node seeders/index.js --admin         - Seed admin users
 node seeders/index.js --courses       - Seed courses
 node seeders/index.js --departments   - Seed departments
-node seeders/index.js --semesters     - Seed semesters
-node seeders/index.js --batches       - Seed batches
+node seeders/index.js --comprehensive - Seed all data (admin, departments, courses)
 
 Available Commands:
 --help, -h           Show this help message
@@ -45,8 +43,7 @@ Available Seeders:
 - admin: Seed admin users
 - courses: Seed course data
 - departments: Seed department data
-- semesters: Seed semester data
-- batches: Seed batch data
+- comprehensive: Seed all data (admin, departments, courses)
       `);
       await mongoose.connection.close();
       process.exit(0);
@@ -76,41 +73,19 @@ Available Seeders:
       process.exit(0);
     }
     
-    if (args.includes('--semesters')) {
-      console.log('Running semesters seeder...');
-      await semesterSeeder.seedSemesters();
-      console.log('✅ Semesters seeder completed!');
+    if (args.includes('--comprehensive')) {
+      console.log('Running comprehensive seeder...');
+      await seedComprehensiveData();
+      console.log('✅ Comprehensive seeder completed!');
       await mongoose.connection.close();
       process.exit(0);
     }
     
-    if (args.includes('--batches')) {
-      console.log('Running batches seeder...');
-      await batchSeeder();
-      console.log('✅ Batches seeder completed!');
-      await mongoose.connection.close();
-      process.exit(0);
-    }
-    
-    // If no specific seeder is mentioned, run all
+    // If no specific seeder is mentioned, run comprehensive seeder
     if (args.length === 0) {
-      console.log('Running all seeders...');
-      console.log('\n1. Seeding departments...');
-      await departmentSeeder.seedDepartments();
-      
-      console.log('\n2. Seeding semesters...');
-      await semesterSeeder.seedSemesters();
-      
-      console.log('\n3. Seeding admin users...');
-      await adminSeeder();
-      
-      console.log('\n4. Seeding courses...');
-      await courseSeeder();
-      
-      console.log('\n5. Seeding batches...');
-      await batchSeeder();
-      
-      console.log('\n✅ All seeders completed successfully!');
+      console.log('Running comprehensive seeder (departments + courses)...');
+      await seedComprehensiveData();
+      console.log('✅ All seeders completed!');
       await mongoose.connection.close();
       process.exit(0);
     }
@@ -124,6 +99,31 @@ Available Seeders:
     await mongoose.connection.close();
     process.exit(1);
   }
+};
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Promise Rejection:', err);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Run the seeder
+if (require.main === module) {
+  runSeeders();
+}
+
+module.exports = {
+  runSeeders,
+  adminSeeder,
+  courseSeeder,
+  departmentSeeder,
+  seedComprehensiveData
 };
 
 // Handle unhandled promise rejections
