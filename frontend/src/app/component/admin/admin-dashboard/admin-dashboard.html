@@ -16,216 +16,257 @@
     </div>
 
     <div *ngIf="!isLoading">
-      <!-- Stats Cards with Progress Bars -->
-      <div class="stats-grid">
-        <mat-card *ngFor="let stat of dashboardStats" class="stat-card" [style.border-left]="'4px solid ' + stat.color">
-          <mat-card-content>
-            <div class="stat-content">
-              <div class="stat-icon" [style.background-color]="stat.color">
-                <mat-icon>{{ stat.icon }}</mat-icon>
-              </div>
-              <div class="stat-info">
-                <h2>{{ stat.value | number }}</h2>
-                <p>{{ stat.title }}</p>
-                <span class="stat-subtitle">{{ stat.subtitle }}</span>
-                <span class="stat-growth" [style.color]="stat.color">{{ stat.growth }}</span>
-                
-                <!-- Progress Bar -->
-                <div class="progress-container">
-                  <div class="progress-label">
-                    <span>Progress</span>
-                    <span>{{ getProgressPercentage(stat) }}%</span>
+      <!-- First Row: User Statistics -->
+      <div class="stats-section">
+        <h3 class="section-title">User Management Statistics</h3>
+        <div class="stats-grid">
+          <mat-card *ngFor="let stat of userStats" class="stat-card" [style.border-left]="'4px solid ' + stat.color">
+            <mat-card-content>
+              <div class="stat-content">
+                <div class="stat-icon" [style.background-color]="stat.color">
+                  <mat-icon>{{ stat.icon }}</mat-icon>
+                </div>
+                <div class="stat-info">
+                  <h2>{{ stat.value | number }}</h2>
+                  <p>{{ stat.title }}</p>
+                  <span class="stat-subtitle">{{ stat.subtitle }}</span>
+                  <span class="stat-growth" [style.color]="stat.color">{{ stat.growth }}</span>
+                  
+                  <!-- Progress Bar -->
+                  <div class="progress-container">
+                    <div class="progress-label">
+                      <span>Progress</span>
+                      <span>{{ getProgressPercentage(stat) }}%</span>
+                    </div>
+                    <mat-progress-bar 
+                      mode="determinate" 
+                      [value]="getProgressPercentage(stat)"
+                      [color]="'primary'">
+                    </mat-progress-bar>
                   </div>
-                  <mat-progress-bar 
-                    mode="determinate" 
-                    [value]="getProgressPercentage(stat)"
-                    [color]="'primary'">
-                  </mat-progress-bar>
                 </div>
               </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
+            </mat-card-content>
+          </mat-card>
+        </div>
       </div>
 
-      <!-- User Statistics Charts -->
-      <div class="user-graph-section">
-        <div class="charts-row">
-          <!-- Left Half - User Distribution Chart -->
-          <mat-card class="chart-card modern-card">
-            <mat-card-header>
-              <mat-card-title>
-                <mat-icon>donut_large</mat-icon>
-                User Distribution
-              </mat-card-title>
-              <mat-card-subtitle>Total Users: {{ allUsers.length }}</mat-card-subtitle>
-            </mat-card-header>
+      <!-- Second Row: System Statistics -->
+      <div class="stats-section">
+        <h3 class="section-title">System Management Statistics</h3>
+        <div class="stats-grid">
+          <mat-card *ngFor="let stat of systemStats" class="stat-card" [style.border-left]="'4px solid ' + stat.color">
             <mat-card-content>
-              <div class="chart-container">
-                <!-- Donut Chart -->
-                <div class="donut-chart-wrapper">
-                  <div class="donut-chart">
-                    <!-- Center Info -->
-                    <div class="chart-center">
-                      <span class="total-number">{{ allUsers.length }}</span>
-                      <span class="total-label">Total Users</span>
-                    </div>
-                    
-                    <!-- SVG Donut Chart -->
-                    <svg width="220" height="220" viewBox="0 0 200 200" class="donut-svg">
-                      <!-- Background Circle -->
-                      <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="20"></circle>
-                      
-                      <!-- Students Arc -->
-                      <circle cx="100" cy="100" r="80" fill="none" 
-                              stroke="#2196F3" 
-                              stroke-width="20"
-                              [attr.stroke-dasharray]="getStudentsStrokeDashArray()"
-                              class="donut-segment students-segment"
-                              transform="rotate(-90 100 100)">
-                      </circle>
-                      
-                      <!-- Teachers Arc -->
-                      <circle cx="100" cy="100" r="80" fill="none" 
-                              stroke="#4CAF50" 
-                              stroke-width="20"
-                              [attr.stroke-dasharray]="getTeachersStrokeDashArray()"
-                              class="donut-segment teachers-segment"
-                              [attr.transform]="'rotate(' + getTeachersRotation() + ' 100 100)'">
-                      </circle>
-                      
-                      <!-- Admins Arc -->
-                      <circle cx="100" cy="100" r="80" fill="none" 
-                              stroke="#FF9800" 
-                              stroke-width="20"
-                              [attr.stroke-dasharray]="getAdminsStrokeDashArray()"
-                              class="donut-segment admins-segment"
-                              [attr.transform]="'rotate(' + getAdminsRotation() + ' 100 100)'">
-                      </circle>
-                    </svg>
-                  </div>
+              <div class="stat-content">
+                <div class="stat-icon" [style.background-color]="stat.color">
+                  <mat-icon>{{ stat.icon }}</mat-icon>
+                </div>
+                <div class="stat-info">
+                  <h2>{{ stat.value | number }}</h2>
+                  <p>{{ stat.title }}</p>
+                  <span class="stat-subtitle">{{ stat.subtitle }}</span>
+                  <span class="stat-growth" [style.color]="stat.color">{{ stat.growth }}</span>
                   
-                  <!-- Legend with Percentages -->
-                  <div class="chart-legend-compact">
-                    <div class="legend-item-compact">
-                      <div class="legend-color students-color"></div>
-                      <span class="legend-label-compact">Students</span>
-                      <span class="legend-percentage">{{ getPercentage('students') }}%</span>
+                  <!-- Progress Bar -->
+                  <div class="progress-container">
+                    <div class="progress-label">
+                      <span>Progress</span>
+                      <span>{{ getProgressPercentage(stat) }}%</span>
                     </div>
-                    <div class="legend-item-compact">
-                      <div class="legend-color teachers-color"></div>
-                      <span class="legend-label-compact">Teachers</span>
-                      <span class="legend-percentage">{{ getPercentage('teachers') }}%</span>
-                    </div>
-                    <div class="legend-item-compact">
-                      <div class="legend-color admins-color"></div>
-                      <span class="legend-label-compact">Admins</span>
-                      <span class="legend-percentage">{{ getPercentage('admins') }}%</span>
-                    </div>
+                    <mat-progress-bar 
+                      mode="determinate" 
+                      [value]="getProgressPercentage(stat)"
+                      [color]="'primary'">
+                    </mat-progress-bar>
                   </div>
                 </div>
               </div>
             </mat-card-content>
           </mat-card>
+        </div>
+      </div>
 
-          <!-- Right Half - User Status Chart -->
-          <mat-card class="chart-card modern-card">
-            <mat-card-header>
-              <mat-card-title>
-                <mat-icon>assessment</mat-icon>
-                User Status
-              </mat-card-title>
-              <mat-card-subtitle>Status Distribution</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="status-chart-container">
-                <!-- Status Donut Chart -->
-                <div class="donut-chart-wrapper">
-                  <div class="donut-chart">
-                    <!-- Center Info -->
-                    <div class="chart-center">
-                      <span class="total-number">{{ allUsers.length }}</span>
-                      <span class="total-label">Total Users</span>
+      <!-- Charts Section -->
+      <div class="charts-section">
+        <!-- User Statistics Charts -->
+        <div class="user-graph-section">
+          <div class="charts-row">
+            <!-- Left Half - User Distribution Chart -->
+            <mat-card class="chart-card modern-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>donut_large</mat-icon>
+                  User Distribution
+                </mat-card-title>
+                <mat-card-subtitle>Total Users: {{ allUsers.length }}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="chart-container">
+                  <!-- Donut Chart -->
+                  <div class="donut-chart-wrapper">
+                    <div class="donut-chart">
+                      <!-- Center Info -->
+                      <div class="chart-center">
+                        <span class="total-number">{{ allUsers.length }}</span>
+                        <span class="total-label">Total Users</span>
+                      </div>
+                      
+                      <!-- SVG Donut Chart -->
+                      <svg width="220" height="220" viewBox="0 0 200 200" class="donut-svg">
+                        <!-- Background Circle -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="20"></circle>
+                        
+                        <!-- Students Arc -->
+                        <circle cx="100" cy="100" r="80" fill="none" 
+                                stroke="#2196F3" 
+                                stroke-width="20"
+                                [attr.stroke-dasharray]="getStudentsStrokeDashArray()"
+                                class="donut-segment students-segment"
+                                transform="rotate(-90 100 100)">
+                        </circle>
+                        
+                        <!-- Teachers Arc -->
+                        <circle cx="100" cy="100" r="80" fill="none" 
+                                stroke="#4CAF50" 
+                                stroke-width="20"
+                                [attr.stroke-dasharray]="getTeachersStrokeDashArray()"
+                                class="donut-segment teachers-segment"
+                                [attr.transform]="'rotate(' + getTeachersRotation() + ' 100 100)'">
+                        </circle>
+                        
+                        <!-- Admins Arc -->
+                        <circle cx="100" cy="100" r="80" fill="none" 
+                                stroke="#FF9800" 
+                                stroke-width="20"
+                                [attr.stroke-dasharray]="getAdminsStrokeDashArray()"
+                                class="donut-segment admins-segment"
+                                [attr.transform]="'rotate(' + getAdminsRotation() + ' 100 100)'">
+                        </circle>
+                      </svg>
                     </div>
                     
-                    <!-- SVG Status Donut Chart -->
-                    <svg width="220" height="220" viewBox="0 0 200 200" class="donut-svg">
-                      <!-- Background Circle -->
-                      <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="20"></circle>
+                    <!-- Legend with Percentages -->
+                    <div class="chart-legend-compact">
+                      <div class="legend-item-compact">
+                        <div class="legend-color students-color"></div>
+                        <span class="legend-label-compact">Students</span>
+                        <span class="legend-percentage">{{ getPercentage('students') }}%</span>
+                      </div>
+                      <div class="legend-item-compact">
+                        <div class="legend-color teachers-color"></div>
+                        <span class="legend-label-compact">Teachers</span>
+                        <span class="legend-percentage">{{ getPercentage('teachers') }}%</span>
+                      </div>
+                      <div class="legend-item-compact">
+                        <div class="legend-color admins-color"></div>
+                        <span class="legend-label-compact">Admins</span>
+                        <span class="legend-percentage">{{ getPercentage('admins') }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Right Half - User Status Chart -->
+            <mat-card class="chart-card modern-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>assessment</mat-icon>
+                  User Status
+                </mat-card-title>
+                <mat-card-subtitle>Status Distribution</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="status-chart-container">
+                  <!-- Status Donut Chart -->
+                  <div class="donut-chart-wrapper">
+                    <div class="donut-chart">
+                      <!-- Center Info -->
+                      <div class="chart-center">
+                        <span class="total-number">{{ allUsers.length }}</span>
+                        <span class="total-label">Total Users</span>
+                      </div>
                       
-                      <!-- Active Users Arc -->
-                      <circle cx="100" cy="100" r="80" fill="none" 
-                              stroke="#4CAF50" 
-                              stroke-width="20"
-                              [attr.stroke-dasharray]="getActiveStrokeDashArray()"
-                              class="donut-segment active-segment"
-                              transform="rotate(-90 100 100)"
-                              *ngIf="getActiveUsersCount() > 0">
-                      </circle>
-                      
-                      <!-- Pending Users Arc -->
-                      <circle cx="100" cy="100" r="80" fill="none" 
-                              stroke="#FF9800" 
-                              stroke-width="20"
-                              [attr.stroke-dasharray]="getPendingStrokeDashArray()"
-                              class="donut-segment pending-segment"
-                              [attr.transform]="'rotate(' + getPendingRotation() + ' 100 100)'"
-                              *ngIf="getPendingUsersCount() > 0">
-                      </circle>
-                      
-                      <!-- Rejected Users Arc -->
-                      <circle cx="100" cy="100" r="80" fill="none" 
-                              stroke="#f44336" 
-                              stroke-width="20"
-                              [attr.stroke-dasharray]="getRejectedStrokeDashArray()"
-                              class="donut-segment rejected-segment"
-                              [attr.transform]="'rotate(' + getRejectedRotation() + ' 100 100)'"
-                              *ngIf="getRejectedUsersCount() > 0">
-                      </circle>
-                    </svg>
+                      <!-- SVG Status Donut Chart -->
+                      <svg width="220" height="220" viewBox="0 0 200 200" class="donut-svg">
+                        <!-- Background Circle -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="20"></circle>
+                        
+                        <!-- Active Users Arc -->
+                        <circle cx="100" cy="100" r="80" fill="none" 
+                                stroke="#4CAF50" 
+                                stroke-width="20"
+                                [attr.stroke-dasharray]="getActiveStrokeDashArray()"
+                                class="donut-segment active-segment"
+                                transform="rotate(-90 100 100)"
+                                *ngIf="getActiveUsersCount() > 0">
+                        </circle>
+                        
+                        <!-- Pending Users Arc -->
+                        <circle cx="100" cy="100" r="80" fill="none" 
+                                stroke="#FF9800" 
+                                stroke-width="20"
+                                [attr.stroke-dasharray]="getPendingStrokeDashArray()"
+                                class="donut-segment pending-segment"
+                                [attr.transform]="'rotate(' + getPendingRotation() + ' 100 100)'"
+                                *ngIf="getPendingUsersCount() > 0">
+                        </circle>
+                        
+                        <!-- Rejected Users Arc -->
+                        <circle cx="100" cy="100" r="80" fill="none" 
+                                stroke="#f44336" 
+                                stroke-width="20"
+                                [attr.stroke-dasharray]="getRejectedStrokeDashArray()"
+                                class="donut-segment rejected-segment"
+                                [attr.transform]="'rotate(' + getRejectedRotation() + ' 100 100)'"
+                                *ngIf="getRejectedUsersCount() > 0">
+                        </circle>
+                      </svg>
+                    </div>
+                    
+                    <!-- Status Legend with Percentages -->
+                    <div class="chart-legend-compact">
+                      <div class="legend-item-compact">
+                        <div class="legend-color active-color"></div>
+                        <span class="legend-label-compact">Active</span>
+                        <span class="legend-percentage">{{ getStatusPercentage('active') }}%</span>
+                      </div>
+                      <div class="legend-item-compact" *ngIf="getPendingUsersCount() > 0">
+                        <div class="legend-color pending-color"></div>
+                        <span class="legend-label-compact">Pending</span>
+                        <span class="legend-percentage">{{ getStatusPercentage('pending') }}%</span>
+                      </div>
+                      <div class="legend-item-compact" *ngIf="getRejectedUsersCount() > 0">
+                        <div class="legend-color rejected-color"></div>
+                        <span class="legend-label-compact">Rejected</span>
+                        <span class="legend-percentage">{{ getStatusPercentage('rejected') }}%</span>
+                      </div>
+                    </div>
                   </div>
                   
-                  <!-- Status Legend with Percentages -->
-                  <div class="chart-legend-compact">
-                    <div class="legend-item-compact">
-                      <div class="legend-color active-color"></div>
-                      <span class="legend-label-compact">Active</span>
-                      <span class="legend-percentage">{{ getStatusPercentage('active') }}%</span>
+                  <!-- Status Summary Cards -->
+                  <div class="status-cards">
+                    <div class="status-card active-card">
+                      <mat-icon>check_circle</mat-icon>
+                      <span class="status-count">{{ getActiveUsersCount() }}</span>
+                      <span class="status-label">Active</span>
                     </div>
-                    <div class="legend-item-compact" *ngIf="getPendingUsersCount() > 0">
-                      <div class="legend-color pending-color"></div>
-                      <span class="legend-label-compact">Pending</span>
-                      <span class="legend-percentage">{{ getStatusPercentage('pending') }}%</span>
+                    <div class="status-card pending-card">
+                      <mat-icon>schedule</mat-icon>
+                      <span class="status-count">{{ getPendingUsersCount() }}</span>
+                      <span class="status-label">Pending</span>
                     </div>
-                    <div class="legend-item-compact" *ngIf="getRejectedUsersCount() > 0">
-                      <div class="legend-color rejected-color"></div>
-                      <span class="legend-label-compact">Rejected</span>
-                      <span class="legend-percentage">{{ getStatusPercentage('rejected') }}%</span>
+                    <div class="status-card rejected-card">
+                      <mat-icon>cancel</mat-icon>
+                      <span class="status-count">{{ getRejectedUsersCount() }}</span>
+                      <span class="status-label">Rejected</span>
                     </div>
                   </div>
                 </div>
-                
-                <!-- Status Summary Cards -->
-                <div class="status-cards">
-                  <div class="status-card active-card">
-                    <mat-icon>check_circle</mat-icon>
-                    <span class="status-count">{{ getActiveUsersCount() }}</span>
-                    <span class="status-label">Active</span>
-                  </div>
-                  <div class="status-card pending-card">
-                    <mat-icon>schedule</mat-icon>
-                    <span class="status-count">{{ getPendingUsersCount() }}</span>
-                    <span class="status-label">Pending</span>
-                  </div>
-                  <div class="status-card rejected-card">
-                    <mat-icon>cancel</mat-icon>
-                    <span class="status-count">{{ getRejectedUsersCount() }}</span>
-                    <span class="status-label">Rejected</span>
-                  </div>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+              </mat-card-content>
+            </mat-card>
+          </div>
         </div>
       </div>
 

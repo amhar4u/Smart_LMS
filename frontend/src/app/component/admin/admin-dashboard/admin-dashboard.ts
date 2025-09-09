@@ -8,9 +8,13 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { Subject } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of, forkJoin } from 'rxjs';
 
 import { UserManagementService, User, UsersResponse } from '../../../services/user-management.service';
+import { DepartmentService, Department } from '../../../services/department.service';
+import { CourseService, Course } from '../../../services/course.service';
+import { BatchService, Batch } from '../../../services/batch.service';
+import { SubjectService, Subject as SubjectModel } from '../../../services/subject.service';
 import { AdminLayout } from '../admin-layout/admin-layout';
 
 interface DashboardStat {
@@ -61,8 +65,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   admins: User[] = [];
   allUsers: User[] = [];
   
-  // Dashboard statistics
-  dashboardStats: DashboardStat[] = [];
+  // New data properties
+  departments: Department[] = [];
+  courses: Course[] = [];
+  batches: Batch[] = [];
+  subjects: SubjectModel[] = [];
+  
+  // Dashboard statistics - organized into two rows
+  userStats: DashboardStat[] = [];
+  systemStats: DashboardStat[] = [];
   
   // Recent data
   recentStudents: User[] = [];
@@ -78,7 +89,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   
   semesterDistribution: { [key: string]: number } = {};
 
-  constructor(private userManagementService: UserManagementService) {}
+  constructor(
+    private userManagementService: UserManagementService,
+    private departmentService: DepartmentService,
+    private courseService: CourseService,
+    private batchService: BatchService,
+    private subjectService: SubjectService
+  ) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -93,15 +110,52 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   loadDashboardData(): void {
     this.isLoading = true;
     
-    this.userManagementService.getAllUsers().pipe(
-      takeUntil(this.destroy$),
-      catchError(error => {
-        console.error('Error loading users:', error);
-        return of({ users: [], total: 0 });
-      })
+    // Load all data using forkJoin for parallel requests
+    forkJoin({
+      users: this.userManagementService.getAllUsers().pipe(
+        catchError(error => {
+          console.error('Error loading users:', error);
+          return of({ users: [], total: 0 });
+        })
+      ),
+      departments: this.departmentService.getDepartments().pipe(
+        catchError(error => {
+          console.error('Error loading departments:', error);
+          return of({ success: false, data: [], count: 0 });
+        })
+      ),
+      courses: this.courseService.getCoursesForAdmin(1, 1000).pipe(
+        catchError(error => {
+          console.error('Error loading courses:', error);
+          return of({ success: false, data: { courses: [], pagination: { totalItems: 0 } } });
+        })
+      ),
+      batches: this.batchService.getBatches().pipe(
+        catchError(error => {
+          console.error('Error loading batches:', error);
+          return of({ success: false, data: [], pagination: { totalItems: 0 } });
+        })
+      ),
+      subjects: this.subjectService.getAllSubjects().pipe(
+        catchError(error => {
+          console.error('Error loading subjects:', error);
+          return of({ success: false, data: [], count: 0 });
+        })
+      )
+    }).pipe(
+      takeUntil(this.destroy$)
     ).subscribe(response => {
-      this.allUsers = response.users || [];
+      // Process user data
+      this.allUsers = response.users.users || [];
       this.categorizeUsers();
+      
+      // Process system data
+      this.departments = response.departments.data || [];
+      this.courses = response.courses.data?.courses || [];
+      this.batches = response.batches.data || [];
+      this.subjects = response.subjects.data || [];
+      
+      // Calculate all statistics and distributions
       this.calculateStatistics();
       this.calculateDistributions();
       this.getRecentUsers();
@@ -120,7 +174,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const activeUsers = this.allUsers.filter(user => user.isActive).length;
     const pendingUsers = this.allUsers.filter(user => !user.isActive).length;
     
-    this.dashboardStats = [
+    // First row: User-related statistics
+    this.userStats = [
       {
         title: 'Total Students',
         value: this.students.length,
@@ -130,44 +185,64 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         growth: this.getRecentGrowth(this.students)
       },
       {
-        title: 'Total Teachers',
+        title: 'Total Lecturers',
         value: this.teachers.length,
         icon: 'person',
         color: '#4CAF50',
-        subtitle: 'Active teachers',
+        subtitle: 'Active lecturers',
         growth: this.getRecentGrowth(this.teachers)
       },
       {
-        title: 'Total Admins',
-        value: this.admins.length,
-        icon: 'admin_panel_settings',
+        title: 'Pending Approvals',
+        value: pendingUsers,
+        icon: 'pending',
         color: '#FF9800',
-        subtitle: 'System administrators',
-        growth: this.getRecentGrowth(this.admins)
+        subtitle: 'Awaiting approval',
+        growth: `${pendingUsers} users`
       },
       {
-        title: 'Active Users',
+        title: 'Approved Users',
         value: activeUsers,
         icon: 'verified_user',
         color: '#4CAF50',
         subtitle: 'Currently active',
         growth: `${((activeUsers / totalUsers) * 100).toFixed(1)}%`
-      },
+      }
+    ];
+
+    // Second row: System-related statistics
+    this.systemStats = [
       {
-        title: 'Pending Approval',
-        value: pendingUsers,
-        icon: 'pending',
-        color: '#FF5722',
-        subtitle: 'Awaiting approval',
-        growth: `${pendingUsers} users`
-      },
-      {
-        title: 'Total Users',
-        value: totalUsers,
-        icon: 'groups',
+        title: 'Total Departments',
+        value: this.departments.length,
+        icon: 'domain',
         color: '#9C27B0',
-        subtitle: 'All system users',
-        growth: '100%'
+        subtitle: 'Academic departments',
+        growth: this.departments.filter(d => d.isActive).length + ' active'
+      },
+      {
+        title: 'Total Courses',
+        value: this.courses.length,
+        icon: 'book',
+        color: '#FF5722',
+        subtitle: 'Available courses',
+        growth: this.courses.filter(c => c.isActive).length + ' active'
+      },
+      {
+        title: 'Total Batches',
+        value: this.batches.length,
+        icon: 'groups',
+        color: '#607D8B',
+        subtitle: 'Student batches',
+        growth: this.batches.filter(b => b.status === 'active').length + ' active'
+      },
+      {
+        title: 'Total Subjects',
+        value: this.subjects.length,
+        icon: 'subject',
+        color: '#3F51B5',
+        subtitle: 'Course subjects',
+        growth: this.subjects.filter(s => s.isActive).length + ' active'
       }
     ];
   }
@@ -294,11 +369,42 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.loadDashboardData();
   }
 
-  // New methods for progress bars and graph
+  // Progress percentage calculation based on filtered count / total count * 100
   getProgressPercentage(stat: DashboardStat): number {
-    const maxValue = Math.max(...this.dashboardStats.map(s => s.value));
-    if (maxValue === 0) return 0;
-    return Math.round((stat.value / maxValue) * 100);
+    switch (stat.title) {
+      case 'Total Students':
+        return this.allUsers.length > 0 ? Math.round((this.students.length / this.allUsers.length) * 100) : 0;
+      
+      case 'Total Lecturers':
+        return this.allUsers.length > 0 ? Math.round((this.teachers.length / this.allUsers.length) * 100) : 0;
+      
+      case 'Pending Approvals':
+        const pendingUsers = this.allUsers.filter(user => !user.isActive).length;
+        return this.allUsers.length > 0 ? Math.round((pendingUsers / this.allUsers.length) * 100) : 0;
+      
+      case 'Approved Users':
+        const activeUsers = this.allUsers.filter(user => user.isActive).length;
+        return this.allUsers.length > 0 ? Math.round((activeUsers / this.allUsers.length) * 100) : 0;
+      
+      case 'Total Departments':
+        const activeDepartments = this.departments.filter(d => d.isActive).length;
+        return this.departments.length > 0 ? Math.round((activeDepartments / this.departments.length) * 100) : 0;
+      
+      case 'Total Courses':
+        const activeCourses = this.courses.filter(c => c.isActive).length;
+        return this.courses.length > 0 ? Math.round((activeCourses / this.courses.length) * 100) : 0;
+      
+      case 'Total Batches':
+        const activeBatches = this.batches.filter(b => b.status === 'active').length;
+        return this.batches.length > 0 ? Math.round((activeBatches / this.batches.length) * 100) : 0;
+      
+      case 'Total Subjects':
+        const activeSubjects = this.subjects.filter(s => s.isActive).length;
+        return this.subjects.length > 0 ? Math.round((activeSubjects / this.subjects.length) * 100) : 0;
+      
+      default:
+        return 0;
+    }
   }
 
   getBarHeight(userType: string): number {
