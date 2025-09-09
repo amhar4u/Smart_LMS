@@ -320,3 +320,57 @@
   --surface-color: #fafafa;
   --border-color: #e0e0e0;
 }
+
+/* Optimized Table Column Styles */
+.description-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.contact-item mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.no-contact {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* Responsive adjustments for optimized table */
+@media (max-width: 1200px) {
+  .description-text {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-info {
+    font-size: 11px;
+  }
+  
+  .description-text {
+    max-width: 120px;
+  }
+}

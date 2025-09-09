@@ -17,7 +17,6 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { DepartmentService, Department } from '../../../services/department.service';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog';
-import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-manage-departments',
@@ -38,8 +37,7 @@ import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading
     MatPaginatorModule,
     MatSortModule,
     MatTooltipModule,
-    MatChipsModule,
-    LoadingSpinnerComponent
+    MatChipsModule
   ],
   templateUrl: './manage-departments.component.html',
   styleUrls: ['./manage-departments.component.css']
@@ -47,7 +45,7 @@ import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading
 export class ManageDepartmentsComponent implements OnInit {
   departments: Department[] = [];
   filteredDepartments: Department[] = [];
-  displayedColumns: string[] = ['name', 'code', 'faculty', 'establishedYear', 'teacherCount', 'studentCount', 'isActive', 'actions'];
+  displayedColumns: string[] = ['code', 'name', 'description', 'createdAt', 'status', 'actions'];
   
   // Pagination
   pageSize = 10;
