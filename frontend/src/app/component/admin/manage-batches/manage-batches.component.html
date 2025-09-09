@@ -1,0 +1,161 @@
+<app-admin-layout>
+  <!-- <app-admin-layout> -->
+  <div class="manage-batches-container">
+    <mat-card class="header-card">
+      <mat-card-header>
+        <div class="header-content">
+          <div class="title-section">
+            <mat-icon class="header-icon">groups</mat-icon>
+            <div>
+              <h1>Manage Batches</h1>
+              <p>Create, edit, and manage student batches for the Learning Management System</p>
+            </div>
+          </div>
+        </div>
+      </mat-card-header>
+    </mat-card>
+
+    <!-- Search and Filter Section -->
+    <mat-card class="search-filter-card">
+      <mat-card-content>
+        <form [formGroup]="filterForm" class="search-filter-form">
+          <div class="search-row">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search batches</mat-label>
+              <input matInput 
+                     placeholder="Search by name, code, or description"
+                     formControlName="search">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+            
+            <span class="filter-label">Filter by Department</span>
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>All Departments</mat-label>
+              <mat-select formControlName="department">
+                <mat-option value="">All Departments</mat-option>
+                <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                  {{ dept.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="action-buttons">
+              <button mat-raised-button color="primary" (click)="loadBatches()" class="search-button">
+                <mat-icon>search</mat-icon>
+                Search
+              </button>
+              
+              <button mat-stroked-button (click)="clearFilters()" class="clear-button">
+                <mat-icon>clear</mat-icon>
+                Clear
+              </button>
+              
+              <button mat-raised-button color="primary" (click)="openCreateBatchDialog()" class="add-button">
+                <mat-icon>add</mat-icon>
+                Add Batch
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Data Table -->
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>list</mat-icon>
+          Batches List ({{ totalItems }})
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="batches" class="batches-table">
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Batch Name</th>
+              <td mat-cell *matCellDef="let batch">{{ batch.name }}</td>
+            </ng-container>
+
+            <!-- Course Column -->
+            <ng-container matColumnDef="course">
+              <th mat-header-cell *matHeaderCellDef>Course</th>
+              <td mat-cell *matCellDef="let batch">{{ batch.course?.name || 'N/A' }}</td>
+            </ng-container>
+
+            <!-- Department Column -->
+            <ng-container matColumnDef="department">
+              <th mat-header-cell *matHeaderCellDef>Department</th>
+              <td mat-cell *matCellDef="let batch">{{ batch.department?.name || 'N/A' }}</td>
+            </ng-container>
+
+            <!-- Year Column -->
+            <ng-container matColumnDef="year">
+              <th mat-header-cell *matHeaderCellDef>Year Range</th>
+              <td mat-cell *matCellDef="let batch">{{ formatYearRange(batch) }}</td>
+            </ng-container>
+
+            <!-- Enrollment Column -->
+            <ng-container matColumnDef="enrollment">
+              <th mat-header-cell *matHeaderCellDef>Enrollment</th>
+              <td mat-cell *matCellDef="let batch">{{ batch.currentEnrollment || 0 }} / {{ batch.maxStudents || 0 }}</td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let batch">{{ batch.status | titlecase }}</td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let batch">
+                <button mat-icon-button color="primary" (click)="openEditBatchDialog(batch)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteBatch(batch)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+
+          <!-- No Data Message -->
+          <div *ngIf="batches.length === 0" class="no-data">
+            <mat-icon>group_off</mat-icon>
+            <p>No batches found</p>
+            <button mat-raised-button color="primary" (click)="openCreateBatchDialog()">
+              <mat-icon>add</mat-icon>
+              Add First Batch
+            </button>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-container" *ngIf="batches.length > 0">
+            <div class="pagination-info">
+              <span>Items per page:</span>
+              <mat-select [value]="pageSize" (selectionChange)="pageSize = $event.value; loadBatches()">
+                <mat-option value="10">10</mat-option>
+                <mat-option value="25">25</mat-option>
+                <mat-option value="50">50</mat-option>
+              </mat-select>
+              <span>{{ ((currentPage - 1) * pageSize) + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }}</span>
+            </div>
+            <mat-paginator
+              [length]="totalItems"
+              [pageSize]="pageSize"
+              [pageIndex]="currentPage - 1"
+              [pageSizeOptions]="[10, 25, 50]"
+              (page)="onPageChange($event)"
+              showFirstLastButtons>
+            </mat-paginator>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</app-admin-layout>
