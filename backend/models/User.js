@@ -59,6 +59,11 @@ const userSchema = new mongoose.Schema({
     ref: 'Course',
     required: function() { return this.role === 'student'; }
   },
+  batch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
+    required: function() { return this.role === 'student'; }
+  },
   semester: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Semester',

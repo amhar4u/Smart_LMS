@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Batch = require('../models/Batch');
+const Course = require('../models/Course');
+const Department = require('../models/Department');
 const authenticate = require('../middleware/auth');
 
 const router = express.Router();
@@ -41,14 +44,18 @@ router.post('/register/student', [
   body('studentId')
     .optional()
     .trim(),
+  body('department')
+    .trim()
+    .notEmpty()
+    .withMessage('Department is required'),
   body('course')
     .trim()
     .notEmpty()
     .withMessage('Course is required'),
-  body('semester')
+  body('batch')
     .trim()
     .notEmpty()
-    .withMessage('Semester is required')
+    .withMessage('Batch is required')
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -68,8 +75,9 @@ router.post('/register/student', [
       password,
       phone,
       studentId,
+      department,
       course,
-      semester
+      batch: batchId
     } = req.body;
 
     // Check if user already exists
@@ -78,6 +86,50 @@ router.post('/register/student', [
       return res.status(400).json({
         success: false,
         message: 'User already exists with this email address'
+      });
+    }
+
+    // Verify batch exists and has available slots
+    const batch = await Batch.findById(batchId)
+      .populate('currentSemester')
+      .populate('course')
+      .populate('department');
+
+    if (!batch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected batch not found'
+      });
+    }
+
+    if (!batch.hasAvailableSlots()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected batch is full. Please choose another batch.'
+      });
+    }
+
+    // Verify course and department match the batch
+    if (batch.course._id.toString() !== course) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected course does not match the batch course'
+      });
+    }
+
+    if (batch.department._id.toString() !== department) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected department does not match the batch department'
+      });
+    }
+
+    // Get current semester from batch (automatic assignment)
+    const currentSemester = batch.currentSemester;
+    if (!currentSemester) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected batch does not have a current semester assigned. Please contact administrator.'
       });
     }
 
@@ -90,11 +142,16 @@ router.post('/register/student', [
       phone,
       role: 'student',
       studentId: studentId || undefined,
+      department,
       course,
-      semester
+      batch: batchId,
+      semester: currentSemester._id
     });
 
     await user.save();
+
+    // Increment batch enrollment
+    await batch.incrementEnrollment();
 
     // Generate token
     const token = generateToken(user._id);
