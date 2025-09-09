@@ -24,6 +24,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/departments', require('./routes/departments'));
 app.use('/api/semesters', require('./routes/semesters'));
+app.use('/api/batches', require('./routes/batches'));
 
 // Test route for auth
 app.get('/api/test', (req, res) => {
