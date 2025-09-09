@@ -27,7 +27,7 @@ export interface StudentRegistration {
   studentId?: string;
   department: string;
   course: string;
-  semester: string;
+  batch: string;
 }
 
 export interface TeacherRegistration {

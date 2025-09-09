@@ -9,6 +9,11 @@ export interface Semester {
   code: string;
   year: number;
   type: 'fall' | 'spring' | 'summer';
+  batch: {
+    _id: string;
+    name: string;
+    code: string;
+  } | string;
   startDate: Date;
   endDate: Date;
   isActive: boolean;

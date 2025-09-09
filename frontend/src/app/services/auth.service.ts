@@ -74,7 +74,7 @@ export class AuthService {
       phone: registration.phone,
       studentId: registration.studentId || '',
       course: registration.course || '',
-      semester: registration.semester || ''
+      batch: registration.batch || ''
     };
 
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/register/student`, payload).pipe(
