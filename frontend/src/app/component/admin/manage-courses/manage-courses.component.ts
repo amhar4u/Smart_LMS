@@ -52,7 +52,7 @@ export class ManageCoursesComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  displayedColumns: string[] = ['code', 'name', 'department', 'description', 'isActive', 'createdAt', 'actions'];
+  displayedColumns: string[] = ['code', 'name', 'department', 'credits', 'status', 'actions'];
   dataSource = new MatTableDataSource<Course>();
   
   // Pagination

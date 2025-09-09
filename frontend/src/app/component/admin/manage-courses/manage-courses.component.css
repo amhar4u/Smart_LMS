@@ -433,3 +433,27 @@ mat-chip {
 .warning-text {
   color: #ff9800;
 }
+
+/* Credits Badge Styling */
+.credits-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Credits badge styling */
+.credits-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
