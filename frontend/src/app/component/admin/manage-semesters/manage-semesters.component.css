@@ -1,0 +1,414 @@
+.manage-semesters-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #f8f9fa;
+  min-height: calc(100vh - 100px);
+}
+
+.header-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
+
+.header-card .mat-mdc-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  margin: -1px -1px 0 -1px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.title-section h1 {
+  margin: 0;
+  color: white;
+  font-weight: 500;
+  font-size: 28px;
+}
+
+.title-section p {
+  margin: 4px 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+/* Search and Filter Styles */
+.search-filter-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
+
+.search-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  
+}
+
+.search-section {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  flex: 2;
+  min-width: 250px;
+  
+}
+
+.search-button, .clear-button, .add-button {
+  height: 56px;
+  border-radius: 8px;
+  font-weight: 500;
+  text-transform: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-button {
+  min-width: 100px;
+  padding: 0 16px;
+}
+
+.clear-button {
+  min-width: 80px;
+  padding: 0 16px;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.add-button {
+  min-width: 140px;
+  padding: 0 20px;
+}
+
+.clear-button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Filters Styles */
+.filters-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
+
+.filters-card .mat-mdc-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  margin: -1px -1px 0 -1px;
+}
+
+.filters-card .mat-mdc-card-title {
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters-form {
+  margin-top: 16px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.filter-field {
+  width: 100%;
+}
+/* List Card Styles */
+.list-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
+
+.list-card .mat-mdc-card-header {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  margin: -1px -1px 0 -1px;
+}
+
+.list-card .mat-mdc-card-title {
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 0 0 12px 12px;
+  border: none;
+}
+
+.semesters-table {
+  width: 100%;
+  background: white;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.semesters-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  padding: 16px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.semesters-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.semesters-table tr:hover {
+  background-color: #f8f9fa;
+  transition: background-color 0.3s ease;
+}
+
+.semesters-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Chip Styles */
+.mat-mdc-chip {
+  border-radius: 16px;
+  font-weight: 500;
+  font-size: 0.75rem;
+  margin-right: 4px;
+}
+
+.type-Regular {
+  background-color: #007bff;
+  color: white;
+}
+
+.type-Summer {
+  background-color: #ffd23f;
+  color: #333;
+}
+
+.type-Winter {
+  background-color: #6f42c1;
+  color: white;
+}
+
+.status-active {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-inactive {
+  background-color: #6c757d;
+  color: white;
+}
+
+.status-current {
+  background-color: #dc3545;
+  color: white;
+  margin-left: 4px;
+}
+
+/* Pagination Styles */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.pagination-info mat-select {
+  min-width: 60px;
+}
+
+/* Loading and No Data Styles */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.no-data mat-icon {
+  font-size: 4rem;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.no-data p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .manage-semesters-container {
+    padding: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .search-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .search-field {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .search-button, .clear-button, .add-button {
+    width: 100%;
+    min-width: auto;
+    height: 48px;
+  }
+  
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .pagination-container {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .search-section {
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .search-field {
+    min-width: 250px;
+    flex: 2;
+  }
+  
+  .search-button, .clear-button, .add-button {
+    height: 52px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .search-section {
+    gap: 20px;
+    align-items: center;
+  }
+  
+  .search-field {
+    flex: 2;
+    min-width: 300px;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .manage-semesters-container {
+    padding: 16px;
+  }
+  
+  .stats-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+}
+
+/* Material Theme Overrides */
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.mat-toolbar {
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}

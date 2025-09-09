@@ -6,15 +6,17 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatIconModule } from '@angular/material/icon';
 
 import { Semester } from '../../../services/semester.service';
+import { Batch } from '../../../services/batch.service';
 
 export interface SemesterDialogData {
   semester?: Semester;
+  batches: Batch[];
 }
 
 @Component({
@@ -28,10 +30,10 @@ export interface SemesterDialogData {
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
-    MatSlideToggleModule,
-    MatIconModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatSlideToggleModule,
+    MatIconModule
   ],
   template: `
     <div class="semester-dialog">
@@ -45,40 +47,50 @@ export interface SemesterDialogData {
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Semester Name</mat-label>
-              <input matInput formControlName="name" placeholder="Enter semester name">
+              <input matInput formControlName="name" placeholder="e.g., Fall 2024">
               <mat-error>{{ getErrorMessage('name') }}</mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Semester Code</mat-label>
-              <input matInput formControlName="code" placeholder="Enter semester code" style="text-transform: uppercase;">
+              <input matInput formControlName="code" placeholder="e.g., F24" style="text-transform: uppercase;">
               <mat-error>{{ getErrorMessage('code') }}</mat-error>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Year</mat-label>
-              <input matInput formControlName="year" type="number" placeholder="Enter year" min="2020" max="2030">
-              <mat-error>{{ getErrorMessage('year') }}</mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="form-field">
               <mat-label>Semester Type</mat-label>
               <mat-select formControlName="type">
-                <mat-option value="fall">Fall Semester</mat-option>
-                <mat-option value="spring">Spring Semester</mat-option>
-                <mat-option value="summer">Summer Semester</mat-option>
+                <mat-option value="fall">Fall</mat-option>
+                <mat-option value="spring">Spring</mat-option>
+                <mat-option value="summer">Summer</mat-option>
               </mat-select>
               <mat-error>{{ getErrorMessage('type') }}</mat-error>
             </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Year</mat-label>
+              <input matInput type="number" formControlName="year" placeholder="2024" min="2020" max="2030">
+              <mat-error>{{ getErrorMessage('year') }}</mat-error>
+            </mat-form-field>
           </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Batch</mat-label>
+            <mat-select formControlName="batch">
+              <mat-option *ngFor="let batch of data.batches" [value]="batch._id">
+                {{ batch.name }}
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('batch') }}</mat-error>
+          </mat-form-field>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Start Date</mat-label>
               <input matInput [matDatepicker]="startPicker" formControlName="startDate">
-              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
               <mat-datepicker #startPicker></mat-datepicker>
               <mat-error>{{ getErrorMessage('startDate') }}</mat-error>
             </mat-form-field>
@@ -86,44 +98,25 @@ export interface SemesterDialogData {
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>End Date</mat-label>
               <input matInput [matDatepicker]="endPicker" formControlName="endDate">
-              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
               <mat-datepicker #endPicker></mat-datepicker>
               <mat-error>{{ getErrorMessage('endDate') }}</mat-error>
             </mat-form-field>
           </div>
 
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Registration Start Date</mat-label>
-              <input matInput [matDatepicker]="regStartPicker" formControlName="registrationStartDate">
-              <mat-datepicker-toggle matSuffix [for]="regStartPicker"></mat-datepicker-toggle>
-              <mat-datepicker #regStartPicker></mat-datepicker>
-              <mat-error>{{ getErrorMessage('registrationStartDate') }}</mat-error>
-            </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description (Optional)</mat-label>
+            <textarea matInput formControlName="description" rows="3" placeholder="Enter semester description"></textarea>
+            <mat-error>{{ getErrorMessage('description') }}</mat-error>
+          </mat-form-field>
 
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Registration End Date</mat-label>
-              <input matInput [matDatepicker]="regEndPicker" formControlName="registrationEndDate">
-              <mat-datepicker-toggle matSuffix [for]="regEndPicker"></mat-datepicker-toggle>
-              <mat-datepicker #regEndPicker></mat-datepicker>
-              <mat-error>{{ getErrorMessage('registrationEndDate') }}</mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="toggle-section">
-            <div class="toggle-row">
-              <mat-slide-toggle formControlName="isActive" color="primary">
-                Active Semester
-              </mat-slide-toggle>
-              <span class="toggle-description">Allow enrollment and course management</span>
-            </div>
-            
-            <div class="toggle-row">
-              <mat-slide-toggle formControlName="isCurrent" color="accent">
-                Current Semester
-              </mat-slide-toggle>
-              <span class="toggle-description">Set as the currently active academic semester</span>
-            </div>
+          <div class="status-toggles">
+            <mat-slide-toggle formControlName="isActive" color="primary">
+              Active Semester
+            </mat-slide-toggle>
+            <mat-slide-toggle formControlName="isCurrent" color="accent">
+              Current Semester
+            </mat-slide-toggle>
           </div>
         </form>
       </mat-dialog-content>
@@ -151,7 +144,7 @@ export interface SemesterDialogData {
     }
 
     .semester-form {
-      min-width: 500px;
+      min-width: 600px;
       padding: 16px 0;
     }
 
@@ -159,7 +152,6 @@ export interface SemesterDialogData {
       display: flex;
       gap: 16px;
       align-items: flex-start;
-      margin-bottom: 8px;
     }
 
     .form-field {
@@ -167,23 +159,15 @@ export interface SemesterDialogData {
       min-width: 200px;
     }
 
-    .toggle-section {
-      padding: 16px 0 8px 0;
-      border-top: 1px solid #e0e0e0;
-      margin-top: 16px;
-    }
-
-    .toggle-row {
+    .status-toggles {
       display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
+      gap: 24px;
+      padding: 16px 0 8px 0;
+      flex-wrap: wrap;
     }
 
-    .toggle-description {
-      color: #666;
-      font-size: 14px;
-      font-style: italic;
+    .full-width {
+      width: 100%;
     }
 
     mat-dialog-actions {
@@ -195,9 +179,9 @@ export interface SemesterDialogData {
       min-width: 120px;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .semester-form {
-        min-width: 320px;
+        min-width: 400px;
       }
 
       .form-row {
@@ -205,10 +189,15 @@ export interface SemesterDialogData {
         gap: 0;
       }
 
-      .toggle-row {
+      .status-toggles {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .semester-form {
+        min-width: 320px;
       }
     }
   `]
@@ -236,27 +225,29 @@ export class SemesterDialogComponent implements OnInit {
         this.data.semester?.code || '', 
         [Validators.required, Validators.minLength(2), Validators.maxLength(10)]
       ],
+      type: [
+        this.data.semester?.type || '', 
+        [Validators.required]
+      ],
       year: [
-        this.data.semester?.year || new Date().getFullYear(),
+        this.data.semester?.year || '', 
         [Validators.required, Validators.min(2020), Validators.max(2030)]
       ],
-      type: [
-        this.data.semester?.type || 'fall',
+      batch: [
+        typeof this.data.semester?.batch === 'object' ? this.data.semester.batch._id : (this.data.semester?.batch || ''), 
         [Validators.required]
       ],
       startDate: [
-        this.data.semester?.startDate || '',
+        this.data.semester?.startDate || '', 
         [Validators.required]
       ],
       endDate: [
-        this.data.semester?.endDate || '',
+        this.data.semester?.endDate || '', 
         [Validators.required]
       ],
-      registrationStartDate: [
-        this.data.semester?.registrationStartDate || ''
-      ],
-      registrationEndDate: [
-        this.data.semester?.registrationEndDate || ''
+      description: [
+        this.data.semester?.description || '', 
+        [Validators.maxLength(500)]
       ],
       isActive: [
         this.data.semester?.isActive !== undefined ? this.data.semester.isActive : true
@@ -272,22 +263,36 @@ export class SemesterDialogComponent implements OnInit {
     if (!field || !field.touched) return '';
 
     if (field.hasError('required')) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+      return `${this.getFieldDisplayName(fieldName)} is required`;
     }
     if (field.hasError('minlength')) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${field.errors?.['minlength']?.requiredLength} characters`;
+      return `${this.getFieldDisplayName(fieldName)} must be at least ${field.errors?.['minlength']?.requiredLength} characters`;
     }
     if (field.hasError('maxlength')) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} cannot exceed ${field.errors?.['maxlength']?.requiredLength} characters`;
+      return `${this.getFieldDisplayName(fieldName)} cannot exceed ${field.errors?.['maxlength']?.requiredLength} characters`;
     }
     if (field.hasError('min')) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${field.errors?.['min']?.min}`;
+      return `Year cannot be earlier than ${field.errors?.['min']?.min}`;
     }
     if (field.hasError('max')) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} cannot exceed ${field.errors?.['max']?.max}`;
+      return `Year cannot be later than ${field.errors?.['max']?.max}`;
     }
 
     return '';
+  }
+
+  private getFieldDisplayName(fieldName: string): string {
+    const fieldMap: { [key: string]: string } = {
+      name: 'Semester name',
+      code: 'Semester code',
+      type: 'Semester type',
+      year: 'Year',
+      batch: 'Batch',
+      startDate: 'Start date',
+      endDate: 'End date',
+      description: 'Description'
+    };
+    return fieldMap[fieldName] || fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
   }
 
   onCancel(): void {

@@ -1,23 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 
 import { SemesterService, Semester } from '../../../services/semester.service';
+import { BatchService, Batch } from '../../../services/batch.service';
+import { DepartmentService, Department } from '../../../services/department.service';
+import { CourseService, Course } from '../../../services/course.service';
+import { SemesterDialogComponent } from './semester-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog';
-import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
+import { AdminLayout } from '../admin-layout/admin-layout';
 
 @Component({
   selector: 'app-manage-semesters',
@@ -26,28 +31,35 @@ import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatTableModule,
     MatCardModule,
+    MatTableModule,
     MatButtonModule,
     MatIconModule,
-    MatDialogModule,
-    MatSnackBarModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatPaginatorModule,
     MatSortModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatDialogModule,
     MatTooltipModule,
     MatChipsModule,
-    LoadingSpinnerComponent
+    AdminLayout
   ],
   templateUrl: './manage-semesters.component.html',
   styleUrls: ['./manage-semesters.component.css']
 })
 export class ManageSemestersComponent implements OnInit {
+  Math = Math; // For template usage
+  
   semesters: Semester[] = [];
   filteredSemesters: Semester[] = [];
-  displayedColumns: string[] = ['code', 'name', 'year', 'type', 'duration', 'status', 'current', 'actions'];
+  batches: Batch[] = [];
+  departments: Department[] = [];
+  courses: Course[] = [];
+  
+  displayedColumns: string[] = ['name', 'code', 'batch', 'type', 'year', 'startDate', 'endDate', 'isActive', 'actions'];
   
   // Pagination
   pageSize = 10;
@@ -56,54 +68,49 @@ export class ManageSemestersComponent implements OnInit {
   
   // Search and Filter
   searchTerm = '';
-  selectedDuration = '';
-  durations: string[] = ['4 months', '5 months', '6 months', 'Custom'];
+  selectedDepartment = '';
+  selectedCourse = '';
+  selectedBatch = '';
+  selectedType = '';
+  selectedYear = '';
   
   // Form
-  semesterForm!: FormGroup;
-  isEditing = false;
-  editingSemesterId: string | null = null;
-  showForm = false;
+  filterForm!: FormGroup;
   
   // Loading states
   isLoading = false;
-  isSubmitting = false;
 
   constructor(
     private semesterService: SemesterService,
-    private dialog: MatDialog,
+    private batchService: BatchService,
+    private departmentService: DepartmentService,
+    private courseService: CourseService,
+    private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private fb: FormBuilder
+    private dialog: MatDialog
   ) {
-    this.initializeForm();
+    this.initializeFilterForm();
   }
 
   ngOnInit(): void {
     this.loadSemesters();
+    this.loadDepartments();
+    this.loadBatches();
   }
 
-  initializeForm(): void {
-    this.semesterForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
-      order: ['', [Validators.required, Validators.min(1), Validators.max(20)]],
-      description: ['', [Validators.maxLength(200)]],
-      duration: ['6 months', Validators.required],
-      creditRange: this.fb.group({
-        min: [12, [Validators.required, Validators.min(1)]],
-        max: [24, [Validators.required, Validators.min(1)]]
-      })
+  initializeFilterForm(): void {
+    this.filterForm = this.fb.group({
+      department: [''],
+      course: [''],
+      batch: [''],
+      type: [''],
+      year: ['']
     });
 
-    // Add validator to ensure max >= min
-    this.semesterForm.get('creditRange')?.setValidators(this.creditRangeValidator);
-  }
-
-  creditRangeValidator(control: AbstractControl): ValidationErrors | null {
-    const group = control as FormGroup;
-    const min = group.get('min')?.value;
-    const max = group.get('max')?.value;
-    return max >= min ? null : { invalidRange: true };
+    // Subscribe to filter changes
+    this.filterForm.valueChanges.subscribe(() => {
+      this.applyFilters();
+    });
   }
 
   loadSemesters(): void {
@@ -112,157 +119,190 @@ export class ManageSemestersComponent implements OnInit {
       next: (response) => {
         this.isLoading = false;
         if (response.success) {
-          this.semesters = response.data.sort((a, b) => a.order - b.order);
+          this.semesters = response.data;
           this.applyFilters();
         }
       },
       error: (error) => {
         this.isLoading = false;
         console.error('Error loading semesters:', error);
-        this.snackBar.open('Error loading semesters', 'Close', {
-          duration: 5000,
+        this.snackBar.open('Error loading semesters', 'Close', { 
+          duration: 3000,
           panelClass: ['error-snackbar']
         });
       }
     });
   }
 
+  loadDepartments(): void {
+    this.departmentService.getDepartments().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.departments = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading departments:', error);
+      }
+    });
+  }
+
+  loadCoursesByDepartment(departmentId: string): void {
+    this.courseService.getCoursesByDepartment(departmentId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.courses = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading courses:', error);
+      }
+    });
+  }
+
+  loadBatches(): void {
+    this.batchService.getBatches().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.batches = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading batches:', error);
+      }
+    });
+  }
+
+  loadBatchesByCourse(courseId: string): void {
+    this.batchService.getBatchesByCourse(courseId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.batches = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading batches:', error);
+      }
+    });
+  }
+
   applyFilters(): void {
     let filtered = [...this.semesters];
-    
-    // Search filter
+
+    // Apply search term filter
     if (this.searchTerm) {
-      const searchLower = this.searchTerm.toLowerCase();
+      const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(semester => 
-        semester.name.toLowerCase().includes(searchLower) ||
-        semester.code.toLowerCase().includes(searchLower) ||
-        (semester.description && semester.description.toLowerCase().includes(searchLower))
+        semester.name.toLowerCase().includes(term) ||
+        semester.code.toLowerCase().includes(term) ||
+        semester.type.toLowerCase().includes(term)
       );
     }
-    
-    // Duration filter
-    if (this.selectedDuration) {
-      filtered = filtered.filter(semester => semester.duration === this.selectedDuration);
+
+    // Apply other filters
+    const filters = this.filterForm.value;
+    if (filters.batch) {
+      filtered = filtered.filter(semester => 
+        typeof semester.batch === 'object' ? semester.batch._id === filters.batch : semester.batch === filters.batch
+      );
     }
-    
+    if (filters.type) {
+      filtered = filtered.filter(semester => semester.type === filters.type);
+    }
+    if (filters.year) {
+      filtered = filtered.filter(semester => semester.year === parseInt(filters.year));
+    }
+
     this.filteredSemesters = filtered;
     this.totalCount = filtered.length;
-    
-    // Reset pagination if needed
-    if (this.pageIndex * this.pageSize >= this.totalCount) {
-      this.pageIndex = 0;
-    }
   }
 
-  onSearchChange(): void {
-    this.applyFilters();
-  }
-
-  onDurationFilterChange(): void {
+  onSearchChange(term: string): void {
+    this.searchTerm = term;
     this.applyFilters();
   }
 
   clearFilters(): void {
     this.searchTerm = '';
-    this.selectedDuration = '';
+    this.filterForm.reset();
     this.applyFilters();
   }
 
-  onPageChange(event: PageEvent): void {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-  }
-
-  sortData(sort: Sort): void {
-    if (!sort.active || sort.direction === '') {
-      this.filteredSemesters = [...this.semesters];
-      return;
-    }
-
-    this.filteredSemesters = this.filteredSemesters.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'name': return this.compare(a.name, b.name, isAsc);
-        case 'code': return this.compare(a.code, b.code, isAsc);
-        case 'order': return this.compare(a.order, b.order, isAsc);
-        case 'duration': return this.compare(a.duration, b.duration, isAsc);
-        default: return 0;
+  showAddDialog(): void {
+    const dialogRef = this.dialog.open(SemesterDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: {
+        batches: this.batches
       }
     });
-  }
 
-  private compare(a: string | number, b: string | number, isAsc: boolean): number {
-    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
-  }
-
-  showAddForm(): void {
-    this.isEditing = false;
-    this.editingSemesterId = null;
-    this.showForm = true;
-    this.semesterForm.reset({
-      duration: '6 months',
-      creditRange: { min: 12, max: 24 }
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createSemester(result);
+      }
     });
   }
 
   editSemester(semester: Semester): void {
-    this.isEditing = true;
-    this.editingSemesterId = semester._id;
-    this.showForm = true;
-    
-    this.semesterForm.patchValue({
-      name: semester.name,
-      code: semester.code,
-      order: semester.order,
-      description: semester.description,
-      duration: semester.duration,
-      creditRange: {
-        min: semester.creditRange.min,
-        max: semester.creditRange.max
+    const dialogRef = this.dialog.open(SemesterDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: {
+        semester: semester,
+        batches: this.batches
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateSemester(semester._id!, result);
       }
     });
   }
 
-  cancelForm(): void {
-    this.showForm = false;
-    this.isEditing = false;
-    this.editingSemesterId = null;
-    this.semesterForm.reset();
+  createSemester(semesterData: any): void {
+    this.semesterService.createSemester(semesterData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Semester created successfully', 'Close', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadSemesters();
+        }
+      },
+      error: (error) => {
+        console.error('Error creating semester:', error);
+        this.snackBar.open(
+          error.error?.message || 'Error creating semester', 
+          'Close', 
+          { duration: 5000, panelClass: ['error-snackbar'] }
+        );
+      }
+    });
   }
 
-  onSubmit(): void {
-    if (this.semesterForm.valid) {
-      this.isSubmitting = true;
-      const formData = this.semesterForm.value;
-
-      const operation = this.isEditing
-        ? this.semesterService.updateSemester(this.editingSemesterId!, formData)
-        : this.semesterService.createSemester(formData);
-
-      operation.subscribe({
-        next: (response) => {
-          this.isSubmitting = false;
-          if (response.success) {
-            this.snackBar.open(
-              `Semester ${this.isEditing ? 'updated' : 'created'} successfully`,
-              'Close',
-              { duration: 3000, panelClass: ['success-snackbar'] }
-            );
-            this.loadSemesters();
-            this.cancelForm();
-          }
-        },
-        error: (error) => {
-          this.isSubmitting = false;
-          console.error('Error saving semester:', error);
-          this.snackBar.open(
-            error.error?.message || `Error ${this.isEditing ? 'updating' : 'creating'} semester`,
-            'Close',
-            { duration: 5000, panelClass: ['error-snackbar'] }
-          );
+  updateSemester(id: string, semesterData: any): void {
+    this.semesterService.updateSemester(id, semesterData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Semester updated successfully', 'Close', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadSemesters();
         }
-      });
-    }
+      },
+      error: (error) => {
+        console.error('Error updating semester:', error);
+        this.snackBar.open(
+          error.error?.message || 'Error updating semester', 
+          'Close', 
+          { duration: 5000, panelClass: ['error-snackbar'] }
+        );
+      }
+    });
   }
 
   deleteSemester(semester: Semester): void {
@@ -279,7 +319,7 @@ export class ManageSemestersComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.semesterService.deleteSemester(semester._id).subscribe({
+        this.semesterService.deleteSemester(semester._id!).subscribe({
           next: (response) => {
             if (response.success) {
               this.snackBar.open('Semester deleted successfully', 'Close', {
@@ -302,40 +342,53 @@ export class ManageSemestersComponent implements OnInit {
     });
   }
 
-  getFormErrorMessage(fieldName: string): string {
-    const field = this.semesterForm.get(fieldName);
-    if (!field || !field.touched) return '';
-
-    if (field.hasError('required')) {
-      return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+  getBatchName(batch: any): string {
+    if (typeof batch === 'object' && batch !== null) {
+      return batch.name || '';
     }
-    if (field.hasError('minlength')) {
-      return `Minimum length is ${field.errors?.['minlength']?.requiredLength}`;
-    }
-    if (field.hasError('maxlength')) {
-      return `Maximum length is ${field.errors?.['maxlength']?.requiredLength}`;
-    }
-    if (field.hasError('min')) {
-      return `Minimum value is ${field.errors?.['min']?.min}`;
-    }
-    if (field.hasError('max')) {
-      return `Maximum value is ${field.errors?.['max']?.max}`;
-    }
-
-    // Credit range validation
-    const creditRange = this.semesterForm.get('creditRange');
-    if (creditRange?.hasError('invalidRange')) {
-      return 'Maximum credits must be greater than or equal to minimum credits';
-    }
-
     return '';
   }
 
-  getCreditRangeError(): string {
-    const creditRange = this.semesterForm.get('creditRange');
-    if (creditRange?.touched && creditRange?.hasError('invalidRange')) {
-      return 'Maximum credits must be greater than or equal to minimum credits';
+  getActiveSemestersCount(): number {
+    return this.semesters.filter(s => s.isActive).length;
+  }
+
+  getCurrentSemestersCount(): number {
+    return this.semesters.filter(s => s.isCurrent).length;
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+  }
+
+  getPaginatedSemesters(): Semester[] {
+    const startIndex = this.pageIndex * this.pageSize;
+    return this.filteredSemesters.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  onDepartmentChange(departmentId: string): void {
+    if (departmentId) {
+      this.loadCoursesByDepartment(departmentId);
+    } else {
+      this.courses = [];
     }
-    return '';
+    this.filterForm.patchValue({
+      course: '',
+      batch: ''
+    });
+    this.applyFilters();
+  }
+
+  onCourseChange(courseId: string): void {
+    if (courseId) {
+      this.loadBatchesByCourse(courseId);
+    } else {
+      this.loadBatches();
+    }
+    this.filterForm.patchValue({
+      batch: ''
+    });
+    this.applyFilters();
   }
 }

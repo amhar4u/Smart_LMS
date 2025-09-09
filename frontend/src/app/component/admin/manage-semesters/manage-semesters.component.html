@@ -1,0 +1,233 @@
+<app-admin-layout>
+  <div class="manage-semesters-container">
+    <!-- Header Card -->
+    <mat-card class="header-card">
+      <mat-card-header>
+        <div class="header-content">
+          <div class="title-section">
+            <mat-icon class="header-icon">event_note</mat-icon>
+            <div>
+              <h1>Manage Semesters</h1>
+              <p>Create, edit, and manage academic semesters</p>
+            </div>
+          </div>
+        </div>
+      </mat-card-header>
+    </mat-card>
+
+    <!-- Search and Actions -->
+    <mat-card class="search-filter-card">
+      <mat-card-content>
+        <div class="search-filter-container">
+          <!-- Search -->
+          <div class="search-section">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search semesters</mat-label>
+              <input matInput 
+                     placeholder="Search by name, code, or type..."
+                     [value]="searchTerm"
+                     (input)="onSearchChange($any($event.target).value)">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+            <button mat-raised-button color="primary" class="search-button" (click)="applyFilters()">
+              <mat-icon>search</mat-icon>
+              Search
+            </button>
+            <button mat-button class="clear-button" (click)="clearFilters()">
+              <mat-icon>clear</mat-icon>
+              Clear
+            </button>
+            <button mat-raised-button color="primary" (click)="showAddDialog()" class="add-button">
+              <mat-icon>add</mat-icon>
+              Add Semester
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Filters Section -->
+    <mat-card class="filters-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>filter_list</mat-icon>
+          Filters
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="filterForm" class="filters-form">
+          <div class="filter-row">
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Department</mat-label>
+              <mat-select formControlName="department" (selectionChange)="onDepartmentChange($event.value)">
+                <mat-option value="">All Departments</mat-option>
+                <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                  {{ dept.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Course</mat-label>
+              <mat-select formControlName="course" (selectionChange)="onCourseChange($event.value)">
+                <mat-option value="">All Courses</mat-option>
+                <mat-option *ngFor="let course of courses" [value]="course._id">
+                  {{ course.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Batch</mat-label>
+              <mat-select formControlName="batch">
+                <mat-option value="">All Batches</mat-option>
+                <mat-option *ngFor="let batch of batches" [value]="batch._id">
+                  {{ batch.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Type</mat-label>
+              <mat-select formControlName="type">
+                <mat-option value="">All Types</mat-option>
+                <mat-option value="Regular">Regular</mat-option>
+                <mat-option value="Summer">Summer</mat-option>
+                <mat-option value="Winter">Winter</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Year</mat-label>
+              <mat-select formControlName="year">
+                <mat-option value="">All Years</mat-option>
+                <mat-option value="2023">2023</mat-option>
+                <mat-option value="2024">2024</mat-option>
+                <mat-option value="2025">2025</mat-option>
+                <mat-option value="2026">2026</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Semesters List -->
+    <mat-card class="list-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>list</mat-icon>
+          Semesters List ({{ filteredSemesters.length }})
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="getPaginatedSemesters()" class="semesters-table">
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let semester">{{ semester.name }}</td>
+            </ng-container>
+
+            <!-- Code Column -->
+            <ng-container matColumnDef="code">
+              <th mat-header-cell *matHeaderCellDef>Code</th>
+              <td mat-cell *matCellDef="let semester">
+                <mat-chip>{{ semester.code }}</mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Batch Column -->
+            <ng-container matColumnDef="batch">
+              <th mat-header-cell *matHeaderCellDef>Batch</th>
+              <td mat-cell *matCellDef="let semester">{{ getBatchName(semester.batch) }}</td>
+            </ng-container>
+
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let semester">
+                <mat-chip [class]="'type-' + semester.type">{{ semester.type | titlecase }}</mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Year Column -->
+            <ng-container matColumnDef="year">
+              <th mat-header-cell *matHeaderCellDef>Year</th>
+              <td mat-cell *matCellDef="let semester">{{ semester.year }}</td>
+            </ng-container>
+
+            <!-- Start Date Column -->
+            <ng-container matColumnDef="startDate">
+              <th mat-header-cell *matHeaderCellDef>Start Date</th>
+              <td mat-cell *matCellDef="let semester">{{ semester.startDate | date:'mediumDate' }}</td>
+            </ng-container>
+
+            <!-- End Date Column -->
+            <ng-container matColumnDef="endDate">
+              <th mat-header-cell *matHeaderCellDef>End Date</th>
+              <td mat-cell *matCellDef="let semester">{{ semester.endDate | date:'mediumDate' }}</td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="isActive">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let semester">
+                <mat-chip [class]="semester.isActive ? 'status-active' : 'status-inactive'">
+                  {{ semester.isActive ? 'Active' : 'Inactive' }}
+                </mat-chip>
+                <mat-chip *ngIf="semester.isCurrent" class="status-current">Current</mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let semester">
+                <button mat-icon-button color="primary" (click)="editSemester(semester)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteSemester(semester)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+
+          <!-- Pagination -->
+          <div class="pagination-container">
+            <div class="pagination-info">
+              <span>Items per page:</span>
+              <mat-select [value]="pageSize" (selectionChange)="pageSize = $event.value; onPageChange({pageIndex: 0, pageSize: $event.value, length: totalCount})">
+                <mat-option value="10">10</mat-option>
+                <mat-option value="25">25</mat-option>
+                <mat-option value="50">50</mat-option>
+              </mat-select>
+              <span>{{ (pageIndex * pageSize) + 1 }} - {{ Math.min((pageIndex + 1) * pageSize, totalCount) }} of {{ totalCount }}</span>
+            </div>
+            <mat-paginator
+              [length]="totalCount"
+              [pageSize]="pageSize"
+              [pageIndex]="pageIndex"
+              [pageSizeOptions]="[10, 25, 50]"
+              (page)="onPageChange($event)"
+              showFirstLastButtons>
+            </mat-paginator>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+        </div>
+
+        <div *ngIf="!isLoading && filteredSemesters.length === 0" class="no-data">
+          <mat-icon>event_note</mat-icon>
+          <p>No semesters found</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</app-admin-layout>
