@@ -157,17 +157,29 @@
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Current Semester</mat-label>
-                <mat-select formControlName="semester" required [disabled]="isLoadingSemesters">
-                  <mat-option *ngIf="isLoadingSemesters" disabled>
-                    Loading semesters...
+                <mat-label>Batch</mat-label>
+                <mat-select formControlName="batch" required [disabled]="isLoadingBatches">
+                  <mat-option *ngIf="isLoadingBatches" disabled>
+                    Loading batches...
                   </mat-option>
-                  <mat-option *ngFor="let semester of semesters" [value]="semester._id">
-                    {{ semester.name }} ({{ semester.code }})
+                  <mat-option *ngIf="!isLoadingBatches && batches.length === 0 && academicInfoForm.get('course')?.value" disabled>
+                    No available batches for selected course
+                  </mat-option>
+                  <mat-option *ngFor="let batch of batches" [value]="batch._id">
+                    {{ batch.name }} ({{ batch.code }}) - {{ batch.startYear }}-{{ batch.endYear }}
+                    <small *ngIf="batch.remainingSlots > 0" style="color: green;">
+                      - {{ batch.remainingSlots }} slots available
+                    </small>
+                    <small *ngIf="batch.remainingSlots === 0" style="color: red;">
+                      - Full
+                    </small>
                   </mat-option>
                 </mat-select>
-                <mat-error *ngIf="academicInfoForm.get('semester')?.invalid && academicInfoForm.get('semester')?.touched">
-                  {{ getErrorMessage(academicInfoForm, 'semester') }}
+                <mat-hint *ngIf="academicInfoForm.get('batch')?.value">
+                  Semester will be automatically assigned based on your selected batch.
+                </mat-hint>
+                <mat-error *ngIf="academicInfoForm.get('batch')?.invalid && academicInfoForm.get('batch')?.touched">
+                  {{ getErrorMessage(academicInfoForm, 'batch') }}
                 </mat-error>
               </mat-form-field>
 

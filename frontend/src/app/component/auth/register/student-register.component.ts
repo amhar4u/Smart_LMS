@@ -19,7 +19,7 @@ import { ValidationService } from '../../../services/validation.service';
 import { StudentRegistration } from '../../../models/user.model';
 import { CourseService, Course } from '../../../services/course.service';
 import { DepartmentService, Department } from '../../../services/department.service';
-import { SemesterService, Semester } from '../../../services/semester.service';
+import { BatchService, Batch } from '../../../services/batch.service';
 
 @Component({
   selector: 'app-student-register',
@@ -51,10 +51,10 @@ export class StudentRegisterComponent implements OnInit {
 
   courses: Course[] = [];
   departments: Department[] = [];
-  semesters: Semester[] = [];
+  batches: Batch[] = [];
   isLoadingCourses = false;
   isLoadingDepartments = false;
-  isLoadingSemesters = false;
+  isLoadingBatches = false;
 
   constructor(
     private fb: FormBuilder,
@@ -64,13 +64,12 @@ export class StudentRegisterComponent implements OnInit {
     private snackBar: MatSnackBar,
     private courseService: CourseService,
     private departmentService: DepartmentService,
-    private semesterService: SemesterService
+    private batchService: BatchService
   ) {}
 
   ngOnInit(): void {
     this.initializeForms();
     this.loadDepartments();
-    this.loadSemesters();
     
     // Watch for department changes to load relevant courses
     this.academicInfoForm.get('department')?.valueChanges.subscribe(departmentId => {
@@ -78,9 +77,22 @@ export class StudentRegisterComponent implements OnInit {
         this.loadCoursesByDepartment(departmentId);
       } else {
         this.courses = [];
+        this.batches = [];
       }
-      // Reset course selection when department changes
+      // Reset course and batch selection when department changes
       this.academicInfoForm.get('course')?.setValue('');
+      this.academicInfoForm.get('batch')?.setValue('');
+    });
+
+    // Watch for course changes to load relevant batches
+    this.academicInfoForm.get('course')?.valueChanges.subscribe(courseId => {
+      if (courseId) {
+        this.loadBatchesByCourse(courseId);
+      } else {
+        this.batches = [];
+      }
+      // Reset batch selection when course changes
+      this.academicInfoForm.get('batch')?.setValue('');
     });
   }
 
@@ -144,19 +156,21 @@ export class StudentRegisterComponent implements OnInit {
     });
   }
 
-  loadSemesters(): void {
-    this.isLoadingSemesters = true;
-    this.semesterService.getSemesters().subscribe({
-      next: (response) => {
-        this.isLoadingSemesters = false;
+  loadBatchesByCourse(courseId: string): void {
+    this.isLoadingBatches = true;
+    this.batchService.getBatchesByCourse(courseId).subscribe({
+      next: (response: any) => {
+        this.isLoadingBatches = false;
         if (response.success) {
-          this.semesters = response.data;
+          this.batches = response.data.filter((batch: Batch) => 
+            batch.status === 'active' && this.batchService.hasAvailableSlots(batch)
+          );
         }
       },
-      error: (error) => {
-        this.isLoadingSemesters = false;
-        console.error('Error loading semesters:', error);
-        this.snackBar.open('Error loading semesters. Please refresh the page.', 'Close', {
+      error: (error: any) => {
+        this.isLoadingBatches = false;
+        console.error('Error loading batches by course:', error);
+        this.snackBar.open('Error loading batches for selected course.', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar']
         });
@@ -181,7 +195,7 @@ export class StudentRegisterComponent implements OnInit {
       studentId: [''],
       department: ['', Validators.required],
       course: ['', Validators.required],
-      semester: ['', Validators.required]
+      batch: ['', Validators.required]
     });
   }
 
