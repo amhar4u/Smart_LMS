@@ -29,6 +29,11 @@ const semesterSchema = new mongoose.Schema({
     enum: ['fall', 'spring', 'summer'],
     lowercase: true
   },
+  batch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
+    required: [true, 'Batch is required for semester']
+  },
   startDate: {
     type: Date,
     required: [true, 'Start date is required']
