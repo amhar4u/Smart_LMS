@@ -9,6 +9,7 @@ const adminSeeder = require('./adminSeeder');
 const courseSeeder = require('./courseSeeder');
 const departmentSeeder = require('./departmentSeeder');
 const semesterSeeder = require('./semesterSeeder');
+const batchSeeder = require('./batchSeeder');
 
 // Main seeder function
 const runSeeders = async () => {
@@ -35,6 +36,7 @@ node seeders/index.js --admin         - Seed admin users
 node seeders/index.js --courses       - Seed courses
 node seeders/index.js --departments   - Seed departments
 node seeders/index.js --semesters     - Seed semesters
+node seeders/index.js --batches       - Seed batches
 
 Available Commands:
 --help, -h           Show this help message
@@ -44,6 +46,7 @@ Available Seeders:
 - courses: Seed course data
 - departments: Seed department data
 - semesters: Seed semester data
+- batches: Seed batch data
       `);
       await mongoose.connection.close();
       process.exit(0);
@@ -81,6 +84,14 @@ Available Seeders:
       process.exit(0);
     }
     
+    if (args.includes('--batches')) {
+      console.log('Running batches seeder...');
+      await batchSeeder();
+      console.log('✅ Batches seeder completed!');
+      await mongoose.connection.close();
+      process.exit(0);
+    }
+    
     // If no specific seeder is mentioned, run all
     if (args.length === 0) {
       console.log('Running all seeders...');
@@ -95,6 +106,9 @@ Available Seeders:
       
       console.log('\n4. Seeding courses...');
       await courseSeeder();
+      
+      console.log('\n5. Seeding batches...');
+      await batchSeeder();
       
       console.log('\n✅ All seeders completed successfully!');
       await mongoose.connection.close();
