@@ -295,6 +295,98 @@
   opacity: 0.9;
 }
 
+/* Department Statistics Section */
+.department-stats-section {
+  padding: 4rem 0;
+  background: 
+    linear-gradient(135deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.95) 100%),
+    var(--pattern-grid);
+  background-size: 
+    100% 100%,
+    40px 40px;
+  animation: subtleMove 30s infinite linear;
+}
+
+.department-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.department-stat-card {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  background: white !important;
+}
+
+.department-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+.department-stat-card .mat-mdc-card-header {
+  padding-bottom: 1rem !important;
+}
+
+.department-stat-card .mat-mdc-card-title {
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+  color: #1e40af !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.department-stat-card .mat-mdc-card-subtitle {
+  font-size: 0.9rem !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+.dept-stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.25rem;
+}
+
+.stat-number.success-rate {
+  color: #059669;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* Testimonials Section */
 .testimonials-section {
   padding: 5rem 0;
