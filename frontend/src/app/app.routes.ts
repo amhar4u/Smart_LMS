@@ -62,6 +62,11 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'admin/manage-subjects',
+    loadComponent: () => import('./component/admin/manage-subjects/manage-subjects.component').then(m => m.ManageSubjectsComponent),
+    canActivate: [adminGuard]
+  },
+  {
     path: 'admin/manage-batches',
     loadComponent: () => import('./component/admin/manage-batches/manage-batches.component').then(m => m.ManageBatchesComponent),
     canActivate: [adminGuard]
