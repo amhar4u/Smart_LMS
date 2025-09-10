@@ -99,15 +99,32 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let admin">
-              <button mat-icon-button color="primary" (click)="editAdmin(admin)" title="Edit">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="accent" (click)="viewAdmin(admin)" title="View">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deleteAdmin(admin)" title="Delete">
-                <mat-icon>delete</mat-icon>
-              </button>
+              <!-- Approval actions for pending admins -->
+              <div *ngIf="admin.status === 'pending'" class="approval-actions">
+                <button mat-icon-button color="primary" (click)="approveAdmin(admin)" title="Approve">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="rejectAdmin(admin)" title="Reject">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </div>
+              
+              <!-- Regular actions for approved/rejected admins -->
+              <div *ngIf="admin.status !== 'pending'" class="regular-actions">
+                <button mat-icon-button color="primary" (click)="editAdmin(admin)" title="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="accent" (click)="viewAdmin(admin)" title="View">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <!-- Re-approve if rejected -->
+                <button *ngIf="admin.status === 'rejected'" mat-icon-button color="primary" (click)="approveAdmin(admin)" title="Approve">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteAdmin(admin)" title="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </td>
           </ng-container>
 

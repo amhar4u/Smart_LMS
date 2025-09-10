@@ -260,6 +260,88 @@ export class ManageAdmins implements OnInit, OnDestroy {
     return admin.permissions?.join(', ') || 'Standard Admin';
   }
 
+  approveAdmin(admin: User): void {
+    const name = admin.fullName || `${admin.firstName} ${admin.lastName}`;
+    const adminId = admin._id || admin.id;
+    
+    if (!adminId) {
+      this.snackBar.open('Admin ID not found', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Approve Admin',
+        message: `Are you sure you want to approve ${name}?`,
+        confirmText: 'Approve',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.approveUser(adminId).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.snackBar.open(`${name} approved successfully`, 'Close', {
+                duration: 3000
+              });
+              this.refreshAdmins();
+            } else {
+              this.snackBar.open('Failed to approve admin', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error approving admin:', error);
+            this.snackBar.open('Error approving admin', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+
+  rejectAdmin(admin: User): void {
+    const name = admin.fullName || `${admin.firstName} ${admin.lastName}`;
+    const adminId = admin._id || admin.id;
+    
+    if (!adminId) {
+      this.snackBar.open('Admin ID not found', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Reject Admin',
+        message: `Are you sure you want to reject ${name}? This action can be reversed later.`,
+        confirmText: 'Reject',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.rejectUser(adminId).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.snackBar.open(`${name} rejected successfully`, 'Close', {
+                duration: 3000
+              });
+              this.refreshAdmins();
+            } else {
+              this.snackBar.open('Failed to reject admin', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error rejecting admin:', error);
+            this.snackBar.open('Error rejecting admin', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+
   private refreshAdmins(): void {
     console.log('🔄 [ManageAdmins] Refreshing admins list');
     // Force refresh by triggering the search control
