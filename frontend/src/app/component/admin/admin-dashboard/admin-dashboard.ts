@@ -136,7 +136,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           return of({ success: false, data: [], pagination: { totalItems: 0 } });
         })
       ),
-      subjects: this.subjectService.getAllSubjects().pipe(
+      subjects: this.subjectService.getSubjects().pipe(
         catchError(error => {
           console.error('Error loading subjects:', error);
           return of({ success: false, data: [], count: 0 });
@@ -153,7 +153,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.departments = response.departments.data || [];
       this.courses = response.courses.data?.courses || [];
       this.batches = response.batches.data || [];
-      this.subjects = response.subjects.data || [];
+      this.subjects = Array.isArray(response.subjects.data) ? response.subjects.data : [];
       
       // Calculate all statistics and distributions
       this.calculateStatistics();
