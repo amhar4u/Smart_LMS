@@ -28,16 +28,11 @@ const courseSchema = new mongoose.Schema({
     ref: 'Department',
     required: [true, 'Department is required for course']
   },
-  credits: {
-    type: Number,
-    min: [1, 'Credits must be at least 1'],
-    max: [10, 'Credits cannot exceed 10'],
-    default: 3
-  },
   duration: {
     type: String,
-    enum: ['semester', 'year', 'trimester'],
-    default: 'semester'
+    enum: ['1 year', '2 years', '3 years', '4 years', '5 years'],
+    required: [true, 'Duration is required'],
+    default: '4 years'
   },
   isActive: {
     type: Boolean,

@@ -14,8 +14,7 @@ export interface Course {
     name: string;
     code: string;
   } | string;
-  credits?: number;
-  duration?: string;
+  duration: string;
   isActive: boolean;
   createdBy?: {
     _id: string;

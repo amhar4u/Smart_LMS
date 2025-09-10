@@ -63,21 +63,17 @@ export interface CourseDialogData {
               </mat-select>
               <mat-error>{{ getErrorMessage('department') }}</mat-error>
             </mat-form-field>
-
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Credits</mat-label>
-              <input matInput type="number" formControlName="credits" placeholder="Enter credits" min="1" max="10">
-              <mat-error>{{ getErrorMessage('credits') }}</mat-error>
-            </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Duration</mat-label>
               <mat-select formControlName="duration">
-                <mat-option value="semester">Semester</mat-option>
-                <mat-option value="year">Year</mat-option>
-                <mat-option value="trimester">Trimester</mat-option>
+                <mat-option value="1 year">1 Year</mat-option>
+                <mat-option value="2 years">2 Years</mat-option>
+                <mat-option value="3 years">3 Years</mat-option>
+                <mat-option value="4 years">4 Years</mat-option>
+                <mat-option value="5 years">5 Years</mat-option>
               </mat-select>
               <mat-error>{{ getErrorMessage('duration') }}</mat-error>
             </mat-form-field>
@@ -220,12 +216,8 @@ export class CourseDialogComponent implements OnInit {
         departmentValue,
         Validators.required
       ],
-      credits: [
-        this.data.course?.credits || 3,
-        [Validators.required, Validators.min(1), Validators.max(10)]
-      ],
       duration: [
-        this.data.course?.duration || 'semester',
+        this.data.course?.duration || '4 years',
         Validators.required
       ],
       isActive: [
