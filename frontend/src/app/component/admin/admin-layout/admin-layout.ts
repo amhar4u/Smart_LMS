@@ -31,6 +31,7 @@ export class AdminLayout implements OnInit {
 
   // Navigation state
   userManagementExpanded = false;
+  sidebarCollapsed = false; // Start expanded by default
 
   // Current user
   currentUser$ = this.authService.currentUser$;
@@ -82,7 +83,21 @@ export class AdminLayout implements OnInit {
   }
 
   toggleUserManagement() {
-    this.userManagementExpanded = !this.userManagementExpanded;
+    if (this.sidebarCollapsed) {
+      // If sidebar is collapsed and user clicks User Management, expand sidebar first
+      this.sidebarCollapsed = false;
+      this.userManagementExpanded = true;
+    } else {
+      this.userManagementExpanded = !this.userManagementExpanded;
+    }
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    // If collapsing sidebar, also collapse user management submenu
+    if (this.sidebarCollapsed) {
+      this.userManagementExpanded = false;
+    }
   }
 
   navigateTo(route: string) {

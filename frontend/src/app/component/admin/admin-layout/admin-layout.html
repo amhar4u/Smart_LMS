@@ -1,11 +1,12 @@
-<div class="admin-layout">
+<div class="admin-layout" [class.sidebar-collapsed]="sidebarCollapsed">
   <!-- Sidebar -->
   <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav 
+    <mat-sidenav
       #drawer
       mode="side" 
       opened="true"
       class="sidenav"
+      [class.collapsed]="sidebarCollapsed"
       fixedInViewport="true">
       
       <!-- Sidebar Header -->
@@ -14,29 +15,33 @@
           <div class="logo-circle">
             <mat-icon>school</mat-icon>
           </div>
+          <h2 *ngIf="!sidebarCollapsed" class="logo-text">Smart LMS</h2>
         </div>
+        <button mat-icon-button (click)="toggleSidebar()" class="toggle-btn">
+          <mat-icon>{{ sidebarCollapsed ? 'menu_open' : 'menu' }}</mat-icon>
+        </button>
       </div>
-
+      
       <!-- Navigation Menu -->
       <nav class="sidebar-nav">
         <!-- Dashboard -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/dashboard">
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/dashboard" [attr.data-tooltip]="sidebarCollapsed ? 'Dashboard' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">dashboard</mat-icon>
-            <span class="nav-text">Dashboard</span>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Dashboard</span>
           </div>
         </div>
 
         <!-- User Management -->
-        <div class="nav-item expandable" [class.expanded]="userManagementExpanded" [class.has-active-child]="hasActiveUserManagementChild()">
+        <div class="nav-item expandable" [class.expanded]="userManagementExpanded && !sidebarCollapsed" [class.has-active-child]="hasActiveUserManagementChild()" [attr.data-tooltip]="sidebarCollapsed ? 'User Management' : null">
           <div class="nav-content" (click)="toggleUserManagement()">
             <mat-icon class="nav-icon">people</mat-icon>
-            <span class="nav-text">User Management</span>
-            <mat-icon class="expand-icon">{{ userManagementExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">User Management</span>
+            <mat-icon *ngIf="!sidebarCollapsed" class="expand-icon">{{ userManagementExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
           </div>
           
           <!-- Sub-menu for User Management -->
-          <div class="sub-menu" *ngIf="userManagementExpanded">
+          <div class="sub-menu" *ngIf="userManagementExpanded && !sidebarCollapsed">
             <div class="sub-nav-item" routerLinkActive="active" routerLink="/admin/manage-students">
               <mat-icon class="sub-icon">school</mat-icon>
               <span class="sub-text">Students</span>
@@ -53,34 +58,42 @@
         </div>
 
         <!-- Courses Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-courses">
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-courses" [attr.data-tooltip]="sidebarCollapsed ? 'Courses' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">school</mat-icon>
-            <span class="nav-text">Courses</span>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Courses</span>
+          </div>
+        </div>
+
+        <!-- Subjects Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-subjects" [attr.data-tooltip]="sidebarCollapsed ? 'Subjects' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">subject</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Subjects</span>
           </div>
         </div>
 
         <!-- Departments Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments">
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments" [attr.data-tooltip]="sidebarCollapsed ? 'Departments' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">account_balance</mat-icon>
-            <span class="nav-text">Departments</span>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Departments</span>
           </div>
         </div>
 
         <!-- Batches Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-batches">
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-batches" [attr.data-tooltip]="sidebarCollapsed ? 'Batches' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">groups</mat-icon>
-            <span class="nav-text">Batches</span>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Batches</span>
           </div>
         </div>
 
         <!-- Semesters Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-semesters">
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-semesters" [attr.data-tooltip]="sidebarCollapsed ? 'Semesters' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">event_note</mat-icon>
-            <span class="nav-text">Semesters</span>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Semesters</span>
           </div>
         </div>
       </nav>
@@ -90,10 +103,6 @@
     <mat-sidenav-content class="main-content">
       <!-- Top Toolbar -->
       <mat-toolbar class="top-toolbar">
-        <button mat-icon-button (click)="drawer.toggle()" class="menu-toggle">
-          <mat-icon>menu</mat-icon>
-        </button>
-        
         <span class="spacer"></span>
         
         <!-- Search -->
