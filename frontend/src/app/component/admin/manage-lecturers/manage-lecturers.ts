@@ -37,7 +37,7 @@ import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, ma
   styleUrl: './manage-lecturers.css'
 })
 export class ManageLecturers implements OnInit, OnDestroy {
-  displayedColumns: string[] = ['id', 'name', 'email', 'department', 'qualification', 'status', 'actions'];
+  displayedColumns: string[] = ['profilePicture', 'id', 'name', 'email', 'phone', 'department', 'createdAt', 'status', 'actions'];
   lecturers$: Observable<User[]>;
   searchControl = new FormControl('');
   isLoading$ = new BehaviorSubject<boolean>(false);
@@ -254,6 +254,105 @@ export class ManageLecturers implements OnInit, OnDestroy {
 
   getLecturerStatus(lecturer: User): string {
     return lecturer.status || (lecturer.isActive ? 'Active' : 'Inactive');
+  }
+
+  getDepartmentName(lecturer: User): string {
+    if (lecturer.department && typeof lecturer.department === 'object') {
+      return (lecturer.department as { name: string }).name || 'N/A';
+    }
+    return 'N/A';
+  }
+
+  getFormattedDate(date: Date | string | undefined): string {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString();
+  }
+
+  getAvatarLetter(lecturer: User): string {
+    const name = lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`;
+    return name.charAt(0).toUpperCase();
+  }
+
+  approveLecturer(lecturer: User): void {
+    const name = lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`;
+    const lecturerId = lecturer._id || lecturer.id;
+    
+    if (!lecturerId) {
+      this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Approve Lecturer',
+        message: `Are you sure you want to approve ${name}?`,
+        confirmText: 'Approve',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.approveUser(lecturerId).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.snackBar.open(`${name} approved successfully`, 'Close', {
+                duration: 3000
+              });
+              this.refreshLecturers();
+            } else {
+              this.snackBar.open('Failed to approve lecturer', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error approving lecturer:', error);
+            this.snackBar.open('Error approving lecturer', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
+  }
+
+  rejectLecturer(lecturer: User): void {
+    const name = lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`;
+    const lecturerId = lecturer._id || lecturer.id;
+    
+    if (!lecturerId) {
+      this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Reject Lecturer',
+        message: `Are you sure you want to reject ${name}? This action can be reversed later.`,
+        confirmText: 'Reject',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.rejectUser(lecturerId).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.snackBar.open(`${name} rejected successfully`, 'Close', {
+                duration: 3000
+              });
+              this.refreshLecturers();
+            } else {
+              this.snackBar.open('Failed to reject lecturer', 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('Error rejecting lecturer:', error);
+            this.snackBar.open('Error rejecting lecturer', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
   private refreshLecturers(): void {

@@ -68,6 +68,23 @@
         <!-- Lecturers Table -->
         <div class="table-container">
           <table mat-table [dataSource]="(lecturers$ | async) || []" class="lecturers-table">
+            <ng-container matColumnDef="profilePicture">
+              <th mat-header-cell *matHeaderCellDef>Profile</th>
+              <td mat-cell *matCellDef="let lecturer">
+                <div class="profile-cell">
+                  <img *ngIf="lecturer.profilePicture" 
+                       [src]="lecturer.profilePicture" 
+                       alt="Profile"
+                       class="profile-image">
+                  <div *ngIf="!lecturer.profilePicture" 
+                       class="avatar-placeholder"
+                       [style.background-color]="'#' + (lecturer._id || lecturer.id || '').slice(-6)">
+                    {{ getAvatarLetter(lecturer) }}
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
             <ng-container matColumnDef="id">
               <th mat-header-cell *matHeaderCellDef>ID</th>
               <td mat-cell *matCellDef="let lecturer">{{ getLecturerId(lecturer) }}</td>
@@ -83,14 +100,19 @@
               <td mat-cell *matCellDef="let lecturer">{{ lecturer.email }}</td>
             </ng-container>
 
-            <ng-container matColumnDef="department">
-              <th mat-header-cell *matHeaderCellDef>Department</th>
-              <td mat-cell *matCellDef="let lecturer">{{ lecturer.department || 'N/A' }}</td>
+            <ng-container matColumnDef="phone">
+              <th mat-header-cell *matHeaderCellDef>Phone</th>
+              <td mat-cell *matCellDef="let lecturer">{{ lecturer.phone || 'N/A' }}</td>
             </ng-container>
 
-            <ng-container matColumnDef="qualification">
-              <th mat-header-cell *matHeaderCellDef>Qualification</th>
-              <td mat-cell *matCellDef="let lecturer">{{ lecturer.qualification || 'N/A' }}</td>
+            <ng-container matColumnDef="department">
+              <th mat-header-cell *matHeaderCellDef>Department</th>
+              <td mat-cell *matCellDef="let lecturer">{{ getDepartmentName(lecturer) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef>Created Date</th>
+              <td mat-cell *matCellDef="let lecturer">{{ getFormattedDate(lecturer.createdAt) }}</td>
             </ng-container>
 
             <ng-container matColumnDef="status">
@@ -105,15 +127,32 @@
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef>Actions</th>
               <td mat-cell *matCellDef="let lecturer">
-                <button mat-icon-button color="primary" (click)="editLecturer(lecturer)" title="Edit">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="accent" (click)="viewLecturer(lecturer)" title="View">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteLecturer(lecturer)" title="Delete">
-                  <mat-icon>delete</mat-icon>
-                </button>
+                <!-- Approval actions for pending lecturers -->
+                <div *ngIf="lecturer.status === 'pending'" class="approval-actions">
+                  <button mat-icon-button color="primary" (click)="approveLecturer(lecturer)" title="Approve">
+                    <mat-icon>check_circle</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="rejectLecturer(lecturer)" title="Reject">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </div>
+                
+                <!-- Regular actions for approved/rejected lecturers -->
+                <div *ngIf="lecturer.status !== 'pending'" class="regular-actions">
+                  <button mat-icon-button color="primary" (click)="editLecturer(lecturer)" title="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="accent" (click)="viewLecturer(lecturer)" title="View">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <!-- Re-approve if rejected -->
+                  <button *ngIf="lecturer.status === 'rejected'" mat-icon-button color="primary" (click)="approveLecturer(lecturer)" title="Approve">
+                    <mat-icon>check_circle</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteLecturer(lecturer)" title="Delete">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
 
