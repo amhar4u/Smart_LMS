@@ -1,49 +1,57 @@
 <app-admin-layout>
-  <div class="manage-lecturers-content">
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1>Lecturer Management</h1>
-      <p>Manage lecturer accounts, course assignments, and schedules</p>
-    </div>
+  <div class="manage-lecturers-container">
+    <mat-card class="header-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person</mat-icon>
+          Manage Lecturers
+        </mat-card-title>
+        <mat-card-subtitle>
+          Manage lecturer accounts, course assignments, and schedules
+        </mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
 
-    <!-- Action Bar -->
-    <div class="action-bar">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search lecturers...</mat-label>
-        <input matInput [formControl]="searchControl" placeholder="Search by name, email, or department">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-      
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="addLecturer()">
-          <mat-icon>add</mat-icon>
-          Add Lecturer
-        </button>
-        <button mat-stroked-button (click)="exportLecturers()">
-          <mat-icon>download</mat-icon>
-          Export
-        </button>
-      </div>
-    </div>
+    <!-- Filters and Search -->
+    <mat-card class="filters-card">
+      <mat-card-content>
+        <div class="filters-container">
+          <div class="search-section">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search lecturers</mat-label>
+              <input matInput [formControl]="searchControl" placeholder="Search by name, email, or department">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="exportLecturers()">
+              <mat-icon>download</mat-icon>
+              Export
+            </button>
+            <button mat-raised-button color="primary" (click)="addLecturer()" class="add-btn">
+              <mat-icon>add</mat-icon>
+              Add Lecturer
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Lecturers Table -->
     <mat-card class="table-card">
       <mat-card-header>
-        <mat-card-title>
-          <mat-icon>person</mat-icon>
-          Lecturers List
-        </mat-card-title>
+        <div class="table-header">
+          <mat-card-title>
+            <mat-icon>group</mat-icon>
+            Lecturers List
+          </mat-card-title>
+          <div class="table-stats">
+            <span class="stats-text">Total: {{ (lecturers$ | async)?.length || 0 }} lecturers</span>
+          </div>
+        </div>
       </mat-card-header>
       <mat-card-content>
-        <!-- Debug Information -->
-        <div style="background: #f5f5f5; padding: 10px; margin-bottom: 10px; font-family: monospace; font-size: 12px;">
-          <strong>Debug Info:</strong><br>
-          Loading: {{ isLoading$ | async }}<br>
-          Lecturers count: {{ (lecturers$ | async)?.length || 0 }}<br>
-          Has lecturers data: {{ !!(lecturers$ | async) }}<br>
-          First lecturer: {{ (lecturers$ | async)?.[0] | json }}
-        </div>
-
         <!-- Loading Indicator -->
         <div *ngIf="isLoading$ | async" class="loading-container">
           <mat-spinner diameter="40"></mat-spinner>

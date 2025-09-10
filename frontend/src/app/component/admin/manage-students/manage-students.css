@@ -1,51 +1,79 @@
-/* Manage Students Styles */
-.manage-students-content {
+/* Modern Students Management Styles */
+.manage-students-container {
   width: 100%;
+  padding: 0;
 }
 
-/* Page Header */
-.page-header {
-  margin-bottom: 32px;
-  text-align: center;
+/* Header Card */
+.header-card {
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
 }
 
-.page-header h1 {
-  margin: 0 0 8px;
-  color: #2c3e50;
-  font-size: 2.5em;
-  font-weight: 700;
-  background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.page-header p {
+.header-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.8em;
+  font-weight: 600;
   margin: 0;
-  color: #6c757d;
-  font-size: 1.2em;
-  font-weight: 300;
 }
 
-/* Action Bar */
-.action-bar {
+.header-card mat-card-subtitle {
+  margin-top: 8px;
+  opacity: 0.9;
+  font-size: 1.1em;
+  color: white !important;
+}
+
+.header-card mat-icon {
+  font-size: 2em;
+  width: 1em;
+  height: 1em;
+}
+
+/* Filters Card */
+.filters-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e3f2fd;
+}
+
+.filters-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
   flex-wrap: wrap;
+  gap: 16px;
+}
+
+.search-section {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  align-items: center;
 }
 
 .search-field {
+  min-width: 300px;
   flex: 1;
-  max-width: 400px;
-  min-width: 250px;
 }
 
 .action-buttons {
   display: flex;
   gap: 12px;
+  align-items: center;
+}
+
+.add-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
 }
 
 .action-buttons button {
@@ -57,9 +85,37 @@
 /* Table Card */
 .table-card {
   border-radius: 16px;
-  border: none;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e3f2fd;
   overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.table-header mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.table-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stats-text {
+  color: #6c757d;
+  font-size: 0.9em;
+  font-weight: 500;
 }
 
 .table-card mat-card-header {
@@ -68,15 +124,7 @@
   border-bottom: 1px solid #e9ecef;
 }
 
-.table-card mat-card-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 1.3em;
-  margin: 0;
-}
+
 
 /* Students Table */
 .students-table {

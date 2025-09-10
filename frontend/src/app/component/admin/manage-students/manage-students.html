@@ -1,38 +1,55 @@
 <app-admin-layout>
-  <div class="manage-students-content">
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1>Student Management</h1>
-      <p>Manage student accounts, enrollments, and academic progress</p>
-    </div>
+  <div class="manage-students-container">
+    <mat-card class="header-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>school</mat-icon>
+          Manage Students
+        </mat-card-title>
+        <mat-card-subtitle>
+          Manage student accounts, enrollments, and academic progress
+        </mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
 
-    <!-- Action Bar -->
-    <div class="action-bar">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search students...</mat-label>
-        <input matInput [formControl]="searchControl" placeholder="Search by name, email, or course">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-      
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="addStudent()">
-          <mat-icon>add</mat-icon>
-          Add Student
-        </button>
-        <button mat-stroked-button (click)="exportStudents()">
-          <mat-icon>download</mat-icon>
-          Export
-        </button>
-      </div>
-    </div>
+    <!-- Filters and Search -->
+    <mat-card class="filters-card">
+      <mat-card-content>
+        <div class="filters-container">
+          <div class="search-section">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search students</mat-label>
+              <input matInput [formControl]="searchControl" placeholder="Search by name, email, or course">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="exportStudents()">
+              <mat-icon>download</mat-icon>
+              Export
+            </button>
+            <button mat-raised-button color="primary" (click)="addStudent()" class="add-btn">
+              <mat-icon>add</mat-icon>
+              Add Student
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Students Table -->
     <mat-card class="table-card">
       <mat-card-header>
-        <mat-card-title>
-          <mat-icon>school</mat-icon>
-          Students List
-        </mat-card-title>
+        <div class="table-header">
+          <mat-card-title>
+            <mat-icon>people</mat-icon>
+            Students List
+          </mat-card-title>
+          <div class="table-stats">
+            <span class="stats-text">Total: {{ (students$ | async)?.length || 0 }} students</span>
+          </div>
+        </div>
       </mat-card-header>
       <mat-card-content>
         <!-- Loading Indicator -->

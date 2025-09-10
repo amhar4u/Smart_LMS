@@ -1,38 +1,55 @@
 <app-admin-layout>
-  <div class="manage-admins-content">
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1>Admin Management</h1>
-      <p>Manage system administrators and their permissions</p>
-    </div>
+  <div class="manage-admins-container">
+    <mat-card class="header-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>admin_panel_settings</mat-icon>
+          Manage Administrators
+        </mat-card-title>
+        <mat-card-subtitle>
+          Manage system administrators and their permissions
+        </mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
 
-    <!-- Action Bar -->
-    <div class="action-bar">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search admins...</mat-label>
-        <input matInput [formControl]="searchControl" placeholder="Search by name, email, or permissions">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-      
-      <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="addAdmin()">
-          <mat-icon>add</mat-icon>
-          Add Admin
-        </button>
-        <button mat-stroked-button (click)="exportAdmins()">
-          <mat-icon>download</mat-icon>
-          Export
-        </button>
-      </div>
-    </div>
+    <!-- Filters and Search -->
+    <mat-card class="filters-card">
+      <mat-card-content>
+        <div class="filters-container">
+          <div class="search-section">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search administrators</mat-label>
+              <input matInput [formControl]="searchControl" placeholder="Search by name, email, or permissions">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="action-buttons">
+            <button mat-stroked-button (click)="exportAdmins()">
+              <mat-icon>download</mat-icon>
+              Export
+            </button>
+            <button mat-raised-button color="primary" (click)="addAdmin()" class="add-btn">
+              <mat-icon>add</mat-icon>
+              Add Admin
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Admins Table -->
     <mat-card class="table-card">
       <mat-card-header>
-        <mat-card-title>
-          <mat-icon>admin_panel_settings</mat-icon>
-          Administrators List
-        </mat-card-title>
+        <div class="table-header">
+          <mat-card-title>
+            <mat-icon>group</mat-icon>
+            Administrators List
+          </mat-card-title>
+          <div class="table-stats">
+            <span class="stats-text">Total: {{ (admins$ | async)?.length || 0 }} administrators</span>
+          </div>
+        </div>
       </mat-card-header>
       <mat-card-content>
         <!-- Loading Indicator -->
