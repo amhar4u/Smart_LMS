@@ -1,67 +1,188 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface Subject {
-  _id: string;
+  _id?: string;
   name: string;
   code: string;
-  description?: string;
-  credits: number;
+  departmentId: {
+    _id: string;
+    name: string;
+    code: string;
+  } | string;
   courseId: {
     _id: string;
     name: string;
     code: string;
-  };
+  } | string;
   semesterId: {
     _id: string;
     name: string;
     code: string;
-  };
-  lecturerId?: {
+    year: number;
+    type: string;
+  } | string;
+  creditHours: number;
+  lecturerId: {
     _id: string;
     firstName: string;
     lastName: string;
     email: string;
-  };
+  } | string;
+  description?: string;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface SubjectResponse {
   success: boolean;
-  data: Subject[];
-  count: number;
+  data: Subject | Subject[];
   message?: string;
+  error?: string;
+}
+
+export interface Department {
+  _id: string;
+  name: string;
+  code: string;
+}
+
+export interface Course {
+  _id: string;
+  name: string;
+  code: string;
+}
+
+export interface Semester {
+  _id?: string;
+  name: string;
+  code: string;
+  year: number;
+  type: string;
+}
+
+export interface Lecturer {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class SubjectService {
-  private apiUrl = `${environment.apiUrl}/subjects`;
+  private baseUrl = `${environment.apiUrl}/subjects`;
+  private subjectsSubject = new BehaviorSubject<Subject[]>([]);
+  public subjects$ = this.subjectsSubject.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
-  getAllSubjects(): Observable<SubjectResponse> {
-    return this.http.get<SubjectResponse>(this.apiUrl);
+  private getHeaders() {
+    return this.authService.getAuthHeaders();
   }
 
-  getSubjectById(id: string): Observable<{ success: boolean; data: Subject; message?: string }> {
-    return this.http.get<{ success: boolean; data: Subject; message?: string }>(`${this.apiUrl}/${id}`);
+  // Get all subjects
+  getSubjects(filters?: {
+    department?: string;
+    course?: string;
+    semester?: string;
+    lecturer?: string;
+  }): Observable<SubjectResponse> {
+    let params = new HttpParams();
+    
+    if (filters) {
+      if (filters.department) params = params.set('department', filters.department);
+      if (filters.course) params = params.set('course', filters.course);
+      if (filters.semester) params = params.set('semester', filters.semester);
+      if (filters.lecturer) params = params.set('lecturer', filters.lecturer);
+    }
+
+    return this.http.get<SubjectResponse>(this.baseUrl, { 
+      headers: this.getHeaders(),
+      params 
+    });
   }
 
-  createSubject(subject: Partial<Subject>): Observable<{ success: boolean; data: Subject; message?: string }> {
-    return this.http.post<{ success: boolean; data: Subject; message?: string }>(this.apiUrl, subject);
+  // Get subject by ID
+  getSubject(id: string): Observable<SubjectResponse> {
+    return this.http.get<SubjectResponse>(`${this.baseUrl}/${id}`, {
+      headers: this.getHeaders()
+    });
   }
 
-  updateSubject(id: string, subject: Partial<Subject>): Observable<{ success: boolean; data: Subject; message?: string }> {
-    return this.http.put<{ success: boolean; data: Subject; message?: string }>(`${this.apiUrl}/${id}`, subject);
+  // Create new subject
+  createSubject(subject: Partial<Subject>): Observable<SubjectResponse> {
+    return this.http.post<SubjectResponse>(this.baseUrl, subject, {
+      headers: this.getHeaders()
+    });
   }
 
-  deleteSubject(id: string): Observable<{ success: boolean; message?: string }> {
-    return this.http.delete<{ success: boolean; message?: string }>(`${this.apiUrl}/${id}`);
+  // Update subject
+  updateSubject(id: string, subject: Partial<Subject>): Observable<SubjectResponse> {
+    return this.http.put<SubjectResponse>(`${this.baseUrl}/${id}`, subject, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Delete subject
+  deleteSubject(id: string): Observable<SubjectResponse> {
+    return this.http.delete<SubjectResponse>(`${this.baseUrl}/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Get courses by department
+  getCoursesByDepartment(departmentId: string): Observable<{ success: boolean; data: Course[] }> {
+    return this.http.get<{ success: boolean; data: Course[] }>(`${this.baseUrl}/courses/${departmentId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Get all lecturers
+  getLecturers(): Observable<{ success: boolean; data: Lecturer[] }> {
+    return this.http.get<{ success: boolean; data: Lecturer[] }>(`${this.baseUrl}/lecturers/all`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Update subjects in BehaviorSubject
+  updateSubjectsState(subjects: Subject[]) {
+    this.subjectsSubject.next(subjects);
+  }
+
+  // Get current subjects state
+  getCurrentSubjects(): Subject[] {
+    return this.subjectsSubject.value;
+  }
+
+  // Add subject to state
+  addSubjectToState(subject: Subject) {
+    const currentSubjects = this.getCurrentSubjects();
+    this.subjectsSubject.next([...currentSubjects, subject]);
+  }
+
+  // Update subject in state
+  updateSubjectInState(updatedSubject: Subject) {
+    const currentSubjects = this.getCurrentSubjects();
+    const index = currentSubjects.findIndex(s => s._id === updatedSubject._id);
+    if (index !== -1) {
+      currentSubjects[index] = updatedSubject;
+      this.subjectsSubject.next([...currentSubjects]);
+    }
+  }
+
+  // Remove subject from state
+  removeSubjectFromState(subjectId: string) {
+    const currentSubjects = this.getCurrentSubjects();
+    const filteredSubjects = currentSubjects.filter(s => s._id !== subjectId);
+    this.subjectsSubject.next(filteredSubjects);
   }
 }

@@ -16,8 +16,19 @@ const subjectSchema = new mongoose.Schema({
     minlength: [2, 'Subject code must be at least 2 characters'],
     maxlength: [10, 'Subject code cannot exceed 10 characters']
   },
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    required: [true, 'Department ID is required']
+  },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+    required: [true, 'Course ID is required']
+  },
   semesterId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Semester',
     required: [true, 'Semester ID is required']
   },
   creditHours: {
@@ -27,7 +38,8 @@ const subjectSchema = new mongoose.Schema({
     max: [10, 'Credit hours cannot exceed 10']
   },
   lecturerId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: [true, 'Lecturer ID is required']
   },
   description: {
@@ -44,8 +56,26 @@ const subjectSchema = new mongoose.Schema({
 });
 
 // Index for better performance
+subjectSchema.index({ departmentId: 1 });
+subjectSchema.index({ courseId: 1 });
 subjectSchema.index({ semesterId: 1 });
 subjectSchema.index({ lecturerId: 1 });
 subjectSchema.index({ code: 1 });
+
+// Static method to get subjects by department
+subjectSchema.statics.getSubjectsByDepartment = function(departmentId) {
+  return this.find({ 
+    departmentId: departmentId, 
+    isActive: true 
+  }).populate(['departmentId', 'courseId', 'semesterId', 'lecturerId']).sort({ name: 1 });
+};
+
+// Static method to get subjects by course
+subjectSchema.statics.getSubjectsByCourse = function(courseId) {
+  return this.find({ 
+    courseId: courseId, 
+    isActive: true 
+  }).populate(['departmentId', 'courseId', 'semesterId', 'lecturerId']).sort({ name: 1 });
+};
 
 module.exports = mongoose.model('Subject', subjectSchema);
