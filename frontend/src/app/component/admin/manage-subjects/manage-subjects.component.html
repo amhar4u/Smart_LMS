@@ -1,0 +1,233 @@
+<app-admin-layout>
+<div class="manage-subjects-container">
+  <app-loading-spinner></app-loading-spinner>
+  
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>subject</mat-icon>
+        Manage Subjects
+      </mat-card-title>
+      <mat-card-subtitle>
+        Create, edit, and manage academic subjects for courses
+      </mat-card-subtitle>
+    </mat-card-header>
+  </mat-card>
+
+  <!-- Filters and Search -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-container">
+        <div class="search-section">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search subjects</mat-label>
+            <input matInput 
+                   [(ngModel)]="searchTerm" 
+                   (input)="onSearchChange()"
+                   (keyup.enter)="onSearchChange()"
+                   placeholder="Search by name, code, department, course...">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by Department</mat-label>
+            <mat-select [(value)]="selectedDepartment" (selectionChange)="onDepartmentChange()">
+              <mat-option value="">All Departments</mat-option>
+              <mat-option *ngFor="let department of departments" [value]="department._id">
+                {{department.name}} ({{department.code}})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by Course</mat-label>
+            <mat-select [(value)]="selectedCourse" (selectionChange)="applyFilter()" [disabled]="!selectedDepartment">
+              <mat-option value="">All Courses</mat-option>
+              <mat-option *ngFor="let course of courses" [value]="course._id">
+                {{course.name}} ({{course.code}})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="action-buttons">
+          <button mat-stroked-button (click)="applyFilter()">
+            <mat-icon>search</mat-icon>
+            Search
+          </button>
+          <button mat-stroked-button (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear
+          </button>
+          <button mat-raised-button color="primary" (click)="openCreateDialog()" class="add-btn">
+            <mat-icon>add</mat-icon>
+            Add Subject
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Subjects Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-header">
+        <div class="results-count">
+          <span class="count-text">{{totalSubjects}} subjects found</span>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="subjects-table">
+          
+          <!-- Code Column -->
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+            <td mat-cell *matCellDef="let subject">
+              <span class="subject-code">{{subject.code}}</span>
+            </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+            <td mat-cell *matCellDef="let subject">
+              <div class="subject-info">
+                <span class="subject-name">{{subject.name}}</span>
+                <div class="subject-description" *ngIf="subject.description">
+                  {{subject.description}}
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Department Column -->
+          <ng-container matColumnDef="department">
+            <th mat-header-cell *matHeaderCellDef>Department</th>
+            <td mat-cell *matCellDef="let subject">
+              <div class="department-info">
+                <span class="department-name">{{subject.departmentId?.name || getDepartmentName(subject.departmentId)}}</span>
+                <small class="department-code">{{subject.departmentId?.code}}</small>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Course Column -->
+          <ng-container matColumnDef="course">
+            <th mat-header-cell *matHeaderCellDef>Course</th>
+            <td mat-cell *matCellDef="let subject">
+              <div class="course-info">
+                <span class="course-name">{{subject.courseId?.name || getCourseName(subject.courseId)}}</span>
+                <small class="course-code">{{subject.courseId?.code}}</small>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Semester Column -->
+          <ng-container matColumnDef="semester">
+            <th mat-header-cell *matHeaderCellDef>Semester</th>
+            <td mat-cell *matCellDef="let subject">
+              <div class="semester-info">
+                <span class="semester-name">{{subject.semesterId?.name || getSemesterName(subject.semesterId)}}</span>
+                <small class="semester-year" *ngIf="subject.semesterId?.year">{{subject.semesterId.year}}</small>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Credit Hours Column -->
+          <ng-container matColumnDef="creditHours">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Credits</th>
+            <td mat-cell *matCellDef="let subject">
+              <mat-chip class="credit-chip" color="primary" selected>
+                {{subject.creditHours}} hrs
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Lecturer Column -->
+          <ng-container matColumnDef="lecturer">
+            <th mat-header-cell *matHeaderCellDef>Lecturer</th>
+            <td mat-cell *matCellDef="let subject">
+              <div class="lecturer-info">
+                <mat-icon class="lecturer-icon">person</mat-icon>
+                <div class="lecturer-details">
+                  <div *ngIf="subject.lecturerId?.firstName" class="lecturer-name">
+                    {{subject.lecturerId.firstName}} {{subject.lecturerId.lastName}}
+                  </div>
+                  <div *ngIf="!subject.lecturerId?.firstName" class="lecturer-name">
+                    {{getLecturerName(subject.lecturerId)}}
+                  </div>
+                  <small class="lecturer-email" *ngIf="subject.lecturerId?.email">
+                    {{subject.lecturerId.email}}
+                  </small>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let subject">
+              <div class="action-buttons">
+                <button mat-icon-button 
+                        color="primary" 
+                        (click)="openEditDialog(subject)"
+                        matTooltip="Edit Subject"
+                        class="action-btn edit-btn">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button 
+                        color="warn" 
+                        (click)="deleteSubject(subject)"
+                        matTooltip="Delete Subject"
+                        class="action-btn delete-btn">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Table Header and Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="subject-row"></tr>
+        </table>
+
+        <!-- No Data Message -->
+        <div *ngIf="dataSource.data.length === 0" class="no-data-container">
+          <div class="no-data">
+            <mat-icon class="no-data-icon">inbox</mat-icon>
+            <h3 class="no-data-title">No subjects found</h3>
+            <p class="no-data-message">
+              <span *ngIf="searchTerm || selectedDepartment || selectedCourse || selectedSemester || selectedLecturer">
+                Try adjusting your search criteria or clear the filters to see all subjects.
+              </span>
+              <span *ngIf="!searchTerm && !selectedDepartment && !selectedCourse && !selectedSemester && !selectedLecturer">
+                Get started by creating your first subject.
+              </span>
+            </p>
+            <button *ngIf="!searchTerm && !selectedDepartment && !selectedCourse && !selectedSemester && !selectedLecturer" 
+                    mat-raised-button 
+                    color="primary" 
+                    (click)="openCreateDialog()"
+                    class="no-data-action">
+              <mat-icon>add</mat-icon>
+              Create First Subject
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paginator -->
+      <mat-paginator [pageSizeOptions]="[5, 10, 25, 50]"
+                     [pageSize]="pageSize"
+                     [pageIndex]="pageIndex"
+                     [length]="totalSubjects"
+                     (page)="onPageChange($event)"
+                     showFirstLastButtons
+                     class="table-paginator">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>
+</app-admin-layout>
