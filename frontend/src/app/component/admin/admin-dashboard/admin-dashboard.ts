@@ -171,8 +171,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   private calculateStatistics(): void {
     const totalUsers = this.allUsers.length;
-    const activeUsers = this.allUsers.filter(user => user.isActive).length;
-    const pendingUsers = this.allUsers.filter(user => !user.isActive).length;
+    const approvedUsers = this.allUsers.filter(user => user.status === 'approved').length;
+    const pendingUsers = this.allUsers.filter(user => user.status === 'pending').length;
     
     // First row: User-related statistics
     this.userStats = [
@@ -202,11 +202,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       },
       {
         title: 'Approved Users',
-        value: activeUsers,
+        value: approvedUsers,
         icon: 'verified_user',
         color: '#4CAF50',
-        subtitle: 'Currently active',
-        growth: `${((activeUsers / totalUsers) * 100).toFixed(1)}%`
+        subtitle: 'Currently approved',
+        growth: `${totalUsers > 0 ? ((approvedUsers / totalUsers) * 100).toFixed(1) : 0}%`
       }
     ];
 
@@ -335,23 +335,26 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   getUserStatus(user: User): string {
-    if (user.isActive) {
-      return 'Active';
-    } else if (user.status === 'Pending') {
+    if (user.status === 'approved') {
+      return 'Approved';
+    } else if (user.status === 'pending') {
       return 'Pending Approval';
+    } else if (user.status === 'rejected') {
+      return 'Rejected';
     } else {
-      return 'Inactive';
+      return 'Unknown';
     }
   }
 
   getUserStatusClass(status: string): string {
     switch (status.toLowerCase()) {
-      case 'active':
+      case 'approved':
         return 'status-active';
+      case 'pending':
       case 'pending approval':
         return 'status-pending';
-      case 'email unverified':
-        return 'status-unverified';
+      case 'rejected':
+        return 'status-rejected';
       default:
         return 'status-default';
     }
@@ -427,11 +430,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   getActiveUsersCount(): number {
-    return this.allUsers.filter(user => user.isActive && (user.status === 'Active' || !user.status)).length;
+    return this.allUsers.filter(user => user.status === 'approved').length;
   }
 
   getPendingUsersCount(): number {
-    return this.allUsers.filter(user => user.status === 'Pending').length;
+    return this.allUsers.filter(user => user.status === 'pending').length;
   }
 
   // Donut Chart Methods
@@ -672,7 +675,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   getRejectedUsersCount(): number {
-    return this.allUsers.filter(user => user.status === 'Inactive' || (!user.isActive && user.status !== 'Pending')).length;
+    return this.allUsers.filter(user => user.status === 'rejected').length;
   }
 
   getStatusPercentage(status: string): number {

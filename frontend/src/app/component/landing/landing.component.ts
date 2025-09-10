@@ -29,7 +29,12 @@ export class LandingComponent implements OnInit {
     successRate: 0,
     totalDepartments: 0,
     totalUsers: 0,
-    admins: 0
+    admins: 0,
+    approvedUsers: 0,
+    pendingUsers: 0,
+    pendingStudents: 0,
+    pendingTeachers: 0,
+    rejectedUsers: 0
   };
 
   departmentStats: DepartmentStatistics[] = [];
