@@ -11,6 +11,11 @@ export interface OverallStatistics {
   totalDepartments: number;
   totalUsers: number;
   admins: number;
+  approvedUsers: number;
+  pendingUsers: number;
+  pendingStudents: number;
+  pendingTeachers: number;
+  rejectedUsers: number;
 }
 
 export interface DepartmentStatistics {

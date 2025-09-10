@@ -12,11 +12,19 @@ router.get('/', async (req, res) => {
   try {
     console.log('📊 [STATISTICS] Fetching platform statistics');
 
-    // Get user counts
-    const totalUsers = await User.countDocuments({ isActive: true });
-    const activeStudents = await User.countDocuments({ role: 'student', isActive: true });
-    const expertTeachers = await User.countDocuments({ role: 'teacher', isActive: true });
-    const admins = await User.countDocuments({ role: 'admin', isActive: true });
+    // Get user counts with proper status filtering
+    const totalUsers = await User.countDocuments({ isActive: true, status: 'approved' });
+    const activeStudents = await User.countDocuments({ role: 'student', isActive: true, status: 'approved' });
+    const expertTeachers = await User.countDocuments({ role: 'teacher', isActive: true, status: 'approved' });
+    const admins = await User.countDocuments({ role: 'admin', isActive: true, status: 'approved' });
+    
+    // Get pending users count
+    const pendingUsers = await User.countDocuments({ status: 'pending' });
+    const pendingStudents = await User.countDocuments({ role: 'student', status: 'pending' });
+    const pendingTeachers = await User.countDocuments({ role: 'teacher', status: 'pending' });
+    
+    // Get rejected users count
+    const rejectedUsers = await User.countDocuments({ status: 'rejected' });
 
     // Get course count
     const coursesAvailable = await Course.countDocuments({ isActive: true });
@@ -24,9 +32,10 @@ router.get('/', async (req, res) => {
     // Get department count
     const totalDepartments = await Department.countDocuments({ isActive: true });
 
-    // Calculate success rate based on active users vs total users
+    // Calculate success rate based on approved users vs total registered users
     const totalRegisteredUsers = await User.countDocuments({});
-    const successRate = totalRegisteredUsers > 0 ? Math.round((totalUsers / totalRegisteredUsers) * 100) : 0;
+    const approvedUsers = await User.countDocuments({ status: 'approved' });
+    const successRate = totalRegisteredUsers > 0 ? Math.round((approvedUsers / totalRegisteredUsers) * 100) : 0;
 
     // Get department-wise statistics
     const departmentStats = await Department.aggregate([
@@ -60,7 +69,8 @@ router.get('/', async (req, res) => {
                 cond: { 
                   $and: [
                     { $eq: ['$$this.role', 'student'] },
-                    { $eq: ['$$this.isActive', true] }
+                    { $eq: ['$$this.isActive', true] },
+                    { $eq: ['$$this.status', 'approved'] }
                   ]
                 }
               }
@@ -73,7 +83,8 @@ router.get('/', async (req, res) => {
                 cond: { 
                   $and: [
                     { $eq: ['$$this.role', 'teacher'] },
-                    { $eq: ['$$this.isActive', true] }
+                    { $eq: ['$$this.isActive', true] },
+                    { $eq: ['$$this.status', 'approved'] }
                   ]
                 }
               }
@@ -98,7 +109,12 @@ router.get('/', async (req, res) => {
                         $size: {
                           $filter: {
                             input: '$users',
-                            cond: { $eq: ['$$this.isActive', true] }
+                            cond: { 
+                              $and: [
+                                { $eq: ['$$this.isActive', true] },
+                                { $eq: ['$$this.status', 'approved'] }
+                              ]
+                            }
                           }
                         }
                       },
@@ -126,7 +142,12 @@ router.get('/', async (req, res) => {
         successRate,
         totalDepartments,
         totalUsers,
-        admins
+        admins,
+        approvedUsers,
+        pendingUsers,
+        pendingStudents,
+        pendingTeachers,
+        rejectedUsers
       },
       departments: departmentStats
     };
@@ -137,6 +158,9 @@ router.get('/', async (req, res) => {
     console.log(`   📚 Courses Available: ${coursesAvailable}`);
     console.log(`   📈 Success Rate: ${successRate}%`);
     console.log(`   🏢 Total Departments: ${totalDepartments}`);
+    console.log(`   ✅ Approved Users: ${approvedUsers}`);
+    console.log(`   ⏳ Pending Users: ${pendingUsers}`);
+    console.log(`   ❌ Rejected Users: ${rejectedUsers}`);
 
     res.json({
       success: true,
@@ -197,7 +221,12 @@ router.get('/departments', async (req, res) => {
             $size: {
               $filter: {
                 input: '$users',
-                cond: { $eq: ['$$this.isActive', true] }
+                cond: { 
+                  $and: [
+                    { $eq: ['$$this.isActive', true] },
+                    { $eq: ['$$this.status', 'approved'] }
+                  ]
+                }
               }
             }
           },
@@ -208,7 +237,8 @@ router.get('/departments', async (req, res) => {
                 cond: { 
                   $and: [
                     { $eq: ['$$this.role', 'student'] },
-                    { $eq: ['$$this.isActive', true] }
+                    { $eq: ['$$this.isActive', true] },
+                    { $eq: ['$$this.status', 'approved'] }
                   ]
                 }
               }
@@ -221,7 +251,8 @@ router.get('/departments', async (req, res) => {
                 cond: { 
                   $and: [
                     { $eq: ['$$this.role', 'teacher'] },
-                    { $eq: ['$$this.isActive', true] }
+                    { $eq: ['$$this.isActive', true] },
+                    { $eq: ['$$this.status', 'approved'] }
                   ]
                 }
               }
@@ -256,7 +287,12 @@ router.get('/departments', async (req, res) => {
                             $size: {
                               $filter: {
                                 input: '$users',
-                                cond: { $eq: ['$$this.isActive', true] }
+                                cond: { 
+                                  $and: [
+                                    { $eq: ['$$this.isActive', true] },
+                                    { $eq: ['$$this.status', 'approved'] }
+                                  ]
+                                }
                               }
                             }
                           },

@@ -1,12 +1,23 @@
 export interface User {
   id?: string;
+  _id?: string;
   firstName: string;
   lastName: string;
+  fullName?: string;
   email: string;
   phone?: string;
   role: UserRole;
   status?: 'pending' | 'approved' | 'rejected';
   isActive?: boolean;
+  profilePicture?: string;
+  teacherId?: string;
+  employeeId?: string;
+  studentId?: string;
+  department?: string | {
+    _id: string;
+    name: string;
+    code: string;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -9,7 +9,8 @@ const router = express.Router();
 // @access  Private
 router.get('/profile', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    // req.user is already the full user object from auth middleware
+    const user = req.user;
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -48,7 +49,7 @@ router.put('/profile', auth, async (req, res) => {
     delete updates.teacherId;
 
     const user = await User.findByIdAndUpdate(
-      req.user.userId,
+      req.user._id,
       { ...updates, updatedAt: new Date() },
       { new: true, runValidators: true }
     );
@@ -100,6 +101,7 @@ router.get('/by-role/:role', auth, async (req, res) => {
     console.log(`🔍 Searching for users with role: ${role}`);
     const users = await User.find({ role })
       .select('-password')
+      .populate('department', 'name code')
       .sort({ createdAt: -1 });
 
     console.log(`✅ Found ${users.length} users with role: ${role}`);
@@ -149,6 +151,7 @@ router.get('/all', auth, async (req, res) => {
     // Fetch users with pagination
     const users = await User.find(query)
       .select('-password')
+      .populate('department', 'name code')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -178,9 +181,8 @@ router.get('/all', auth, async (req, res) => {
 // @access  Private (Admin)
 router.put('/:id/approve', auth, async (req, res) => {
   try {
-    // Check if user is admin
-    const adminUser = await User.findById(req.user.userId);
-    if (!adminUser || adminUser.role !== 'admin') {
+    // Check if user is admin - req.user is the full user object from auth middleware
+    if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Access denied. Admin privileges required.'
@@ -222,9 +224,8 @@ router.put('/:id/approve', auth, async (req, res) => {
 // @access  Private (Admin)
 router.put('/:id/reject', auth, async (req, res) => {
   try {
-    // Check if user is admin
-    const adminUser = await User.findById(req.user.userId);
-    if (!adminUser || adminUser.role !== 'admin') {
+    // Check if user is admin - req.user is the full user object from auth middleware
+    if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Access denied. Admin privileges required.'
@@ -266,9 +267,8 @@ router.put('/:id/reject', auth, async (req, res) => {
 // @access  Private (Admin)
 router.get('/pending', auth, async (req, res) => {
   try {
-    // Check if user is admin
-    const adminUser = await User.findById(req.user.userId);
-    if (!adminUser || adminUser.role !== 'admin') {
+    // Check if user is admin - req.user is the full user object from auth middleware
+    if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Access denied. Admin privileges required.'
@@ -285,6 +285,7 @@ router.get('/pending', auth, async (req, res) => {
 
     const users = await User.find(query)
       .select('-password')
+      .populate('department', 'name code')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });

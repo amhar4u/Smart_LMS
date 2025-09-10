@@ -14,7 +14,7 @@ export interface User {
   email: string;
   phone?: string;
   role: 'admin' | 'student' | 'teacher';
-  status?: 'Active' | 'Inactive' | 'Pending' | 'On Leave';
+  status?: 'pending' | 'approved' | 'rejected';
   isActive?: boolean;
   createdAt: Date;
   updatedAt?: Date;
@@ -209,7 +209,7 @@ export class UserManagementService {
       ...user,
       id: user._id || user.id,
       fullName: `${user.firstName} ${user.lastName}`,
-      status: user.isActive ? 'Active' : 'Inactive',
+      status: user.status || 'pending', // Use actual status from database
       createdAt: new Date(user.createdAt),
       updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined
     };
@@ -219,7 +219,8 @@ export class UserManagementService {
       fullName: transformed.fullName,
       role: transformed.role,
       email: transformed.email,
-      status: transformed.status
+      status: transformed.status,
+      isActive: transformed.isActive
     });
     
     return transformed;
@@ -320,7 +321,7 @@ export class UserManagementService {
         `"${user.fullName || `${user.firstName} ${user.lastName}`}"`,
         `"${user.email}"`,
         `"${user.role}"`,
-        `"${user.status || (user.isActive ? 'Active' : 'Inactive')}"`,
+        `"${user.status || 'pending'}"`,
         `"${user.phone || ''}"`,
         `"${user.createdAt.toLocaleDateString()}"`
       ].join(','))
@@ -341,26 +342,34 @@ export class UserManagementService {
   }
 
   // User approval methods
-  approveUser(userId: string): Observable<ApiResponse<User>> {
+  approveUser(userId: string): Observable<ApiResponse<{ user: User }>> {
     const headers = this.authService.getAuthHeaders();
     
-    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/approve`, {}, { headers }).pipe(
-      tap(() => this.refreshUsers()),
+    return this.http.put<ApiResponse<{ user: User }>>(`${this.baseUrl}/users/${userId}/approve`, {}, { headers }).pipe(
+      tap((response) => {
+        if (response.success) {
+          this.refreshAllUsers();
+        }
+      }),
       catchError((error) => {
         console.error('Error approving user:', error);
-        return of({ success: false, data: {} as User, message: 'Failed to approve user' });
+        throw error;
       })
     );
   }
 
-  rejectUser(userId: string): Observable<ApiResponse<User>> {
+  rejectUser(userId: string): Observable<ApiResponse<{ user: User }>> {
     const headers = this.authService.getAuthHeaders();
     
-    return this.http.put<ApiResponse<User>>(`${this.baseUrl}/users/${userId}/reject`, {}, { headers }).pipe(
-      tap(() => this.refreshUsers()),
+    return this.http.put<ApiResponse<{ user: User }>>(`${this.baseUrl}/users/${userId}/reject`, {}, { headers }).pipe(
+      tap((response) => {
+        if (response.success) {
+          this.refreshAllUsers();
+        }
+      }),
       catchError((error) => {
         console.error('Error rejecting user:', error);
-        return of({ success: false, data: {} as User, message: 'Failed to reject user' });
+        throw error;
       })
     );
   }
