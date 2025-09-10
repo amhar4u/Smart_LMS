@@ -15,6 +15,8 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 import { SemesterService, Semester } from '../../../services/semester.service';
 import { BatchService, Batch } from '../../../services/batch.service';
@@ -45,6 +47,8 @@ import { AdminLayout } from '../admin-layout/admin-layout';
     MatDialogModule,
     MatTooltipModule,
     MatChipsModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     AdminLayout
   ],
   templateUrl: './manage-semesters.component.html',

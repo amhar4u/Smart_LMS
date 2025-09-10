@@ -145,6 +145,7 @@ router.post('/', auth, requireAdmin, async (req, res) => {
       code,
       year,
       type,
+      batch,
       startDate,
       endDate,
       registrationStartDate,
@@ -184,6 +185,7 @@ router.post('/', auth, requireAdmin, async (req, res) => {
       code: code.toUpperCase().trim(),
       year,
       type: type.toLowerCase(),
+      batch,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       description: description?.trim(),
@@ -240,6 +242,7 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
       code,
       year,
       type,
+      batch,
       startDate,
       endDate,
       registrationStartDate,
@@ -297,6 +300,7 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
     if (code) semester.code = code.toUpperCase().trim();
     if (year) semester.year = year;
     if (type) semester.type = type.toLowerCase();
+    if (batch) semester.batch = batch;
     if (startDate) semester.startDate = new Date(startDate);
     if (endDate) semester.endDate = new Date(endDate);
     if (registrationStartDate) semester.registrationStartDate = new Date(registrationStartDate);

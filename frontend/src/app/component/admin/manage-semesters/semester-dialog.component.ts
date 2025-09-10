@@ -238,11 +238,11 @@ export class SemesterDialogComponent implements OnInit {
         [Validators.required]
       ],
       startDate: [
-        this.data.semester?.startDate || '', 
+        this.data.semester?.startDate ? new Date(this.data.semester.startDate) : null, 
         [Validators.required]
       ],
       endDate: [
-        this.data.semester?.endDate || '', 
+        this.data.semester?.endDate ? new Date(this.data.semester.endDate) : null, 
         [Validators.required]
       ],
       description: [
