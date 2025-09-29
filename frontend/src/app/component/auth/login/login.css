@@ -476,6 +476,58 @@
   }
 }
 
+/* Google Sign-In Styles */
+.login-divider {
+  margin: 1.5rem 0 1rem 0 !important;
+  position: relative !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.divider-text {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background: white !important;
+  padding: 0 1rem !important;
+  color: #6b7280 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+}
+
+.google-signin-button {
+  height: 48px !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  background: white !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  transition: all 0.2s ease !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.google-signin-button:hover {
+  border-color: #d1d5db !important;
+  background: #f9fafb !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.google-signin-button:active {
+  transform: translateY(0) !important;
+}
+
+.google-logo {
+  width: 20px !important;
+  height: 20px !important;
+  object-fit: contain !important;
+}
+
 /* Loading Spinner */
 ::ng-deep app-loading-spinner {
   position: fixed;
