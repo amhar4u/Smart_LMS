@@ -110,9 +110,8 @@ const moduleSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes
+// Indexes (code already has unique index from field definition)
 moduleSchema.index({ subject: 1, order: 1 });
-moduleSchema.index({ code: 1 }, { unique: true });
 moduleSchema.index({ isActive: 1 });
 
 // Virtual for subject details

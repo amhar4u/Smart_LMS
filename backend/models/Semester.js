@@ -55,13 +55,11 @@ const semesterSchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true,
-    index: true
+    default: true
   },
   isCurrent: {
     type: Boolean,
-    default: false,
-    index: true
+    default: false
   }
 }, {
   timestamps: true,
@@ -95,9 +93,8 @@ semesterSchema.pre('save', function(next) {
   next();
 });
 
-// Indexes for performance
+// Indexes for performance (code already indexed by unique constraint)
 semesterSchema.index({ name: 1 });
-semesterSchema.index({ code: 1 });
 semesterSchema.index({ year: 1, type: 1 });
 semesterSchema.index({ isActive: 1 });
 semesterSchema.index({ isCurrent: 1 });

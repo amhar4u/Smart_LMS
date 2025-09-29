@@ -296,7 +296,7 @@ export class ManageModulesComponent implements OnInit {
   }
 
   hasVideo(module: Module): boolean {
-    return !!(module.video && module.video.driveFileId);
+    return !!(module.video && module.video.name);
   }
 
   getSubjectName(subjectId: string): string {

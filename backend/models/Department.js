@@ -104,9 +104,7 @@ departmentSchema.virtual('courseCount', {
   match: { isActive: true }
 });
 
-// Indexes for performance
-departmentSchema.index({ name: 1 });
-departmentSchema.index({ code: 1 });
+// Indexes for performance (name and code already indexed by unique constraint)
 departmentSchema.index({ isActive: 1 });
 departmentSchema.index({ createdAt: -1 });
 
