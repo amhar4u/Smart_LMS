@@ -124,7 +124,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           return of({ success: false, data: [], count: 0 });
         })
       ),
-      courses: this.courseService.getCoursesForAdmin(1, 1000).pipe(
+      courses: this.courseService.getCoursesAdmin(1, 1000).pipe(
         catchError(error => {
           console.error('Error loading courses:', error);
           return of({ success: false, data: { courses: [], pagination: { totalItems: 0 } } });

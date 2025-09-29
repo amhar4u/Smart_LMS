@@ -73,6 +73,14 @@
           </div>
         </div>
 
+        <!-- Modules Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-modules" [attr.data-tooltip]="sidebarCollapsed ? 'Modules' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">view_module</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Modules</span>
+          </div>
+        </div>
+
         <!-- Departments Management -->
         <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments" [attr.data-tooltip]="sidebarCollapsed ? 'Departments' : null">
           <div class="nav-content">
