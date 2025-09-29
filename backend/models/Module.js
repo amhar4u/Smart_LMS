@@ -5,49 +5,155 @@ const moduleSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Module title is required'],
     trim: true,
-    minlength: [2, 'Module title must be at least 2 characters'],
-    maxlength: [200, 'Module title cannot exceed 200 characters']
+    maxlength: [100, 'Module title cannot exceed 100 characters']
+  },
+  name: {
+    type: String,
+    required: [true, 'Module name is required'],
+    trim: true,
+    maxlength: [100, 'Module name cannot exceed 100 characters']
+  },
+  code: {
+    type: String,
+    required: [true, 'Module code is required'],
+    unique: true,
+    trim: true,
+    uppercase: true,
+    maxlength: [20, 'Module code cannot exceed 20 characters']
   },
   description: {
     type: String,
+    required: [true, 'Module description is required'],
     trim: true,
-    maxlength: [1000, 'Description cannot exceed 1000 characters']
+    maxlength: [500, 'Description cannot exceed 500 characters']
   },
-  subjectId: {
-    type: String,
-    required: [true, 'Subject ID is required']
+  subject: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subject',
+    required: [true, 'Subject is required']
+  },
+  documents: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    uniqueName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    localPath: {
+      type: String,
+      required: true
+    },
+    fileType: {
+      type: String,
+      required: true
+    },
+    size: {
+      type: Number, // Size in bytes
+      required: false
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  video: {
+    name: {
+      type: String,
+      trim: true
+    },
+    uniqueName: {
+      type: String,
+      trim: true
+    },
+    localPath: {
+      type: String
+    },
+    fileType: {
+      type: String
+    },
+    size: {
+      type: Number
+    },
+    duration: {
+      type: String // Duration in format like "1:23:45"
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
   },
   order: {
     type: Number,
-    required: [true, 'Module order is required'],
-    min: [1, 'Order must be at least 1']
-  },
-  content: {
-    type: String,
-    trim: true
-  },
-  resources: [{
-    name: String,
-    url: String,
-    type: {
-      type: String,
-      enum: ['pdf', 'video', 'link', 'document', 'other']
-    }
-  }],
-  duration: {
-    type: Number, // Duration in hours
-    min: [0, 'Duration cannot be negative']
+    default: 0,
+    min: 0
   },
   isActive: {
     type: Boolean,
     default: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-// Index for better performance
-moduleSchema.index({ subjectId: 1 });
-moduleSchema.index({ order: 1 });
+// Indexes
+moduleSchema.index({ subject: 1, order: 1 });
+moduleSchema.index({ code: 1 }, { unique: true });
+moduleSchema.index({ isActive: 1 });
 
-module.exports = mongoose.model('Module', moduleSchema);
+// Virtual for subject details
+moduleSchema.virtual('subjectDetails', {
+  ref: 'Subject',
+  localField: 'subject',
+  foreignField: '_id',
+  justOne: true
+});
+
+// Methods
+moduleSchema.methods.getPublicInfo = function() {
+  return {
+    _id: this._id,
+    name: this.name,
+    code: this.code,
+    description: this.description,
+    subject: this.subject,
+    documents: this.documents,
+    video: this.video,
+    order: this.order,
+    isActive: this.isActive,
+    createdAt: this.createdAt,
+    updatedAt: this.updatedAt
+  };
+};
+
+// Static methods
+moduleSchema.statics.findBySubject = function(subjectId) {
+  return this.find({ subject: subjectId, isActive: true })
+    .sort({ order: 1 })
+    .populate('subject', 'name code');
+};
+
+moduleSchema.statics.findWithDetails = function(moduleId) {
+  return this.findById(moduleId)
+    .populate('subject', 'name code description')
+    .populate('createdBy', 'firstName lastName email')
+    .populate('updatedBy', 'firstName lastName email');
+};
+
+const Module = mongoose.model('Module', moduleSchema);
+
+module.exports = Module;
