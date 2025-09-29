@@ -463,4 +463,36 @@ router.put('/:id/current', auth, requireAdmin, async (req, res) => {
   }
 });
 
+// @route   GET /api/semesters/batch/:batchId
+// @desc    Get semesters by batch
+// @access  Private
+router.get('/batch/:batchId', auth, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    console.log(`📅 [SEMESTERS] Fetching semesters for batch: ${batchId}`);
+
+    const semesters = await Semester.find({ 
+      batch: batchId,
+      isActive: true 
+    })
+    .populate('batch', 'name code')
+    .sort({ year: 1, type: 1 });
+
+    console.log(`✅ [SEMESTERS] Found ${semesters.length} semesters for batch ${batchId}`);
+
+    res.json({
+      success: true,
+      data: semesters,
+      count: semesters.length
+    });
+  } catch (error) {
+    console.error('❌ [SEMESTERS] Error fetching semesters by batch:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching semesters by batch',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

@@ -77,6 +77,11 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'admin/manage-modules',
+    loadComponent: () => import('./component/admin/manage-modules/manage-modules.component').then(m => m.ManageModulesComponent),
+    canActivate: [adminGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

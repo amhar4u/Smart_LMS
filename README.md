@@ -52,4 +52,4 @@ This project aims to improve the online learning experience by detecting student
 | Emotion AI    | Face API.js (TensorFlow) |
 | Video Calls   | Jitsi Meet / WebRTC |
 | Auth          | JWT (JSON Web Token) |
-| Storage       | Local file system / Cloud (e.g., AWS S3) |
+| Storage       | Local file system |

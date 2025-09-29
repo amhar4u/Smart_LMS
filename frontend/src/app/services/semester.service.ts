@@ -82,6 +82,13 @@ export class SemesterService {
   }
 
   /**
+   * Get semesters by batch
+   */
+  getSemestersByBatch(batchId: string): Observable<SemesterResponse> {
+    return this.http.get<SemesterResponse>(`${this.apiUrl}/batch/${batchId}`);
+  }
+
+  /**
    * Create new semester (Admin only)
    */
   createSemester(semester: Partial<Semester>): Observable<SingleSemesterResponse> {
