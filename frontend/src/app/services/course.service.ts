@@ -118,34 +118,20 @@ export class CourseService {
     return this.coursesSubject.value;
   }
 
-  // Get courses for admin with pagination and filters
-  getCoursesForAdmin(
-    page: number = 1,
-    limit: number = 10,
-    search: string = '',
-    category: string = '',
-    departmentId: string = ''
-  ): Observable<CoursesAdminResponse> {
+    // Get courses with pagination for admin
+  getCoursesAdmin(page: number = 1, limit: number = 10, search?: string, departmentId?: string): Observable<CoursesAdminResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
-
-    if (search.trim()) {
-      params = params.set('search', search.trim());
+    
+    if (search) {
+      params = params.set('search', search);
     }
-
-    if (category && category !== 'all') {
-      params = params.set('category', category);
-    }
-
-    if (departmentId && departmentId !== 'all') {
+    if (departmentId) {
       params = params.set('department', departmentId);
     }
 
-    const headers = this.authService.getAuthHeaders();
-    console.log('🔐 CourseService: Making admin request with headers:', headers.get('Authorization') ? 'Bearer token present' : 'No auth token');
-    
-    return this.http.get<CoursesAdminResponse>(`${this.apiUrl}/admin`, { params, headers });
+    return this.http.get<CoursesAdminResponse>(`${this.apiUrl}/admin`, { params });
   }
 
   // Get single course by ID
@@ -155,26 +141,24 @@ export class CourseService {
 
   // Create new course
   createCourse(courseData: CreateCourseRequest): Observable<CourseDetailResponse> {
-    const headers = this.authService.getAuthHeaders();
-    return this.http.post<CourseDetailResponse>(this.apiUrl, courseData, { headers });
+    return this.http.post<CourseDetailResponse>(this.apiUrl, courseData);
   }
 
   // Update course
   updateCourse(id: string, courseData: UpdateCourseRequest): Observable<CourseDetailResponse> {
-    const headers = this.authService.getAuthHeaders();
-    return this.http.put<CourseDetailResponse>(`${this.apiUrl}/${id}`, courseData, { headers });
+    console.log('✏️ Update course request:', id, courseData);
+    return this.http.put<CourseDetailResponse>(`${this.apiUrl}/${id}`, courseData);
   }
 
   // Delete course
   deleteCourse(id: string): Observable<{ success: boolean; message: string }> {
-    const headers = this.authService.getAuthHeaders();
-    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`, { headers });
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`);
   }
 
   // Toggle course active status
   toggleCourseStatus(id: string): Observable<CourseDetailResponse> {
-    const headers = this.authService.getAuthHeaders();
-    return this.http.patch<CourseDetailResponse>(`${this.apiUrl}/${id}/toggle-status`, {}, { headers });
+    console.log('🔄 Toggle course status request:', id);
+    return this.http.patch<CourseDetailResponse>(`${this.apiUrl}/${id}/toggle-status`, {});
   }
 
   // Get course categories

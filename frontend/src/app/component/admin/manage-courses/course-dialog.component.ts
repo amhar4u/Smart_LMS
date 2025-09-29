@@ -69,6 +69,12 @@ export interface CourseDialogData {
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Duration</mat-label>
               <mat-select formControlName="duration">
+                <mat-option value="1 month">1 Month</mat-option>
+                <mat-option value="3 months">3 Months</mat-option>
+                <mat-option value="6 months">6 Months</mat-option>
+                <mat-option value="semester">1 Semester</mat-option>
+                <mat-option value="1 semester">1 Semester</mat-option>
+                <mat-option value="2 semesters">2 Semesters</mat-option>
                 <mat-option value="1 year">1 Year</mat-option>
                 <mat-option value="2 years">2 Years</mat-option>
                 <mat-option value="3 years">3 Years</mat-option>

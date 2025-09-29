@@ -16,6 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { CourseService, Course } from '../../../services/course.service';
+import type { CoursesAdminResponse } from '../../../services/course.service';
 import { DepartmentService, Department } from '../../../services/department.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { LoadingService } from '../../../services/loading.service';
@@ -96,22 +97,21 @@ export class ManageCoursesComponent implements OnInit {
   loadCourses(): void {
     this.loadingService.show();
     
-    this.courseService.getCoursesForAdmin(
+    this.courseService.getCoursesAdmin(
       this.currentPage,
       this.pageSize,
       this.searchTerm,
-      '', // category - empty since we removed it
       this.selectedDepartment
     ).subscribe({
-      next: (response) => {
+      next: (response: CoursesAdminResponse) => {
         this.loadingService.hide();
-        if (response.success) {
+        console.log('Courses loaded:', response);
+        if (response.success && response.data) {
           this.dataSource.data = response.data.courses;
           this.totalItems = response.data.pagination.totalItems;
-          this.totalPages = response.data.pagination.totalPages;
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         this.loadingService.hide();
         console.error('Error loading courses:', error);
         this.snackBar.open('Error loading courses', 'Close', {
@@ -206,9 +206,13 @@ export class ManageCoursesComponent implements OnInit {
   updateCourse(id: string, courseData: any): void {
     this.loadingService.show();
     
+    console.log('Updating course with data:', courseData);
+    
     this.courseService.updateCourse(id, courseData).subscribe({
       next: (response) => {
         this.loadingService.hide();
+        console.log('Update response:', response);
+        
         if (response.success) {
           this.snackBar.open('Course updated successfully', 'Close', {
             duration: 3000,
@@ -216,11 +220,18 @@ export class ManageCoursesComponent implements OnInit {
           });
           this.loadCourses();
           this.courseService.refreshCourses();
+        } else {
+          this.snackBar.open(response.message || 'Failed to update course', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
         }
       },
       error: (error) => {
         this.loadingService.hide();
-        const errorMessage = error.error?.message || 'Error updating course';
+        console.error('Update error:', error);
+        
+        const errorMessage = error.error?.message || error.message || 'Error updating course';
         this.snackBar.open(errorMessage, 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar']
@@ -274,21 +285,32 @@ export class ManageCoursesComponent implements OnInit {
       if (confirmed) {
         this.loadingService.show();
         
+        console.log(`Toggling course status for: ${course.name} (${course._id})`);
+        
         this.courseService.toggleCourseStatus(course._id!).subscribe({
           next: (response) => {
             this.loadingService.hide();
+            console.log('Toggle response:', response);
+            
             if (response.success) {
               this.snackBar.open(`Course ${action}d successfully`, 'Close', {
                 duration: 3000,
                 panelClass: ['success-snackbar']
               });
               this.loadCourses();
-              this.courseService.refreshCourses(); // Refresh the courses list for other components
+              this.courseService.refreshCourses();
+            } else {
+              this.snackBar.open(response.message || `Failed to ${action} course`, 'Close', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+              });
             }
           },
           error: (error) => {
             this.loadingService.hide();
-            const errorMessage = error.error?.message || `Error ${action}ing course`;
+            console.error('Toggle error:', error);
+            
+            const errorMessage = error.error?.message || error.message || `Error ${action}ing course`;
             this.snackBar.open(errorMessage, 'Close', {
               duration: 5000,
               panelClass: ['error-snackbar']

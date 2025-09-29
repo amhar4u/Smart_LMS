@@ -30,7 +30,7 @@ const courseSchema = new mongoose.Schema({
   },
   duration: {
     type: String,
-    enum: ['1 year', '2 years', '3 years', '4 years', '5 years'],
+    enum: ['1 year', '2 years', '3 years', '4 years', '5 years', 'semester', '1 semester', '2 semesters', '6 months', '1 month', '3 months'],
     required: [true, 'Duration is required'],
     default: '4 years'
   },
@@ -40,8 +40,7 @@ const courseSchema = new mongoose.Schema({
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   createdAt: {
     type: Date,

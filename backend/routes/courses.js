@@ -1,21 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const Course = require('../models/Course');
+const Department = require('../models/Department');
 const auth = require('../middleware/auth');
 
 // Get all courses (public access for registration forms)
 router.get('/', async (req, res) => {
   try {
     const departmentId = req.query.department;
-    let query = { isActive: true };
+    let filter = { isActive: true };
     
     if (departmentId) {
-      query.department = departmentId;
+      filter.department = departmentId;
     }
     
-    const courses = await Course.find(query)
+    const courses = await Course.find(filter)
       .populate('department', 'name code')
-      .select('name code description category department credits duration')
+      .select('name code description duration')
       .sort({ name: 1 });
     
     res.json({
@@ -35,6 +36,8 @@ router.get('/', async (req, res) => {
 // Get all courses with pagination (admin access)
 router.get('/admin', auth, async (req, res) => {
   try {
+    console.log('Admin courses endpoint called, user:', req.user);
+    
     // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -45,31 +48,41 @@ router.get('/admin', auth, async (req, res) => {
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
     const search = req.query.search || '';
     const departmentId = req.query.department || '';
 
-    // Build query
-    let query = {};
+    console.log('Query params:', { page, limit, offset, search, departmentId });
+
+    // Build filter for MongoDB
+    let filter = {};
+    
+    // Add search conditions
     if (search) {
-      query.$or = [
+      filter.$or = [
         { name: { $regex: search, $options: 'i' } },
         { code: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
     }
+    
+    // Add department filter
     if (departmentId && departmentId !== 'all') {
-      query.department = departmentId;
+      filter.department = departmentId;
     }
 
-    const courses = await Course.find(query)
-      .populate('createdBy', 'firstName lastName email')
+    console.log('Filter:', filter);
+
+    // Get courses with pagination
+    const courses = await Course.find(filter)
       .populate('department', 'name code')
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .skip(offset);
 
-    const total = await Course.countDocuments(query);
+    const count = await Course.countDocuments(filter);
+
+    console.log('Found courses:', courses.length, 'Total count:', count);
 
     res.json({
       success: true,
@@ -77,8 +90,8 @@ router.get('/admin', auth, async (req, res) => {
         courses,
         pagination: {
           currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalItems: total,
+          totalPages: Math.ceil(count / limit),
+          totalItems: count,
           itemsPerPage: limit
         }
       }
@@ -203,6 +216,8 @@ router.post('/', auth, async (req, res) => {
 // Update course
 router.put('/:id', auth, async (req, res) => {
   try {
+    console.log('Update course request:', req.params.id, req.body);
+    
     // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -221,6 +236,8 @@ router.put('/:id', auth, async (req, res) => {
         message: 'Course not found'
       });
     }
+
+    console.log('Found course to update:', course.name);
 
     // Check if course with same name or code already exists (excluding current course)
     if (name || code) {
@@ -258,8 +275,10 @@ router.put('/:id', auth, async (req, res) => {
 
     await course.save();
 
-    // Populate the updated course
-    await course.populate(['createdBy', 'department'], 'firstName lastName email name code');
+    // Populate the updated course with department info
+    await course.populate('department', 'name code');
+
+    console.log(`Course updated: ${course.name} (${course.code})`);
 
     res.json({
       success: true,
@@ -339,7 +358,14 @@ router.patch('/:id/toggle-status', auth, async (req, res) => {
       });
     }
 
-    await course.toggleActive();
+    // Toggle the status
+    course.isActive = !course.isActive;
+    await course.save();
+
+    // Populate the course with department info before sending response
+    await course.populate('department', 'name code');
+
+    console.log(`Course ${course.name} status toggled to ${course.isActive ? 'active' : 'inactive'}`);
 
     res.json({
       success: true,
