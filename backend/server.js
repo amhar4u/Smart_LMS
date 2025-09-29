@@ -2,17 +2,29 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const session = require('express-session');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'smart-lms-secret-key-2024',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { 
+    secure: false, // Set to true in production with HTTPS
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 // Middleware
 app.use(cors({
   origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4202'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -26,6 +38,7 @@ app.use('/api/departments', require('./routes/departments'));
 app.use('/api/semesters', require('./routes/semesters'));
 app.use('/api/batches', require('./routes/batches'));
 app.use('/api/subjects', require('./routes/subjects'));
+app.use('/api/modules', require('./routes/modules'));
 app.use('/api/statistics', require('./routes/statistics'));
 
 // Test route for auth
