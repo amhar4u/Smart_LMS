@@ -118,8 +118,10 @@ export class CourseService {
     return this.coursesSubject.value;
   }
 
-    // Get courses with pagination for admin
+  // Get courses with pagination for admin
   getCoursesAdmin(page: number = 1, limit: number = 10, search?: string, departmentId?: string): Observable<CoursesAdminResponse> {
+    const headers = this.authService.getAuthHeaders();
+    
     let params = new HttpParams()
       .set('page', page.toString())
       .set('limit', limit.toString());
@@ -131,7 +133,7 @@ export class CourseService {
       params = params.set('department', departmentId);
     }
 
-    return this.http.get<CoursesAdminResponse>(`${this.apiUrl}/admin`, { params });
+    return this.http.get<CoursesAdminResponse>(`${this.apiUrl}/admin`, { params, headers });
   }
 
   // Get single course by ID
@@ -141,24 +143,28 @@ export class CourseService {
 
   // Create new course
   createCourse(courseData: CreateCourseRequest): Observable<CourseDetailResponse> {
-    return this.http.post<CourseDetailResponse>(this.apiUrl, courseData);
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post<CourseDetailResponse>(this.apiUrl, courseData, { headers });
   }
 
   // Update course
   updateCourse(id: string, courseData: UpdateCourseRequest): Observable<CourseDetailResponse> {
     console.log('✏️ Update course request:', id, courseData);
-    return this.http.put<CourseDetailResponse>(`${this.apiUrl}/${id}`, courseData);
+    const headers = this.authService.getAuthHeaders();
+    return this.http.put<CourseDetailResponse>(`${this.apiUrl}/${id}`, courseData, { headers });
   }
 
   // Delete course
   deleteCourse(id: string): Observable<{ success: boolean; message: string }> {
-    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`);
+    const headers = this.authService.getAuthHeaders();
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`, { headers });
   }
 
   // Toggle course active status
   toggleCourseStatus(id: string): Observable<CourseDetailResponse> {
     console.log('🔄 Toggle course status request:', id);
-    return this.http.patch<CourseDetailResponse>(`${this.apiUrl}/${id}/toggle-status`, {});
+    const headers = this.authService.getAuthHeaders();
+    return this.http.patch<CourseDetailResponse>(`${this.apiUrl}/${id}/toggle-status`, {}, { headers });
   }
 
   // Get course categories
