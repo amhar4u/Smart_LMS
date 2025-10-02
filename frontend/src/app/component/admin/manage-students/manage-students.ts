@@ -37,7 +37,7 @@ import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, ma
   styleUrl: './manage-students.css'
 })
 export class ManageStudents implements OnInit, OnDestroy {
-  displayedColumns: string[] = ['id', 'name', 'email', 'course', 'semester', 'status', 'createdAt', 'actions'];
+  displayedColumns: string[] = ['id', 'name', 'email', 'course', 'department', 'batch', 'status', 'createdAt', 'actions'];
   students$: Observable<User[]>;
   searchControl = new FormControl('');
   isLoading$ = new BehaviorSubject<boolean>(false);
@@ -254,6 +254,27 @@ export class ManageStudents implements OnInit, OnDestroy {
 
   getStudentStatus(student: User): string {
     return student.status || (student.isActive ? 'Active' : 'Inactive');
+  }
+
+  getDepartmentName(student: User): string {
+    if (typeof student.department === 'object' && student.department) {
+      return `${student.department.name} (${student.department.code})`;
+    }
+    return student.department || 'N/A';
+  }
+
+  getBatchName(student: User): string {
+    if (typeof student.batch === 'object' && student.batch) {
+      return `${student.batch.name} (${student.batch.code})`;
+    }
+    return student.batch || 'N/A';
+  }
+
+  getCourseName(student: User): string {
+    if (typeof student.course === 'object' && student.course) {
+      return `${student.course.name} (${student.course.code})`;
+    }
+    return student.course || 'N/A';
   }
 
   private refreshStudents(): void {

@@ -123,6 +123,17 @@
             </td>
           </ng-container>
 
+          <!-- Batch Column -->
+          <ng-container matColumnDef="batch">
+            <th mat-header-cell *matHeaderCellDef>Batch</th>
+            <td mat-cell *matCellDef="let subject">
+              <div class="batch-info">
+                <span class="batch-name">{{subject.batchId?.name || getBatchName(subject.batchId)}}</span>
+                <small class="batch-years" *ngIf="subject.batchId?.startYear">{{subject.batchId.startYear}}-{{subject.batchId.endYear}}</small>
+              </div>
+            </td>
+          </ng-container>
+
           <!-- Semester Column -->
           <ng-container matColumnDef="semester">
             <th mat-header-cell *matHeaderCellDef>Semester</th>
