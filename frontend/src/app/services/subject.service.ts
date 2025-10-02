@@ -18,6 +18,13 @@ export interface Subject {
     name: string;
     code: string;
   } | string;
+  batchId: {
+    _id: string;
+    name: string;
+    code: string;
+    startYear: number;
+    endYear: number;
+  } | string;
   semesterId: {
     _id: string;
     name: string;
@@ -55,6 +62,14 @@ export interface Course {
   _id: string;
   name: string;
   code: string;
+}
+
+export interface Batch {
+  _id: string;
+  name: string;
+  code: string;
+  startYear: number;
+  endYear: number;
 }
 
 export interface Semester {
@@ -142,6 +157,20 @@ export class SubjectService {
   // Get courses by department
   getCoursesByDepartment(departmentId: string): Observable<{ success: boolean; data: Course[] }> {
     return this.http.get<{ success: boolean; data: Course[] }>(`${this.baseUrl}/courses/${departmentId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Get batches by course
+  getBatchesByCourse(courseId: string): Observable<{ success: boolean; data: Batch[] }> {
+    return this.http.get<{ success: boolean; data: Batch[] }>(`${this.baseUrl}/batches/${courseId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Get semesters by batch
+  getSemestersByBatch(batchId: string): Observable<{ success: boolean; data: Semester[] }> {
+    return this.http.get<{ success: boolean; data: Semester[] }>(`${this.baseUrl}/semesters/${batchId}`, {
       headers: this.getHeaders()
     });
   }

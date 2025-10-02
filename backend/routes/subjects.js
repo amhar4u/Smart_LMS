@@ -22,6 +22,7 @@ router.get('/', auth, async (req, res) => {
     const subjects = await Subject.find(filter)
       .populate('departmentId', 'name code')
       .populate('courseId', 'name code')
+      .populate('batchId', 'name code startYear endYear')
       .populate('semesterId', 'name code year type')
       .populate('lecturerId', 'firstName lastName email')
       .sort({ name: 1 });
@@ -67,10 +68,14 @@ router.get('/:id', auth, async (req, res) => {
 // Create new subject
 router.post('/', auth, async (req, res) => {
   try {
-    const { name, code, departmentId, courseId, semesterId, creditHours, lecturerId, description } = req.body;
+    const { name, code, departmentId, courseId, batchId, semesterId, creditHours, lecturerId, description } = req.body;
+
+    console.log(`📝 [DEBUG] Creating subject with data:`, {
+      name, code, departmentId, courseId, batchId, semesterId, creditHours, lecturerId, description
+    });
 
     // Validate required fields
-    if (!name || !code || !departmentId || !courseId || !semesterId || !creditHours || !lecturerId) {
+    if (!name || !code || !departmentId || !courseId || !batchId || !semesterId || !creditHours || !lecturerId) {
       return res.status(400).json({ 
         success: false, 
         message: 'All required fields must be provided' 
@@ -95,23 +100,40 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
-    // Check if semester exists
-    const semester = await Semester.findById(semesterId);
-    if (!semester) {
+    // Check if batch exists and belongs to the course
+    const Batch = require('../models/Batch');
+    const batch = await Batch.findById(batchId);
+    if (!batch || batch.course.toString() !== courseId) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Invalid semester selected' 
+        message: 'Invalid batch selected for this course' 
       });
     }
 
-    // Check if lecturer exists and has lecturer role
+    // Check if semester exists and belongs to the batch
+    const semester = await Semester.findById(semesterId);
+    if (!semester || semester.batch.toString() !== batchId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid semester selected for this batch' 
+      });
+    }
+
+    // Check if lecturer exists and has teacher role
     const lecturer = await User.findById(lecturerId);
-    if (!lecturer || lecturer.role !== 'lecturer') {
+    console.log(`🔍 [DEBUG] Lecturer validation for ID: ${lecturerId}`);
+    console.log(`🔍 [DEBUG] Lecturer found:`, lecturer ? `${lecturer.firstName} ${lecturer.lastName}` : 'Not found');
+    console.log(`🔍 [DEBUG] Lecturer role:`, lecturer?.role);
+    console.log(`🔍 [DEBUG] Lecturer status:`, lecturer?.status);
+    
+    if (!lecturer || lecturer.role !== 'teacher' || lecturer.status !== 'approved') {
+      console.log(`❌ [DEBUG] Lecturer validation failed`);
       return res.status(400).json({ 
         success: false, 
         message: 'Invalid lecturer selected' 
       });
     }
+    console.log(`✅ [DEBUG] Lecturer validation passed`);
 
     // Check if subject code already exists
     const existingSubject = await Subject.findOne({ code: code.toUpperCase() });
@@ -127,6 +149,7 @@ router.post('/', auth, async (req, res) => {
       code: code.toUpperCase().trim(),
       departmentId,
       courseId,
+      batchId,
       semesterId,
       creditHours,
       lecturerId,
@@ -139,6 +162,7 @@ router.post('/', auth, async (req, res) => {
     await subject.populate([
       { path: 'departmentId', select: 'name code' },
       { path: 'courseId', select: 'name code' },
+      { path: 'batchId', select: 'name code startYear endYear' },
       { path: 'semesterId', select: 'name code year type' },
       { path: 'lecturerId', select: 'firstName lastName email' }
     ]);
@@ -213,9 +237,9 @@ router.put('/:id', auth, async (req, res) => {
       });
     }
 
-    // Check if lecturer exists and has lecturer role
+    // Check if lecturer exists and has teacher role
     const lecturer = await User.findById(lecturerId);
-    if (!lecturer || lecturer.role !== 'lecturer') {
+    if (!lecturer || lecturer.role !== 'teacher' || lecturer.status !== 'approved') {
       return res.status(400).json({ 
         success: false, 
         message: 'Invalid lecturer selected' 
@@ -323,14 +347,55 @@ router.get('/courses/:departmentId', auth, async (req, res) => {
   }
 });
 
+// Get batches by course
+router.get('/batches/:courseId', auth, async (req, res) => {
+  try {
+    const Batch = require('../models/Batch');
+    const batches = await Batch.find({ 
+      course: req.params.courseId, 
+      isActive: true 
+    }).select('name code startYear endYear').sort({ startYear: -1 });
+
+    res.json({ success: true, data: batches });
+  } catch (error) {
+    console.error('Error fetching batches by course:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch batches',
+      error: error.message 
+    });
+  }
+});
+
+// Get semesters by batch
+router.get('/semesters/:batchId', auth, async (req, res) => {
+  try {
+    const semesters = await Semester.find({ 
+      batch: req.params.batchId, 
+      isActive: true 
+    }).select('name code year type').sort({ year: -1, type: 1 });
+
+    res.json({ success: true, data: semesters });
+  } catch (error) {
+    console.error('Error fetching semesters by batch:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch semesters',
+      error: error.message 
+    });
+  }
+});
+
 // Get lecturers
 router.get('/lecturers/all', auth, async (req, res) => {
   try {
     const lecturers = await User.find({ 
-      role: 'lecturer',
+      role: 'teacher',
+      status: 'approved',
       isActive: true 
     }).select('firstName lastName email').sort({ firstName: 1 });
 
+    console.log('✅ [LECTURERS] Found', lecturers.length, 'approved teachers');
     res.json({ success: true, data: lecturers });
   } catch (error) {
     console.error('Error fetching lecturers:', error);

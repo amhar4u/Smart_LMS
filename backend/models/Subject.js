@@ -26,6 +26,11 @@ const subjectSchema = new mongoose.Schema({
     ref: 'Course',
     required: [true, 'Course ID is required']
   },
+  batchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
+    required: [true, 'Batch ID is required']
+  },
   semesterId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Semester',
@@ -58,6 +63,7 @@ const subjectSchema = new mongoose.Schema({
 // Index for better performance
 subjectSchema.index({ departmentId: 1 });
 subjectSchema.index({ courseId: 1 });
+subjectSchema.index({ batchId: 1 });
 subjectSchema.index({ semesterId: 1 });
 subjectSchema.index({ lecturerId: 1 });
 subjectSchema.index({ code: 1 });

@@ -9,14 +9,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { SubjectService, Subject, Department, Course, Semester, Lecturer } from '../../../services/subject.service';
+import { SubjectService, Subject, Department, Course, Batch, Semester, Lecturer } from '../../../services/subject.service';
 import { LoadingService } from '../../../services/loading.service';
 
 interface DialogData {
   mode: 'create' | 'edit';
   subject?: Subject;
   departments: Department[];
-  semesters: Semester[];
   lecturers: Lecturer[];
 }
 
@@ -41,6 +40,8 @@ export class SubjectDialogComponent implements OnInit {
   form: FormGroup;
   isEdit: boolean;
   courses: Course[] = [];
+  batches: Batch[] = [];
+  semesters: Semester[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -66,6 +67,7 @@ export class SubjectDialogComponent implements OnInit {
       code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
       departmentId: ['', [Validators.required]],
       courseId: ['', [Validators.required]],
+      batchId: ['', [Validators.required]],
       semesterId: ['', [Validators.required]],
       creditHours: ['', [Validators.required, Validators.min(1), Validators.max(10)]],
       lecturerId: ['', [Validators.required]],
@@ -86,6 +88,22 @@ export class SubjectDialogComponent implements OnInit {
       await this.loadCoursesByDepartment(departmentId);
     }
 
+    // Load batches for the selected course
+    if (subject.courseId) {
+      const courseId = typeof subject.courseId === 'string' 
+        ? subject.courseId 
+        : subject.courseId._id;
+      await this.loadBatchesByCourse(courseId);
+    }
+
+    // Load semesters for the selected batch
+    if (subject.batchId) {
+      const batchId = typeof subject.batchId === 'string' 
+        ? subject.batchId 
+        : subject.batchId._id;
+      await this.loadSemestersByBatch(batchId);
+    }
+
     this.form.patchValue({
       name: subject.name,
       code: subject.code,
@@ -95,6 +113,9 @@ export class SubjectDialogComponent implements OnInit {
       courseId: typeof subject.courseId === 'string' 
         ? subject.courseId 
         : subject.courseId._id,
+      batchId: typeof subject.batchId === 'string' 
+        ? subject.batchId 
+        : subject.batchId._id,
       semesterId: typeof subject.semesterId === 'string' 
         ? subject.semesterId 
         : subject.semesterId._id,
@@ -109,12 +130,42 @@ export class SubjectDialogComponent implements OnInit {
   async onDepartmentChange() {
     const departmentId = this.form.get('departmentId')?.value;
     
-    // Reset course selection
+    // Reset dependent selections
     this.form.get('courseId')?.setValue('');
+    this.form.get('batchId')?.setValue('');
+    this.form.get('semesterId')?.setValue('');
     this.courses = [];
+    this.batches = [];
+    this.semesters = [];
     
     if (departmentId) {
       await this.loadCoursesByDepartment(departmentId);
+    }
+  }
+
+  async onCourseChange() {
+    const courseId = this.form.get('courseId')?.value;
+    
+    // Reset dependent selections
+    this.form.get('batchId')?.setValue('');
+    this.form.get('semesterId')?.setValue('');
+    this.batches = [];
+    this.semesters = [];
+    
+    if (courseId) {
+      await this.loadBatchesByCourse(courseId);
+    }
+  }
+
+  async onBatchChange() {
+    const batchId = this.form.get('batchId')?.value;
+    
+    // Reset semester selection
+    this.form.get('semesterId')?.setValue('');
+    this.semesters = [];
+    
+    if (batchId) {
+      await this.loadSemestersByBatch(batchId);
     }
   }
 
@@ -127,6 +178,30 @@ export class SubjectDialogComponent implements OnInit {
     } catch (error) {
       console.error('Error loading courses:', error);
       this.showError('Failed to load courses for selected department');
+    }
+  }
+
+  async loadBatchesByCourse(courseId: string) {
+    try {
+      const response = await this.subjectService.getBatchesByCourse(courseId).toPromise();
+      if (response?.success && Array.isArray(response.data)) {
+        this.batches = response.data;
+      }
+    } catch (error) {
+      console.error('Error loading batches:', error);
+      this.showError('Failed to load batches for selected course');
+    }
+  }
+
+  async loadSemestersByBatch(batchId: string) {
+    try {
+      const response = await this.subjectService.getSemestersByBatch(batchId).toPromise();
+      if (response?.success && Array.isArray(response.data)) {
+        this.semesters = response.data;
+      }
+    } catch (error) {
+      console.error('Error loading semesters:', error);
+      this.showError('Failed to load semesters for selected batch');
     }
   }
 
@@ -143,6 +218,7 @@ export class SubjectDialogComponent implements OnInit {
           code: formData.code.toUpperCase().trim(),
           departmentId: formData.departmentId,
           courseId: formData.courseId,
+          batchId: formData.batchId,
           semesterId: formData.semesterId,
           creditHours: Number(formData.creditHours),
           lecturerId: formData.lecturerId,
@@ -219,6 +295,7 @@ export class SubjectDialogComponent implements OnInit {
       code: 'Subject code',
       departmentId: 'Department',
       courseId: 'Course',
+      batchId: 'Batch',
       semesterId: 'Semester',
       creditHours: 'Credit hours',
       lecturerId: 'Lecturer',

@@ -59,6 +59,7 @@ export class ManageSubjectsComponent implements OnInit {
     'code',
     'department',
     'course',
+    'batch',
     'semester',
     'creditHours',
     'lecturer',
@@ -262,6 +263,15 @@ export class ManageSubjectsComponent implements OnInit {
     return course ? course.name.toLowerCase() : '';
   }
 
+  getBatchName(batchId: any): string {
+    if (typeof batchId === 'object' && batchId?.name) {
+      return batchId.name;
+    }
+    // Since we don't have batches loaded globally, return empty string
+    // The populated data from backend will be used instead
+    return '';
+  }
+
   getSemesterName(semesterId: any): string {
     if (typeof semesterId === 'object' && semesterId?.name) {
       return semesterId.name.toLowerCase();
@@ -284,7 +294,6 @@ export class ManageSubjectsComponent implements OnInit {
       data: {
         mode: 'create',
         departments: this.departments,
-        semesters: this.semesters,
         lecturers: this.lecturers
       }
     });
@@ -304,7 +313,6 @@ export class ManageSubjectsComponent implements OnInit {
         mode: 'edit',
         subject: { ...subject },
         departments: this.departments,
-        semesters: this.semesters,
         lecturers: this.lecturers
       }
     });

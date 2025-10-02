@@ -54,7 +54,7 @@
       <!-- Course -->
       <mat-form-field class="full-width">
         <mat-label>Course *</mat-label>
-        <mat-select formControlName="courseId" [disabled]="!form.get('departmentId')?.value">
+        <mat-select formControlName="courseId" [disabled]="!form.get('departmentId')?.value" (selectionChange)="onCourseChange()">
           <mat-option value="">Select Course</mat-option>
           <mat-option *ngFor="let course of courses" [value]="course._id">
             {{ course.name }} ({{ course.code }})
@@ -68,18 +68,38 @@
         </mat-hint>
       </mat-form-field>
 
+      <!-- Batch -->
+      <mat-form-field class="full-width">
+        <mat-label>Batch *</mat-label>
+        <mat-select formControlName="batchId" [disabled]="!form.get('courseId')?.value" (selectionChange)="onBatchChange()">
+          <mat-option value="">Select Batch</mat-option>
+          <mat-option *ngFor="let batch of batches" [value]="batch._id">
+            {{ batch.name }} ({{ batch.startYear }}-{{ batch.endYear }})
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('batchId')?.touched && form.get('batchId')?.errors">
+          {{ getErrorMessage('batchId') }}
+        </mat-error>
+        <mat-hint *ngIf="!form.get('courseId')?.value">
+          Please select a course first
+        </mat-hint>
+      </mat-form-field>
+
       <!-- Semester -->
       <mat-form-field class="full-width">
         <mat-label>Semester *</mat-label>
-        <mat-select formControlName="semesterId">
+        <mat-select formControlName="semesterId" [disabled]="!form.get('batchId')?.value">
           <mat-option value="">Select Semester</mat-option>
-          <mat-option *ngFor="let semester of data.semesters" [value]="semester._id">
-            {{ semester.name }} ({{ semester.year }})
+          <mat-option *ngFor="let semester of semesters" [value]="semester._id">
+            {{ semester.name }} ({{ semester.year }} - {{ semester.type | titlecase }})
           </mat-option>
         </mat-select>
         <mat-error *ngIf="form.get('semesterId')?.touched && form.get('semesterId')?.errors">
           {{ getErrorMessage('semesterId') }}
         </mat-error>
+        <mat-hint *ngIf="!form.get('batchId')?.value">
+          Please select a batch first
+        </mat-hint>
       </mat-form-field>
 
       <!-- Credit Hours -->
