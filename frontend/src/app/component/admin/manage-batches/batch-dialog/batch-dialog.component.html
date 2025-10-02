@@ -55,11 +55,12 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Course</mat-label>
-          <mat-select formControlName="course">
-            <mat-option *ngFor="let course of courses" [value]="course._id">
-              {{ course.name }}
+          <mat-select formControlName="course" [disabled]="!batchForm.get('department')?.value">
+            <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
+              {{ course.name }} ({{ course.code }})
             </mat-option>
           </mat-select>
+          <mat-hint *ngIf="!batchForm.get('department')?.value">Please select a department first</mat-hint>
           <mat-error *ngIf="courseControl?.hasError('required')">
             Course is required
           </mat-error>
@@ -69,24 +70,26 @@
       <div class="form-row two-columns">
         <mat-form-field appearance="outline">
           <mat-label>Start Year</mat-label>
-          <input matInput type="number" formControlName="startYear" placeholder="2024">
+          <mat-select formControlName="startYear">
+            <mat-option *ngFor="let year of yearOptions" [value]="year">
+              {{ year }}
+            </mat-option>
+          </mat-select>
           <mat-error *ngIf="startYearControl?.hasError('required')">
             Start year is required
-          </mat-error>
-          <mat-error *ngIf="startYearControl?.hasError('min') || startYearControl?.hasError('max')">
-            Year must be between 2020 and 2030
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>End Year</mat-label>
-          <input matInput type="number" formControlName="endYear" placeholder="2028">
+          <mat-select formControlName="endYear">
+            <mat-option *ngFor="let year of yearOptions" [value]="year">
+              {{ year }}
+            </mat-option>
+          </mat-select>
           <mat-hint>Auto-calculated as Start Year + 4</mat-hint>
           <mat-error *ngIf="endYearControl?.hasError('required')">
             End year is required
-          </mat-error>
-          <mat-error *ngIf="endYearControl?.hasError('min') || endYearControl?.hasError('max')">
-            Year must be between 2020 and 2035
           </mat-error>
         </mat-form-field>
       </div>

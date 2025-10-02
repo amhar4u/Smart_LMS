@@ -44,7 +44,9 @@ export interface BatchDialogData {
 export class BatchDialogComponent implements OnInit {
   batchForm: FormGroup;
   courses: Course[] = [];
+  filteredCourses: Course[] = [];
   departments: Department[] = [];
+  yearOptions: number[] = [];
   isLoading = false;
   isSubmitting = false;
 
@@ -57,24 +59,27 @@ export class BatchDialogComponent implements OnInit {
     private departmentService: DepartmentService,
     private snackBar: MatSnackBar
   ) {
+    // Generate year options (current year to +10 years)
+    this.generateYearOptions();
+    
     this.batchForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]+$/)]],
       department: ['', Validators.required],
       course: ['', Validators.required],
-      startYear: ['', [Validators.required, Validators.min(2020), Validators.max(2030)]],
-      endYear: ['', [Validators.required, Validators.min(2020), Validators.max(2035)]],
+      startYear: ['', Validators.required],
+      endYear: ['', Validators.required],
       maxStudents: ['', [Validators.required, Validators.min(1), Validators.max(200)]],
       description: ['']
     });
   }
 
   ngOnInit() {
-    this.loadInitialData();
-    
-    if (this.data.mode === 'edit' && this.data.batch) {
-      this.populateForm();
-    }
+    this.loadInitialData().then(() => {
+      if (this.data.mode === 'edit' && this.data.batch) {
+        this.populateForm();
+      }
+    });
 
     // Auto-generate code when name changes
     this.batchForm.get('name')?.valueChanges.subscribe(name => {
@@ -84,22 +89,30 @@ export class BatchDialogComponent implements OnInit {
       }
     });
 
+    // Filter courses when department changes
+    this.batchForm.get('department')?.valueChanges.subscribe(departmentId => {
+      this.onDepartmentChange(departmentId);
+    });
+
     // Auto-set end year when start year changes
     this.batchForm.get('startYear')?.valueChanges.subscribe(startYear => {
       if (startYear) {
         const endYear = parseInt(startYear) + 4; // Assuming 4-year programs
-        this.batchForm.patchValue({ endYear }, { emitEvent: false });
+        // Only auto-set if the end year is within our year options
+        if (this.yearOptions.includes(endYear)) {
+          this.batchForm.patchValue({ endYear }, { emitEvent: false });
+        }
       }
     });
   }
 
-  loadInitialData() {
+  loadInitialData(): Promise<void> {
     this.isLoading = true;
 
     const loadCourses = this.courseService.getCourses().toPromise();
     const loadDepartments = this.departmentService.getDepartments().toPromise();
 
-    Promise.all([loadCourses, loadDepartments])
+    return Promise.all([loadCourses, loadDepartments])
       .then(([coursesResponse, departmentsResponse]) => {
         // Handle different response formats
         if (Array.isArray(coursesResponse)) {
@@ -118,27 +131,50 @@ export class BatchDialogComponent implements OnInit {
           this.departments = [];
         }
 
+        // Initialize filtered courses as empty (will be populated when department is selected)
+        this.filteredCourses = [];
+
         this.isLoading = false;
       })
       .catch(error => {
         console.error('Error loading initial data:', error);
         this.snackBar.open('Error loading data', 'Close', { duration: 3000 });
         this.isLoading = false;
+        throw error; // Re-throw to propagate the error
       });
   }
 
   populateForm() {
     if (this.data.batch) {
+      // Extract IDs from populated objects
+      const departmentId = typeof this.data.batch.department === 'object' 
+        ? this.data.batch.department._id 
+        : this.data.batch.department;
+      
+      const courseId = typeof this.data.batch.course === 'object' 
+        ? this.data.batch.course._id 
+        : this.data.batch.course;
+
+      // First populate all fields except course
       this.batchForm.patchValue({
         name: this.data.batch.name,
         code: this.data.batch.code,
-        department: this.data.batch.department,
-        course: this.data.batch.course,
+        department: departmentId,
         startYear: this.data.batch.startYear,
         endYear: this.data.batch.endYear,
         maxStudents: this.data.batch.maxStudents,
         description: this.data.batch.description || ''
       });
+
+      // Trigger department change to filter courses, then set the course
+      if (departmentId) {
+        this.onDepartmentChange(departmentId);
+        
+        // Now set the course after filtering
+        this.batchForm.patchValue({
+          course: courseId
+        });
+      }
     }
   }
 
@@ -216,6 +252,36 @@ export class BatchDialogComponent implements OnInit {
       const control = this.batchForm.get(key);
       control?.markAsTouched();
     });
+  }
+
+  private generateYearOptions() {
+    const currentYear = new Date().getFullYear();
+    this.yearOptions = [];
+    for (let i = 0; i <= 10; i++) {
+      this.yearOptions.push(currentYear + i);
+    }
+  }
+
+  private onDepartmentChange(departmentId: string) {
+    if (!departmentId) {
+      this.filteredCourses = [];
+      this.batchForm.patchValue({ course: '' });
+      return;
+    }
+
+    // Filter courses based on selected department
+    this.filteredCourses = this.courses.filter(course => {
+      const courseDepId = typeof course.department === 'object' 
+        ? course.department._id 
+        : course.department;
+      return courseDepId === departmentId;
+    });
+
+    // Reset course selection if current course is not available for the new department
+    const currentCourse = this.batchForm.get('course')?.value;
+    if (currentCourse && !this.filteredCourses.find(c => c._id === currentCourse)) {
+      this.batchForm.patchValue({ course: '' });
+    }
   }
 
   // Getter methods for form validation
