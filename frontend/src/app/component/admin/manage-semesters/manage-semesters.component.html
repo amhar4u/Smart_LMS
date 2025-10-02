@@ -69,9 +69,9 @@
 
             <mat-form-field appearance="outline" class="filter-field">
               <mat-label>Course</mat-label>
-              <mat-select formControlName="course" (selectionChange)="onCourseChange($event.value)">
+              <mat-select formControlName="course" (selectionChange)="onCourseChange($event.value)" [disabled]="!courses.length">
                 <mat-option value="">All Courses</mat-option>
-                <mat-option *ngFor="let course of courses" [value]="course._id">
+                <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
                   {{ course.name }}
                 </mat-option>
               </mat-select>
@@ -79,10 +79,10 @@
 
             <mat-form-field appearance="outline" class="filter-field">
               <mat-label>Batch</mat-label>
-              <mat-select formControlName="batch">
+              <mat-select formControlName="batch" [disabled]="!filteredBatches.length">
                 <mat-option value="">All Batches</mat-option>
-                <mat-option *ngFor="let batch of batches" [value]="batch._id">
-                  {{ batch.name }}
+                <mat-option *ngFor="let batch of filteredBatches" [value]="batch._id">
+                  {{ batch.name }} ({{ batch.startYear }}-{{ batch.endYear }})
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -135,6 +135,18 @@
               <td mat-cell *matCellDef="let semester">
                 <mat-chip>{{ semester.code }}</mat-chip>
               </td>
+            </ng-container>
+
+            <!-- Department Column -->
+            <ng-container matColumnDef="department">
+              <th mat-header-cell *matHeaderCellDef>Department</th>
+              <td mat-cell *matCellDef="let semester">{{ getDepartmentName(semester.batch) }}</td>
+            </ng-container>
+
+            <!-- Course Column -->
+            <ng-container matColumnDef="course">
+              <th mat-header-cell *matHeaderCellDef>Course</th>
+              <td mat-cell *matCellDef="let semester">{{ getCourseName(semester.batch) }}</td>
             </ng-container>
 
             <!-- Batch Column -->

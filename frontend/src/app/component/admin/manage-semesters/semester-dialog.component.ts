@@ -12,7 +12,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 
 import { Semester } from '../../../services/semester.service';
-import { Batch } from '../../../services/batch.service';
+import { Batch, BatchService } from '../../../services/batch.service';
+import { Course, CourseService } from '../../../services/course.service';
+import { Department, DepartmentService } from '../../../services/department.service';
 
 export interface SemesterDialogData {
   semester?: Semester;
@@ -76,11 +78,33 @@ export interface SemesterDialogData {
             </mat-form-field>
           </div>
 
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Department</mat-label>
+              <mat-select formControlName="department">
+                <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                  {{ dept.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage('department') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Course</mat-label>
+              <mat-select formControlName="course" [disabled]="!filteredCourses.length">
+                <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
+                  {{ course.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage('course') }}</mat-error>
+            </mat-form-field>
+          </div>
+
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Batch</mat-label>
-            <mat-select formControlName="batch">
-              <mat-option *ngFor="let batch of data.batches" [value]="batch._id">
-                {{ batch.name }}
+            <mat-select formControlName="batch" [disabled]="!filteredBatches.length">
+              <mat-option *ngFor="let batch of filteredBatches" [value]="batch._id">
+                {{ batch.name }} ({{ batch.startYear }}-{{ batch.endYear }})
               </mat-option>
             </mat-select>
             <mat-error>{{ getErrorMessage('batch') }}</mat-error>
@@ -204,16 +228,30 @@ export interface SemesterDialogData {
 })
 export class SemesterDialogComponent implements OnInit {
   semesterForm!: FormGroup;
+  departments: Department[] = [];
+  courses: Course[] = [];
+  filteredCourses: Course[] = [];
+  filteredBatches: Batch[] = [];
+  isLoading = false;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<SemesterDialogComponent>,
+    private batchService: BatchService,
+    private courseService: CourseService,
+    private departmentService: DepartmentService,
     @Inject(MAT_DIALOG_DATA) public data: SemesterDialogData
   ) {
     this.initializeForm();
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadInitialData().then(() => {
+      if (this.data.semester) {
+        this.populateFormForEdit();
+      }
+    });
+  }
 
   initializeForm(): void {
     this.semesterForm = this.fb.group({
@@ -233,6 +271,8 @@ export class SemesterDialogComponent implements OnInit {
         this.data.semester?.year || '', 
         [Validators.required, Validators.min(2020), Validators.max(2030)]
       ],
+      department: ['', [Validators.required]],
+      course: ['', [Validators.required]],
       batch: [
         typeof this.data.semester?.batch === 'object' ? this.data.semester.batch._id : (this.data.semester?.batch || ''), 
         [Validators.required]
@@ -256,6 +296,120 @@ export class SemesterDialogComponent implements OnInit {
         this.data.semester?.isCurrent !== undefined ? this.data.semester.isCurrent : false
       ]
     });
+
+    // Set up form change listeners
+    this.semesterForm.get('department')?.valueChanges.subscribe(departmentId => {
+      this.onDepartmentChange(departmentId);
+    });
+
+    this.semesterForm.get('course')?.valueChanges.subscribe(courseId => {
+      this.onCourseChange(courseId);
+    });
+  }
+
+  async loadInitialData(): Promise<void> {
+    this.isLoading = true;
+    
+    try {
+      const [departmentsRes, coursesRes] = await Promise.all([
+        this.departmentService.getDepartments().toPromise(),
+        this.courseService.getCourses().toPromise()
+      ]);
+
+      // Handle different response formats
+      if (Array.isArray(departmentsRes)) {
+        this.departments = departmentsRes;
+      } else if (departmentsRes && 'data' in departmentsRes) {
+        this.departments = (departmentsRes as any).data;
+      }
+
+      if (Array.isArray(coursesRes)) {
+        this.courses = coursesRes;
+      } else if (coursesRes && 'data' in coursesRes) {
+        this.courses = (coursesRes as any).data;
+      }
+
+      this.isLoading = false;
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      this.isLoading = false;
+    }
+  }
+
+  populateFormForEdit(): void {
+    if (this.data.semester) {
+      // Get the batch to extract department and course info
+      const batchId = typeof this.data.semester.batch === 'object' 
+        ? this.data.semester.batch._id 
+        : this.data.semester.batch;
+      
+      const batch = this.data.batches.find(b => b._id === batchId);
+      
+      if (batch) {
+        const departmentId = typeof batch.department === 'object' 
+          ? batch.department._id 
+          : batch.department;
+        
+        const courseId = typeof batch.course === 'object' 
+          ? batch.course._id 
+          : batch.course;
+
+        // Set department and course values
+        this.semesterForm.patchValue({
+          department: departmentId,
+          course: courseId
+        });
+
+        // Trigger filtering
+        this.onDepartmentChange(departmentId);
+        this.onCourseChange(courseId);
+      }
+    }
+  }
+
+  onDepartmentChange(departmentId: string): void {
+    if (!departmentId) {
+      this.filteredCourses = [];
+      this.filteredBatches = [];
+      this.semesterForm.patchValue({ course: '', batch: '' });
+      return;
+    }
+
+    // Filter courses by department
+    this.filteredCourses = this.courses.filter(course => {
+      const courseDepId = typeof course.department === 'object' 
+        ? course.department._id 
+        : course.department;
+      return courseDepId === departmentId;
+    });
+
+    // Reset course and batch if current course is not in filtered courses
+    const currentCourse = this.semesterForm.get('course')?.value;
+    if (currentCourse && !this.filteredCourses.find(c => c._id === currentCourse)) {
+      this.semesterForm.patchValue({ course: '', batch: '' });
+    }
+  }
+
+  onCourseChange(courseId: string): void {
+    if (!courseId) {
+      this.filteredBatches = [];
+      this.semesterForm.patchValue({ batch: '' });
+      return;
+    }
+
+    // Filter batches by course
+    this.filteredBatches = this.data.batches.filter(batch => {
+      const batchCourseId = typeof batch.course === 'object' 
+        ? batch.course._id 
+        : batch.course;
+      return batchCourseId === courseId;
+    });
+
+    // Reset batch if current batch is not in filtered batches
+    const currentBatch = this.semesterForm.get('batch')?.value;
+    if (currentBatch && !this.filteredBatches.find(b => b._id === currentBatch)) {
+      this.semesterForm.patchValue({ batch: '' });
+    }
   }
 
   getErrorMessage(fieldName: string): string {
@@ -287,6 +441,8 @@ export class SemesterDialogComponent implements OnInit {
       code: 'Semester code',
       type: 'Semester type',
       year: 'Year',
+      department: 'Department',
+      course: 'Course',
       batch: 'Batch',
       startDate: 'Start date',
       endDate: 'End date',

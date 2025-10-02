@@ -22,7 +22,23 @@ router.get('/', async (req, res) => {
   try {
     console.log('📅 [SEMESTERS] Fetching all active semesters');
 
-    const semesters = await Semester.getActiveSemesters().select('-__v');
+    const semesters = await Semester.find({ isActive: true })
+      .populate({
+        path: 'batch',
+        select: 'name code startYear endYear',
+        populate: [
+          {
+            path: 'department',
+            select: 'name code'
+          },
+          {
+            path: 'course',
+            select: 'name code'
+          }
+        ]
+      })
+      .sort({ year: -1, type: 1 })
+      .select('-__v');
 
     console.log(`✅ [SEMESTERS] Found ${semesters.length} active semesters`);
 

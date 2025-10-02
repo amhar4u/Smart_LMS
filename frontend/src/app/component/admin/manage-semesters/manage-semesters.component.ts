@@ -60,10 +60,12 @@ export class ManageSemestersComponent implements OnInit {
   semesters: Semester[] = [];
   filteredSemesters: Semester[] = [];
   batches: Batch[] = [];
+  filteredBatches: Batch[] = [];
   departments: Department[] = [];
   courses: Course[] = [];
+  filteredCourses: Course[] = [];
   
-  displayedColumns: string[] = ['name', 'code', 'batch', 'type', 'year', 'startDate', 'endDate', 'isActive', 'actions'];
+  displayedColumns: string[] = ['name', 'code', 'department', 'course', 'batch', 'type', 'year', 'startDate', 'endDate', 'isActive', 'actions'];
   
   // Pagination
   pageSize = 10;
@@ -99,6 +101,7 @@ export class ManageSemestersComponent implements OnInit {
   ngOnInit(): void {
     this.loadSemesters();
     this.loadDepartments();
+    this.loadCourses();
     this.loadBatches();
   }
 
@@ -147,6 +150,20 @@ export class ManageSemestersComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading departments:', error);
+      }
+    });
+  }
+
+  loadCourses(): void {
+    this.courseService.getCourses().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.courses = response.data;
+          this.filteredCourses = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading courses:', error);
       }
     });
   }
@@ -205,11 +222,42 @@ export class ManageSemestersComponent implements OnInit {
 
     // Apply other filters
     const filters = this.filterForm.value;
+    
+    // Filter by department
+    if (filters.department) {
+      filtered = filtered.filter(semester => {
+        if (typeof semester.batch === 'object' && semester.batch !== null) {
+          const batch = semester.batch as any; // Cast to any to access department
+          const batchDepId = typeof batch.department === 'object' 
+            ? batch.department._id 
+            : batch.department;
+          return batchDepId === filters.department;
+        }
+        return false;
+      });
+    }
+
+    // Filter by course
+    if (filters.course) {
+      filtered = filtered.filter(semester => {
+        if (typeof semester.batch === 'object' && semester.batch !== null) {
+          const batch = semester.batch as any; // Cast to any to access course
+          const batchCourseId = typeof batch.course === 'object' 
+            ? batch.course._id 
+            : batch.course;
+          return batchCourseId === filters.course;
+        }
+        return false;
+      });
+    }
+
+    // Filter by batch
     if (filters.batch) {
       filtered = filtered.filter(semester => 
         typeof semester.batch === 'object' ? semester.batch._id === filters.batch : semester.batch === filters.batch
       );
     }
+    
     if (filters.type) {
       filtered = filtered.filter(semester => semester.type === filters.type);
     }
@@ -229,6 +277,8 @@ export class ManageSemestersComponent implements OnInit {
   clearFilters(): void {
     this.searchTerm = '';
     this.filterForm.reset();
+    this.filteredCourses = [];
+    this.filteredBatches = [];
     this.applyFilters();
   }
 
@@ -353,6 +403,24 @@ export class ManageSemestersComponent implements OnInit {
     return '';
   }
 
+  getDepartmentName(batch: any): string {
+    if (typeof batch === 'object' && batch !== null) {
+      if (typeof batch.department === 'object' && batch.department !== null) {
+        return batch.department.name || '';
+      }
+    }
+    return '';
+  }
+
+  getCourseName(batch: any): string {
+    if (typeof batch === 'object' && batch !== null) {
+      if (typeof batch.course === 'object' && batch.course !== null) {
+        return batch.course.name || '';
+      }
+    }
+    return '';
+  }
+
   getActiveSemestersCount(): number {
     return this.semesters.filter(s => s.isActive).length;
   }
@@ -373,10 +441,19 @@ export class ManageSemestersComponent implements OnInit {
 
   onDepartmentChange(departmentId: string): void {
     if (departmentId) {
-      this.loadCoursesByDepartment(departmentId);
+      // Filter courses by selected department
+      this.filteredCourses = this.courses.filter(course => {
+        const courseDepId = typeof course.department === 'object' 
+          ? course.department._id 
+          : course.department;
+        return courseDepId === departmentId;
+      });
     } else {
-      this.courses = [];
+      this.filteredCourses = [];
     }
+    
+    // Reset dependent dropdowns
+    this.filteredBatches = [];
     this.filterForm.patchValue({
       course: '',
       batch: ''
@@ -386,10 +463,18 @@ export class ManageSemestersComponent implements OnInit {
 
   onCourseChange(courseId: string): void {
     if (courseId) {
-      this.loadBatchesByCourse(courseId);
+      // Filter batches by selected course
+      this.filteredBatches = this.batches.filter(batch => {
+        const batchCourseId = typeof batch.course === 'object' 
+          ? batch.course._id 
+          : batch.course;
+        return batchCourseId === courseId;
+      });
     } else {
-      this.loadBatches();
+      this.filteredBatches = [];
     }
+    
+    // Reset dependent dropdown
     this.filterForm.patchValue({
       batch: ''
     });
