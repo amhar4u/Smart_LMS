@@ -11,15 +11,29 @@
       <!-- Basic Information -->
       <div class="form-row">
         <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Module Title *</mat-label>
+          <input matInput formControlName="title" placeholder="Enter module title">
+          <mat-error>{{ getErrorMessage('title') }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
           <mat-label>Module Name *</mat-label>
           <input matInput formControlName="name" placeholder="Enter module name">
           <mat-error>{{ getErrorMessage('name') }}</mat-error>
         </mat-form-field>
+      </div>
 
+      <div class="form-row">
         <mat-form-field appearance="outline" class="half-width">
           <mat-label>Module Code *</mat-label>
           <input matInput formControlName="code" placeholder="Enter module code" style="text-transform: uppercase;">
           <mat-error>{{ getErrorMessage('code') }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Order *</mat-label>
+          <input matInput formControlName="order" type="number" min="1" placeholder="Enter module order">
+          <mat-error>{{ getErrorMessage('order') }}</mat-error>
         </mat-form-field>
       </div>
 
@@ -77,18 +91,12 @@
       <div class="form-row">
         <mat-form-field appearance="outline" class="half-width">
           <mat-label>Subject *</mat-label>
-          <mat-select formControlName="subject" required [disabled]="!subjects.length">
+          <mat-select formControlName="subjectId" required [disabled]="!subjects.length">
             <mat-option *ngFor="let subject of subjects" [value]="subject._id">
               {{ subject.name }} ({{ subject.code }})
             </mat-option>
           </mat-select>
-          <mat-error>{{ getErrorMessage('subject') }}</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Order *</mat-label>
-          <input matInput formControlName="order" type="number" min="1" placeholder="Enter module order">
-          <mat-error>{{ getErrorMessage('order') }}</mat-error>
+          <mat-error>{{ getErrorMessage('subjectId') }}</mat-error>
         </mat-form-field>
       </div>
 
@@ -109,8 +117,42 @@
         <div class="upload-section">
           <h3 class="section-title">
             <mat-icon>description</mat-icon>
-            Documents (PDFs)
+            Documents (PDFs) *Required
           </h3>
+          
+          <!-- Existing Documents (Edit Mode) -->
+          <div *ngIf="data.mode === 'edit' && data.module?.documents?.length > 0" class="existing-files">
+            <h4>Current Documents ({{ data.module.documents.length }})</h4>
+            <div class="file-list">
+              <div *ngFor="let document of data.module.documents; let i = index" class="file-item existing">
+                <mat-icon class="file-icon">picture_as_pdf</mat-icon>
+                <div class="file-info">
+                  <div class="file-name">{{ document.name }}</div>
+                  <div class="file-size">{{ formatFileSize(document.size || 0) }}</div>
+                  <div class="file-date">Uploaded: {{ document.uploadedAt | date:'short' }}</div>
+                </div>
+                <div class="file-actions">
+                  <button mat-icon-button color="primary" type="button" 
+                          (click)="viewDocument(document)" 
+                          matTooltip="View Document">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button color="accent" type="button" 
+                          (click)="downloadDocument(document)" 
+                          matTooltip="Download Document">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" type="button" 
+                          (click)="removeDocument(i)" 
+                          matTooltip="Remove Document"
+                          [disabled]="data.module.documents.length === 1">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <mat-divider class="section-divider"></mat-divider>
+          </div>
           
           <div class="upload-area" [class.has-files]="selectedDocuments.length > 0">
             <div class="upload-content">
@@ -127,9 +169,9 @@
           </div>
 
           <div *ngIf="selectedDocuments.length > 0" class="selected-files">
-            <h4>Selected Documents ({{ selectedDocuments.length }})</h4>
+            <h4>New Documents to Upload ({{ selectedDocuments.length }})</h4>
             <div class="file-list">
-              <div *ngFor="let file of selectedDocuments; let i = index" class="file-item">
+              <div *ngFor="let file of selectedDocuments; let i = index" class="file-item new">
                 <mat-icon class="file-icon">picture_as_pdf</mat-icon>
                 <div class="file-info">
                   <div class="file-name">{{ file.name }}</div>
@@ -151,6 +193,35 @@
             <mat-icon>videocam</mat-icon>
             Video (Optional)
           </h3>
+          
+          <!-- Existing Video (Edit Mode) -->
+          <div *ngIf="data.mode === 'edit' && data.module?.video" class="existing-files">
+            <h4>Current Video</h4>
+            <div class="file-list">
+              <div class="file-item existing">
+                <mat-icon class="file-icon">movie</mat-icon>
+                <div class="file-info">
+                  <div class="file-name">{{ data.module.video.name }}</div>
+                  <div class="file-size">{{ formatFileSize(data.module.video.size || 0) }}</div>
+                  <div class="file-date">Uploaded: {{ data.module.video.uploadedAt | date:'short' }}</div>
+                  <div *ngIf="data.module.video.duration" class="file-duration">Duration: {{ data.module.video.duration }}</div>
+                </div>
+                <div class="file-actions">
+                  <button mat-icon-button color="primary" type="button" 
+                          (click)="playVideo()" 
+                          matTooltip="Play Video">
+                    <mat-icon>play_circle</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" type="button" 
+                          (click)="removeVideo()" 
+                          matTooltip="Remove Video">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <mat-divider class="section-divider"></mat-divider>
+          </div>
           
           <div class="upload-area" [class.has-files]="selectedVideo">
             <div class="upload-content">

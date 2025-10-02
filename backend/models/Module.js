@@ -45,7 +45,15 @@ const moduleSchema = new mongoose.Schema({
     },
     localPath: {
       type: String,
-      required: true
+      required: false // Keep for backward compatibility
+    },
+    firebaseURL: {
+      type: String,
+      required: true // Firebase download URL
+    },
+    firebasePath: {
+      type: String,
+      required: true // Firebase storage path for deletion
     },
     fileType: {
       type: String,
@@ -70,7 +78,13 @@ const moduleSchema = new mongoose.Schema({
       trim: true
     },
     localPath: {
-      type: String
+      type: String // Keep for backward compatibility
+    },
+    firebaseURL: {
+      type: String // Firebase download URL
+    },
+    firebasePath: {
+      type: String // Firebase storage path for deletion
     },
     fileType: {
       type: String

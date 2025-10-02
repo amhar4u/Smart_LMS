@@ -19,6 +19,7 @@ import { DepartmentService } from '../../../../services/department.service';
 import { CourseService } from '../../../../services/course.service';
 import { BatchService } from '../../../../services/batch.service';
 import { SemesterService } from '../../../../services/semester.service';
+import { FirebaseService } from '../../../../services/firebase.service';
 
 export interface ModuleDialogData {
   module?: any;
@@ -68,6 +69,7 @@ export class ModuleDialogComponent implements OnInit {
     private courseService: CourseService,
     private batchService: BatchService,
     private semesterService: SemesterService,
+    private firebaseService: FirebaseService,
     private snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<ModuleDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ModuleDialogData
@@ -84,6 +86,7 @@ export class ModuleDialogComponent implements OnInit {
 
   private createForm(): FormGroup {
     return this.fb.group({
+      title: ['', [Validators.required, Validators.minLength(3)]],
       name: ['', [Validators.required, Validators.minLength(3)]],
       code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9-]+$/)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
@@ -91,7 +94,7 @@ export class ModuleDialogComponent implements OnInit {
       course: ['', Validators.required],
       batch: ['', Validators.required],
       semester: ['', Validators.required],
-      subject: ['', Validators.required],
+      subjectId: ['', Validators.required],
       order: [1, [Validators.required, Validators.min(1)]],
       isActive: [true]
     });
@@ -118,14 +121,19 @@ export class ModuleDialogComponent implements OnInit {
   }
 
   private loadDepartments(): void {
+    console.log('🔍 [MODULE DIALOG] Loading departments...');
     this.departmentService.getDepartments().subscribe({
       next: (response: any) => {
+        console.log('📋 [MODULE DIALOG] Departments response:', response);
         if (response.success && response.data) {
           this.departments = response.data;
+          console.log(`✅ [MODULE DIALOG] Loaded ${this.departments.length} departments`);
+        } else {
+          console.warn('⚠️ [MODULE DIALOG] Invalid departments response:', response);
         }
       },
       error: (error) => {
-        console.error('Error loading departments:', error);
+        console.error('❌ [MODULE DIALOG] Error loading departments:', error);
         this.snackBar.open('Failed to load departments', 'Close', { duration: 3000 });
       }
     });
@@ -192,14 +200,19 @@ export class ModuleDialogComponent implements OnInit {
   }
 
   private loadCoursesByDepartment(departmentId: string): void {
+    console.log('🔍 [MODULE DIALOG] Loading courses for department:', departmentId);
     this.courseService.getCoursesByDepartment(departmentId).subscribe({
       next: (response: any) => {
+        console.log('📋 [MODULE DIALOG] Courses response:', response);
         if (response.success && response.data) {
           this.courses = response.data;
+          console.log(`✅ [MODULE DIALOG] Loaded ${this.courses.length} courses`);
+        } else {
+          console.warn('⚠️ [MODULE DIALOG] Invalid courses response:', response);
         }
       },
       error: (error) => {
-        console.error('Error loading courses:', error);
+        console.error('❌ [MODULE DIALOG] Error loading courses:', error);
         this.snackBar.open('Failed to load courses', 'Close', { duration: 3000 });
       }
     });
@@ -251,21 +264,27 @@ export class ModuleDialogComponent implements OnInit {
   }
 
   private populateForm(module: any): void {
+    console.log('🔍 [MODULE DIALOG] Populating form with module:', module);
+    
     this.moduleForm.patchValue({
+      title: module.title || module.name,
       name: module.name,
       code: module.code,
       description: module.description,
       order: module.order,
-      isActive: module.isActive
+      isActive: module.isActive,
+      subjectId: module.subject?._id || module.subject
     });
 
-    // If we have subject data with populated references, load the hierarchical data
+    // If we have subject data with the reference IDs, load the hierarchical data
     if (module.subject) {
       const subject = module.subject;
+      console.log('📋 [MODULE DIALOG] Subject data:', subject);
       
       // Load department and set it
       if (subject.departmentId) {
         const departmentId = subject.departmentId._id || subject.departmentId;
+        console.log('🏢 [MODULE DIALOG] Setting department:', departmentId);
         this.moduleForm.patchValue({ department: departmentId });
         this.loadCoursesByDepartment(departmentId);
         
@@ -273,26 +292,32 @@ export class ModuleDialogComponent implements OnInit {
         setTimeout(() => {
           if (subject.courseId) {
             const courseId = subject.courseId._id || subject.courseId;
+            console.log('📚 [MODULE DIALOG] Setting course:', courseId);
             this.moduleForm.patchValue({ course: courseId });
             this.loadBatchesByCourse(courseId);
             
             // After batches are loaded, set batch
             setTimeout(() => {
-              if (subject.semesterId && subject.semesterId.batch) {
-                const batchId = subject.semesterId.batch._id || subject.semesterId.batch;
+              if (subject.batchId) {
+                const batchId = subject.batchId._id || subject.batchId;
+                console.log('🎓 [MODULE DIALOG] Setting batch:', batchId);
                 this.moduleForm.patchValue({ batch: batchId });
                 this.loadSemestersByBatch(batchId);
                 
                 // After semesters are loaded, set semester
                 setTimeout(() => {
-                  const semesterId = subject.semesterId._id || subject.semesterId;
-                  this.moduleForm.patchValue({ semester: semesterId });
-                  this.loadSubjectsBySemester(semesterId);
-                  
-                  // Finally set the subject
-                  setTimeout(() => {
-                    this.moduleForm.patchValue({ subject: subject._id || subject });
-                  }, 500);
+                  if (subject.semesterId) {
+                    const semesterId = subject.semesterId._id || subject.semesterId;
+                    console.log('📅 [MODULE DIALOG] Setting semester:', semesterId);
+                    this.moduleForm.patchValue({ semester: semesterId });
+                    this.loadSubjectsBySemester(semesterId);
+                    
+                    // Finally set the subject
+                    setTimeout(() => {
+                      console.log('📖 [MODULE DIALOG] Setting subject:', subject._id);
+                      this.moduleForm.patchValue({ subjectId: subject._id });
+                    }, 500);
+                  }
                 }, 500);
               }
             }, 500);
@@ -307,16 +332,7 @@ export class ModuleDialogComponent implements OnInit {
     if (files) {
       // Validate file types (PDFs only)
       const validFiles = Array.from(files).filter((file: any) => {
-        if (file.type !== 'application/pdf') {
-          this.snackBar.open(`${file.name} is not a PDF file`, 'Close', { duration: 3000 });
-          return false;
-        }
-        // Check file size (max 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-          this.snackBar.open(`${file.name} is too large (max 10MB)`, 'Close', { duration: 3000 });
-          return false;
-        }
-        return true;
+        return this.validateDocumentFile(file);
       }) as File[];
 
       this.selectedDocuments = [...this.selectedDocuments, ...validFiles];
@@ -326,28 +342,82 @@ export class ModuleDialogComponent implements OnInit {
   onVideoSelect(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Check file size (max 100MB)
-      if (file.size > 100 * 1024 * 1024) {
-        this.snackBar.open('Video file is too large (max 100MB)', 'Close', { duration: 3000 });
-        return;
+      if (this.validateVideoFile(file)) {
+        this.selectedVideo = file;
       }
-      
-      // Validate file type
-      if (!file.type.startsWith('video/')) {
-        this.snackBar.open('Please select a valid video file', 'Close', { duration: 3000 });
-        return;
-      }
-      
-      this.selectedVideo = file;
+    }
+  }
+
+  // Methods for viewing documents and videos
+  viewDocument(document: any): void {
+    if (document.firebaseURL) {
+      this.firebaseService.openFile(document.firebaseURL);
+    } else {
+      this.snackBar.open('Document URL not available', 'Close', { duration: 3000 });
+    }
+  }
+
+  downloadDocument(document: any): void {
+    if (document.firebaseURL) {
+      this.firebaseService.downloadFile(document.firebaseURL, document.name);
+    } else {
+      this.snackBar.open('Document URL not available', 'Close', { duration: 3000 });
+    }
+  }
+
+  playVideo(): void {
+    if (this.data.module?.video?.firebaseURL) {
+      this.firebaseService.openFile(this.data.module.video.firebaseURL);
+    } else {
+      this.snackBar.open('Video URL not available', 'Close', { duration: 3000 });
     }
   }
 
   removeDocument(index: number): void {
-    this.selectedDocuments.splice(index, 1);
+    if (this.data.mode === 'edit' && this.data.module?.documents) {
+      const documentId = this.data.module.documents[index]._id;
+      if (documentId) {
+        // Call API to remove document
+        this.moduleService.deleteDocument(this.data.module._id, documentId).subscribe({
+          next: () => {
+            this.data.module.documents.splice(index, 1);
+            this.snackBar.open('Document removed successfully', 'Close', { duration: 3000 });
+          },
+          error: (error) => {
+            this.snackBar.open(
+              error.error?.message || 'Failed to remove document',
+              'Close',
+              { duration: 5000 }
+            );
+          }
+        });
+      }
+    } else {
+      // Remove from selected files array for create mode
+      this.selectedDocuments.splice(index, 1);
+    }
   }
 
   removeVideo(): void {
-    this.selectedVideo = null;
+    if (this.data.mode === 'edit' && this.data.module?.video) {
+      // Call API to remove video
+      this.moduleService.deleteVideo(this.data.module._id).subscribe({
+        next: () => {
+          this.data.module.video = null;
+          this.snackBar.open('Video removed successfully', 'Close', { duration: 3000 });
+        },
+        error: (error) => {
+          this.snackBar.open(
+            error.error?.message || 'Failed to remove video',
+            'Close',
+            { duration: 5000 }
+          );
+        }
+      });
+    } else {
+      // Remove from selected file for create mode
+      this.selectedVideo = null;
+    }
   }
 
   formatFileSize(bytes: number): string {
@@ -361,6 +431,15 @@ export class ModuleDialogComponent implements OnInit {
   onSubmit(): void {
     if (this.moduleForm.invalid) {
       this.markFormGroupTouched(this.moduleForm);
+      return;
+    }
+
+    // Validate that at least one document is present (existing or new)
+    const hasExistingDocuments = this.data.mode === 'edit' && this.data.module?.documents?.length > 0;
+    const hasNewDocuments = this.selectedDocuments.length > 0;
+    
+    if (!hasExistingDocuments && !hasNewDocuments) {
+      this.snackBar.open('At least one PDF document is required', 'Close', { duration: 5000 });
       return;
     }
 
@@ -454,5 +533,30 @@ export class ModuleDialogComponent implements OnInit {
   get submitButtonText(): string {
     if (this.uploading) return 'Uploading...';
     return this.data.mode === 'create' ? 'Create Module' : 'Update Module';
+  }
+
+  // File validation
+  private validateDocumentFile(file: File): boolean {
+    if (file.type !== 'application/pdf') {
+      this.snackBar.open('Only PDF files are allowed for documents', 'Close', { duration: 3000 });
+      return false;
+    }
+    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+      this.snackBar.open('Document file size must be less than 50MB', 'Close', { duration: 3000 });
+      return false;
+    }
+    return true;
+  }
+
+  private validateVideoFile(file: File): boolean {
+    if (!file.type.startsWith('video/')) {
+      this.snackBar.open('Only video files are allowed', 'Close', { duration: 3000 });
+      return false;
+    }
+    if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      this.snackBar.open('Video file size must be less than 100MB', 'Close', { duration: 3000 });
+      return false;
+    }
+    return true;
   }
 }

@@ -6,22 +6,12 @@ const { body, validationResult } = require('express-validator');
 const Module = require('../models/Module');
 const Subject = require('../models/Subject');
 const auth = require('../middleware/auth');
+const { uploadFile, deleteFile } = require('../config/firebase');
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/modules';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
+// Configure multer for file uploads (store in memory for Firebase upload)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -29,64 +19,205 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024 // 100MB limit
   },
   fileFilter: function (req, file, cb) {
-    // Allow all file types for now
-    cb(null, true);
+    // Allow PDF files for documents
+    if (file.fieldname === 'documents') {
+      if (file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF files are allowed for documents'), false);
+      }
+    }
+    // Allow video files for video
+    else if (file.fieldname === 'video') {
+      if (file.mimetype.startsWith('video/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only video files are allowed'), false);
+      }
+    } else {
+      cb(null, true);
+    }
   }
 });
 
 // Validation middleware
 const validateModule = [
   body('title').trim().isLength({ min: 1 }).withMessage('Title is required'),
+  body('name').trim().isLength({ min: 1 }).withMessage('Name is required'),
   body('description').optional().trim(),
   body('subjectId').isMongoId().withMessage('Valid subject ID is required'),
   body('code').trim().isLength({ min: 1 }).withMessage('Module code is required')
 ];
 
 // Get all modules with population
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
-    const modules = await Module.find()
-      .populate('subject', 'name code')
-      .populate('createdBy', 'name email')
-      .sort({ createdAt: -1 });
+    console.log('📋 [MODULES] Fetching all modules (no auth for testing)');
     
-    res.json(modules);
+    const { subject, page = 1, limit = 50, search } = req.query;
+    
+    // Build filter - don't filter by isActive if it doesn't exist
+    let filter = {};
+    
+    if (subject) {
+      filter.subject = subject;
+    }
+    
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { code: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    console.log('📋 [MODULES] Filter:', filter);
+    
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    
+    // Get modules with pagination
+    const modules = await Module.find(filter)
+      .populate('subject', 'name code departmentId courseId batchId semesterId')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    // Get total count for pagination
+    const totalItems = await Module.countDocuments(filter);
+    const totalPages = Math.ceil(totalItems / limit);
+    
+    console.log(`✅ [MODULES] Found ${modules.length} modules (${totalItems} total)`);
+    console.log('📋 [MODULES] First module:', modules[0] ? modules[0].title : 'None');
+    
+    res.json({
+      success: true,
+      message: 'Modules fetched successfully',
+      data: {
+        modules,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalItems,
+          itemsPerPage: parseInt(limit)
+        }
+      }
+    });
   } catch (error) {
-    console.error('Error fetching modules:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ [MODULES] Error fetching modules:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch modules',
+      error: error.message 
+    });
   }
 });
 
 // Get modules by subject
-router.get('/subject/:subjectId', async (req, res) => {
+router.get('/subject/:subjectId', auth, async (req, res) => {
   try {
-    const modules = await Module.find({ subject: req.params.subjectId })
-      .populate('subject', 'name code')
-      .populate('createdBy', 'name email')
+    console.log(`📋 [MODULES] Fetching modules for subject: ${req.params.subjectId}`);
+    
+    const modules = await Module.find({ 
+      subject: req.params.subjectId,
+      isActive: true 
+    })
+      .populate({
+        path: 'subject',
+        select: 'name code departmentId courseId batchId semesterId',
+        populate: [
+          {
+            path: 'departmentId',
+            select: 'name code'
+          },
+          {
+            path: 'courseId', 
+            select: 'name code'
+          },
+          {
+            path: 'batchId',
+            select: 'name code'
+          },
+          {
+            path: 'semesterId',
+            select: 'name code year type'
+          }
+        ]
+      })
+      .populate('createdBy', 'firstName lastName email')
       .sort({ createdAt: -1 });
     
-    res.json(modules);
+    console.log(`✅ [MODULES] Found ${modules.length} modules for subject`);
+    
+    res.json({
+      success: true,
+      message: 'Modules fetched successfully',
+      data: { modules }
+    });
   } catch (error) {
-    console.error('Error fetching modules by subject:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ [MODULES] Error fetching modules by subject:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch modules by subject',
+      error: error.message 
+    });
   }
 });
 
 // Get single module
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
+    console.log(`📋 [MODULES] Fetching module: ${req.params.id}`);
+    
     const module = await Module.findById(req.params.id)
-      .populate('subject', 'name code')
-      .populate('createdBy', 'name email');
+      .populate({
+        path: 'subject',
+        select: 'name code departmentId courseId batchId semesterId',
+        populate: [
+          {
+            path: 'departmentId',
+            select: 'name code'
+          },
+          {
+            path: 'courseId', 
+            select: 'name code'
+          },
+          {
+            path: 'batchId',
+            select: 'name code'
+          },
+          {
+            path: 'semesterId',
+            select: 'name code year type'
+          }
+        ]
+      })
+      .populate('createdBy', 'firstName lastName email');
     
     if (!module) {
-      return res.status(404).json({ message: 'Module not found' });
+      console.log(`❌ [MODULES] Module not found: ${req.params.id}`);
+      return res.status(404).json({ 
+        success: false,
+        message: 'Module not found' 
+      });
     }
     
-    res.json(module);
+    console.log(`✅ [MODULES] Module found: ${module.title}`);
+    
+    res.json({
+      success: true,
+      message: 'Module fetched successfully',
+      data: module
+    });
   } catch (error) {
-    console.error('Error fetching module:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ [MODULES] Error fetching module:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch module',
+      error: error.message 
+    });
   }
 });
 
@@ -101,7 +232,7 @@ router.post('/', auth, upload.fields([
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, description, subjectId, code } = req.body;
+    const { title, name, description, subjectId, code } = req.body;
 
     // Check if subject exists
     const subject = await Subject.findById(subjectId);
@@ -121,39 +252,74 @@ router.post('/', auth, upload.fields([
       });
     }
 
+    // Validate that at least one document is provided (mandatory)
+    if (!req.files || !req.files.documents || req.files.documents.length === 0) {
+      return res.status(400).json({ 
+        message: 'At least one PDF document is required' 
+      });
+    }
+
     const module = new Module({
       title,
+      name,
       description,
       code,
       subject: subjectId,
       createdBy: req.user.id
     });
 
-    // Handle document uploads
+    // Handle document uploads to Firebase
     const documents = [];
     if (req.files && req.files.documents) {
       for (const file of req.files.documents) {
-        documents.push({
-          name: file.originalname,
-          uniqueName: file.filename,
-          localPath: file.path,
-          fileType: path.extname(file.originalname),
-          size: file.size
-        });
+        try {
+          const uploadResult = await uploadFile(
+            file.buffer, 
+            file.originalname, 
+            'modules/documents'
+          );
+          
+          documents.push({
+            name: file.originalname,
+            uniqueName: uploadResult.uniqueFileName,
+            firebaseURL: uploadResult.downloadURL,
+            firebasePath: uploadResult.filePath,
+            fileType: path.extname(file.originalname),
+            size: file.size
+          });
+        } catch (uploadError) {
+          console.error('Error uploading document to Firebase:', uploadError);
+          return res.status(500).json({ 
+            message: 'Failed to upload document to cloud storage' 
+          });
+        }
       }
     }
 
-    // Handle video upload
+    // Handle video upload to Firebase (optional)
     let video = null;
     if (req.files && req.files.video && req.files.video[0]) {
       const videoFile = req.files.video[0];
-      video = {
-        name: videoFile.originalname,
-        uniqueName: videoFile.filename,
-        localPath: videoFile.path,
-        fileType: path.extname(videoFile.originalname),
-        size: videoFile.size
-      };
+      try {
+        const uploadResult = await uploadFile(
+          videoFile.buffer, 
+          videoFile.originalname, 
+          'modules/videos'
+        );
+        
+        video = {
+          name: videoFile.originalname,
+          uniqueName: uploadResult.uniqueFileName,
+          firebaseURL: uploadResult.downloadURL,
+          firebasePath: uploadResult.filePath,
+          fileType: path.extname(videoFile.originalname),
+          size: videoFile.size
+        };
+      } catch (uploadError) {
+        console.error('Error uploading video to Firebase:', uploadError);
+        // Don't fail the entire request for optional video upload
+        // Just log the error and continue without video
+      }
     }
 
     module.documents = documents;
@@ -172,16 +338,6 @@ router.post('/', auth, upload.fields([
 
   } catch (error) {
     console.error('Error creating module:', error);
-    
-    // Clean up uploaded files in case of error
-    if (req.files) {
-      Object.values(req.files).flat().forEach(file => {
-        if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
-        }
-      });
-    }
-    
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -202,7 +358,7 @@ router.put('/:id', auth, upload.fields([
       return res.status(404).json({ message: 'Module not found' });
     }
 
-    const { title, description, subjectId, code } = req.body;
+    const { title, name, description, subjectId, code } = req.body;
 
     // Check if subject exists
     const subject = await Subject.findById(subjectId);
@@ -212,40 +368,74 @@ router.put('/:id', auth, upload.fields([
 
     // Update basic fields
     module.title = title;
+    module.name = name;
     module.description = description;
     module.code = code;
     module.subject = subjectId;
 
-    // Handle new document uploads
+    // Handle new document uploads to Firebase
     if (req.files && req.files.documents) {
       const newDocuments = [];
       for (const file of req.files.documents) {
-        newDocuments.push({
-          name: file.originalname,
-          uniqueName: file.filename,
-          localPath: file.path,
-          fileType: path.extname(file.originalname),
-          size: file.size
-        });
+        try {
+          const uploadResult = await uploadFile(
+            file.buffer, 
+            file.originalname, 
+            'modules/documents'
+          );
+          
+          newDocuments.push({
+            name: file.originalname,
+            uniqueName: uploadResult.uniqueFileName,
+            firebaseURL: uploadResult.downloadURL,
+            firebasePath: uploadResult.filePath,
+            fileType: path.extname(file.originalname),
+            size: file.size
+          });
+        } catch (uploadError) {
+          console.error('Error uploading document to Firebase:', uploadError);
+          return res.status(500).json({ 
+            message: 'Failed to upload document to cloud storage' 
+          });
+        }
       }
       module.documents = [...module.documents, ...newDocuments];
     }
 
     // Handle video replacement
     if (req.files && req.files.video && req.files.video[0]) {
-      // Delete old video file if exists
-      if (module.video && module.video.localPath && fs.existsSync(module.video.localPath)) {
-        fs.unlinkSync(module.video.localPath);
+      // Delete old video from Firebase if exists
+      if (module.video && module.video.firebasePath) {
+        try {
+          await deleteFile(module.video.firebasePath);
+        } catch (deleteError) {
+          console.error('Error deleting old video from Firebase:', deleteError);
+          // Continue with upload even if deletion fails
+        }
       }
 
       const videoFile = req.files.video[0];
-      module.video = {
-        name: videoFile.originalname,
-        uniqueName: videoFile.filename,
-        localPath: videoFile.path,
-        fileType: path.extname(videoFile.originalname),
-        size: videoFile.size
-      };
+      try {
+        const uploadResult = await uploadFile(
+          videoFile.buffer, 
+          videoFile.originalname, 
+          'modules/videos'
+        );
+        
+        module.video = {
+          name: videoFile.originalname,
+          uniqueName: uploadResult.uniqueFileName,
+          firebaseURL: uploadResult.downloadURL,
+          firebasePath: uploadResult.filePath,
+          fileType: path.extname(videoFile.originalname),
+          size: videoFile.size
+        };
+      } catch (uploadError) {
+        console.error('Error uploading video to Firebase:', uploadError);
+        return res.status(500).json({ 
+          message: 'Failed to upload video to cloud storage' 
+        });
+      }
     }
 
     await module.save();
@@ -261,16 +451,56 @@ router.put('/:id', auth, upload.fields([
 
   } catch (error) {
     console.error('Error updating module:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete document from module
+router.delete('/:id/documents/:documentId', auth, async (req, res) => {
+  try {
+    const module = await Module.findById(req.params.id);
+    if (!module) {
+      return res.status(404).json({ message: 'Module not found' });
+    }
+
+    const documentIndex = module.documents.findIndex(
+      doc => doc._id.toString() === req.params.documentId
+    );
+
+    if (documentIndex === -1) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    const document = module.documents[documentIndex];
+
+    // Delete from Firebase if firebasePath exists
+    if (document.firebasePath) {
+      try {
+        await deleteFile(document.firebasePath);
+      } catch (deleteError) {
+        console.error('Error deleting document from Firebase:', deleteError);
+        // Continue with removal from database even if Firebase deletion fails
+      }
+    }
+
+    // Remove document from array
+    module.documents.splice(documentIndex, 1);
     
-    // Clean up uploaded files in case of error
-    if (req.files) {
-      Object.values(req.files).flat().forEach(file => {
-        if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
-        }
+    // Check if module still has at least one document (since documents are mandatory)
+    if (module.documents.length === 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete the last document. Modules must have at least one document.' 
       });
     }
-    
+
+    await module.save();
+
+    res.json({
+      message: 'Document deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting document:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -287,30 +517,38 @@ router.post('/:id/documents', auth, upload.single('document'), async (req, res) 
       return res.status(404).json({ message: 'Module not found' });
     }
 
-    const newDocument = {
-      name: req.file.originalname,
-      uniqueName: req.file.filename,
-      localPath: req.file.path,
-      fileType: path.extname(req.file.originalname),
-      size: req.file.size
-    };
+    try {
+      const uploadResult = await uploadFile(
+        req.file.buffer, 
+        req.file.originalname, 
+        'modules/documents'
+      );
+      
+      const newDocument = {
+        name: req.file.originalname,
+        uniqueName: uploadResult.uniqueFileName,
+        firebaseURL: uploadResult.downloadURL,
+        firebasePath: uploadResult.filePath,
+        fileType: path.extname(req.file.originalname),
+        size: req.file.size
+      };
 
-    module.documents.push(newDocument);
-    await module.save();
+      module.documents.push(newDocument);
+      await module.save();
 
-    res.json({
-      message: 'Document added successfully',
-      document: newDocument
-    });
+      res.json({
+        message: 'Document added successfully',
+        document: newDocument
+      });
+    } catch (uploadError) {
+      console.error('Error uploading document to Firebase:', uploadError);
+      return res.status(500).json({ 
+        message: 'Failed to upload document to cloud storage' 
+      });
+    }
 
   } catch (error) {
     console.error('Error adding document:', error);
-    
-    // Clean up uploaded file
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -327,34 +565,47 @@ router.put('/:id/video', auth, upload.single('video'), async (req, res) => {
       return res.status(404).json({ message: 'Module not found' });
     }
 
-    // Delete existing video file if exists
-    if (module.video && module.video.localPath && fs.existsSync(module.video.localPath)) {
-      fs.unlinkSync(module.video.localPath);
+    // Delete existing video from Firebase if exists
+    if (module.video && module.video.firebasePath) {
+      try {
+        await deleteFile(module.video.firebasePath);
+      } catch (deleteError) {
+        console.error('Error deleting old video from Firebase:', deleteError);
+        // Continue with upload even if deletion fails
+      }
     }
 
-    module.video = {
-      name: req.file.originalname,
-      uniqueName: req.file.filename,
-      localPath: req.file.path,
-      fileType: path.extname(req.file.originalname),
-      size: req.file.size
-    };
+    try {
+      const uploadResult = await uploadFile(
+        req.file.buffer, 
+        req.file.originalname, 
+        'modules/videos'
+      );
+      
+      module.video = {
+        name: req.file.originalname,
+        uniqueName: uploadResult.uniqueFileName,
+        firebaseURL: uploadResult.downloadURL,
+        firebasePath: uploadResult.filePath,
+        fileType: path.extname(req.file.originalname),
+        size: req.file.size
+      };
 
-    await module.save();
+      await module.save();
 
-    res.json({
-      message: 'Video updated successfully',
-      video: module.video
-    });
+      res.json({
+        message: 'Video updated successfully',
+        video: module.video
+      });
+    } catch (uploadError) {
+      console.error('Error uploading video to Firebase:', uploadError);
+      return res.status(500).json({ 
+        message: 'Failed to upload video to cloud storage' 
+      });
+    }
 
   } catch (error) {
     console.error('Error updating video:', error);
-    
-    // Clean up uploaded file
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -429,15 +680,25 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Module not found' });
     }
 
-    // Delete all associated files
-    module.documents.forEach(doc => {
-      if (doc.localPath && fs.existsSync(doc.localPath)) {
-        fs.unlinkSync(doc.localPath);
+    // Delete all associated files from Firebase
+    for (const doc of module.documents) {
+      if (doc.firebasePath) {
+        try {
+          await deleteFile(doc.firebasePath);
+        } catch (deleteError) {
+          console.error('Error deleting document from Firebase:', deleteError);
+          // Continue with other deletions even if one fails
+        }
       }
-    });
+    }
 
-    if (module.video && module.video.localPath && fs.existsSync(module.video.localPath)) {
-      fs.unlinkSync(module.video.localPath);
+    if (module.video && module.video.firebasePath) {
+      try {
+        await deleteFile(module.video.firebasePath);
+      } catch (deleteError) {
+        console.error('Error deleting video from Firebase:', deleteError);
+        // Continue with module deletion even if Firebase deletion fails
+      }
     }
 
     await Module.findByIdAndDelete(req.params.id);

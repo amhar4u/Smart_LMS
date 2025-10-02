@@ -309,3 +309,73 @@ mat-divider {
     height: 36px !important;
   }
 }
+
+/* Existing Files Styles */
+.existing-files {
+  margin-bottom: 20px;
+}
+
+.existing-files h4 {
+  color: #424242;
+  font-size: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-item.existing {
+  background-color: #f8f9fa;
+  border: 2px solid #e3f2fd;
+}
+
+.file-item.existing .file-icon {
+  color: #1976d2;
+}
+
+.file-item.new {
+  background-color: #fff3e0;
+  border: 2px solid #ffcc02;
+}
+
+.file-item.new .file-icon {
+  color: #f57c00;
+}
+
+.file-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.file-actions button {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+}
+
+.file-date, .file-duration {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.section-divider {
+  margin: 16px 0;
+}
+
+/* Video specific styles */
+.file-item .file-icon[class*="movie"] {
+  color: #e91e63;
+}
+
+/* Tooltip improvements */
+[matTooltip] {
+  cursor: pointer;
+}
+
+/* Disabled state for required documents */
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

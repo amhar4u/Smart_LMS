@@ -26,7 +26,9 @@ export interface ModuleDocument {
   _id: string;
   name: string;
   uniqueName: string;
-  localPath: string;
+  localPath?: string; // Keep for backward compatibility
+  firebaseURL: string; // Firebase download URL
+  firebasePath: string; // Firebase storage path
   fileType: string;
   size?: number;
   uploadedAt: string;
@@ -35,7 +37,9 @@ export interface ModuleDocument {
 export interface ModuleVideo {
   name: string;
   uniqueName: string;
-  localPath: string;
+  localPath?: string; // Keep for backward compatibility
+  firebaseURL: string; // Firebase download URL
+  firebasePath: string; // Firebase storage path
   fileType: string;
   duration?: string;
   uploadedAt: string;

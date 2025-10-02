@@ -57,7 +57,7 @@ export class ModuleService {
 
   // Create new module with files
   createModuleWithFiles(formData: FormData): Observable<ApiResponse<Module>> {
-    return this.http.post<ApiResponse<Module>>(`${this.API_URL}/with-files`, formData);
+    return this.http.post<ApiResponse<Module>>(this.API_URL, formData);
   }
 
   // Update module
@@ -67,7 +67,7 @@ export class ModuleService {
 
   // Update module with files
   updateModuleWithFiles(id: string, formData: FormData): Observable<ApiResponse<Module>> {
-    return this.http.put<ApiResponse<Module>>(`${this.API_URL}/${id}/with-files`, formData);
+    return this.http.put<ApiResponse<Module>>(`${this.API_URL}/${id}`, formData);
   }
 
   // Upload documents
