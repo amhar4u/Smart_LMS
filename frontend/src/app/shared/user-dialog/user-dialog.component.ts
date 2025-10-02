@@ -9,6 +9,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { User } from '../../services/user-management.service';
+import { CourseService, Course } from '../../services/course.service';
+import { DepartmentService, Department } from '../../services/department.service';
+import { BatchService, Batch } from '../../services/batch.service';
 
 export interface UserDialogData {
   user?: User;
@@ -120,17 +123,41 @@ export interface UserDialogData {
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Course</mat-label>
-              <input matInput formControlName="course" [readonly]="data.mode === 'view'">
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="status" [disabled]="data.mode === 'view'">
+                <mat-option value="pending">Pending</mat-option>
+                <mat-option value="approved">Approved</mat-option>
+                <mat-option value="rejected">Rejected</mat-option>
+              </mat-select>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline">
-              <mat-label>Semester</mat-label>
-              <mat-select formControlName="semester" [disabled]="data.mode === 'view'">
-                <mat-option *ngFor="let semester of semesters" [value]="semester">
-                  {{ semester }}
+              <mat-label>Department</mat-label>
+              <mat-select formControlName="department" [disabled]="data.mode === 'view'" (selectionChange)="onDepartmentChange($event.value)">
+                <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                  {{ dept.name }} ({{ dept.code }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Course</mat-label>
+              <mat-select formControlName="course" [disabled]="data.mode === 'view' || !userForm.get('department')?.value" (selectionChange)="onCourseChange($event.value)">
+                <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
+                  {{ course.name }} ({{ course.code }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Batch</mat-label>
+              <mat-select formControlName="batch" [disabled]="data.mode === 'view' || !userForm.get('course')?.value">
+                <mat-option *ngFor="let batch of filteredBatches" [value]="batch._id">
+                  {{ batch.name }} ({{ batch.code }})
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -147,27 +174,23 @@ export interface UserDialogData {
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Employee ID</mat-label>
-              <input matInput formControlName="employeeId" [readonly]="data.mode === 'view'">
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field appearance="outline">
               <mat-label>Department</mat-label>
-              <input matInput formControlName="department" [readonly]="data.mode === 'view'">
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Qualification</mat-label>
-              <input matInput formControlName="qualification" [readonly]="data.mode === 'view'">
+              <mat-select formControlName="department" [disabled]="data.mode === 'view'">
+                <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                  {{ dept.name }} ({{ dept.code }})
+                </mat-option>
+              </mat-select>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline">
-              <mat-label>Experience (years)</mat-label>
-              <input matInput type="number" formControlName="experience" [readonly]="data.mode === 'view'">
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="status" [disabled]="data.mode === 'view'">
+                <mat-option value="pending">Pending</mat-option>
+                <mat-option value="approved">Approved</mat-option>
+                <mat-option value="rejected">Rejected</mat-option>
+              </mat-select>
             </mat-form-field>
           </div>
         </div>
@@ -245,6 +268,11 @@ export interface UserDialogData {
 })
 export class UserDialogComponent implements OnInit {
   userForm: FormGroup;
+  departments: Department[] = [];
+  courses: Course[] = [];
+  batches: Batch[] = [];
+  filteredCourses: Course[] = [];
+  filteredBatches: Batch[] = [];
 
   semesters = [
     'Semester 1',
@@ -260,15 +288,97 @@ export class UserDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<UserDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: UserDialogData
+    @Inject(MAT_DIALOG_DATA) public data: UserDialogData,
+    private courseService: CourseService,
+    private departmentService: DepartmentService,
+    private batchService: BatchService
   ) {
     this.userForm = this.createForm();
   }
 
   ngOnInit(): void {
-    if (this.data.user && this.data.mode !== 'create') {
-      this.populateForm(this.data.user);
-    }
+    console.log('UserDialogComponent initialized');
+    
+    // Initialize filtered arrays
+    this.filteredCourses = [];
+    this.filteredBatches = [];
+    
+    this.loadDropdownData().then(() => {
+      if (this.data.user && this.data.mode !== 'create') {
+        // console.log('Populating form with user data:', this.data.user);
+        this.populateForm(this.data.user);
+      }
+    });
+  }
+
+  private loadDropdownData(): Promise<void> {
+    const promises: Promise<any>[] = [];
+
+    // Load departments
+    const departmentPromise = new Promise<void>((resolve, reject) => {
+      this.departmentService.getDepartments().subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            this.departments = response.data;
+            console.log('Loaded departments:', this.departments);
+            resolve();
+          } else {
+            reject('Failed to load departments');
+          }
+        },
+        error: (error: any) => {
+          console.error('Error loading departments:', error);
+          reject(error);
+        }
+      });
+    });
+    promises.push(departmentPromise);
+
+    // Load all courses
+    const coursePromise = new Promise<void>((resolve, reject) => {
+      this.courseService.getCourses().subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            this.courses = response.data;
+            console.log('Loaded courses:', this.courses);
+            resolve();
+          } else {
+            reject('Failed to load courses');
+          }
+        },
+        error: (error: any) => {
+          console.error('Error loading courses:', error);
+          reject(error);
+        }
+      });
+    });
+    promises.push(coursePromise);
+
+    // Load all batches
+    const batchPromise = new Promise<void>((resolve, reject) => {
+      this.batchService.getBatches().subscribe({
+        next: (response: any) => {
+          if (response.success) {
+            this.batches = response.data;
+            console.log('Loaded batches:', this.batches);
+            resolve();
+          } else {
+            reject('Failed to load batches');
+          }
+        },
+        error: (error: any) => {
+          console.error('Error loading batches:', error);
+          reject(error);
+        }
+      });
+    });
+    promises.push(batchPromise);
+
+    return Promise.all(promises).then(() => {
+      console.log('All dropdown data loaded successfully');
+    }).catch((error) => {
+      console.error('Error loading dropdown data:', error);
+    });
   }
 
   private createForm(): FormGroup {
@@ -282,15 +392,13 @@ export class UserDialogComponent implements OnInit {
       
       // Student fields
       studentId: [''],
+      status: ['pending'],
+      department: [''],
       course: [''],
-      semester: [''],
+      batch: [''],
       
       // Teacher fields
       teacherId: [''],
-      employeeId: [''],
-      department: [''],
-      qualification: [''],
-      experience: [''],
       
       // Admin fields
       permissionsString: ['']
@@ -305,6 +413,16 @@ export class UserDialogComponent implements OnInit {
   }
 
   private populateForm(user: User): void {
+    console.log('Populating form with user:', user);
+    
+    // Extract IDs for department, course, and batch
+    const departmentId = typeof user.department === 'object' ? user.department?._id : user.department;
+    const courseId = typeof user.course === 'object' ? user.course?._id : user.course;
+    const batchId = typeof user.batch === 'object' ? user.batch?._id : user.batch;
+    
+    console.log('Extracted IDs - Department:', departmentId, 'Course:', courseId, 'Batch:', batchId);
+
+    // First, set all basic form values
     this.userForm.patchValue({
       firstName: user.firstName,
       lastName: user.lastName,
@@ -315,19 +433,120 @@ export class UserDialogComponent implements OnInit {
       
       // Student fields
       studentId: user.studentId,
-      course: user.course,
-      semester: user.semester,
+      status: user.status || 'pending',
       
       // Teacher fields
       teacherId: user.teacherId,
-      employeeId: user.employeeId,
-      department: user.department,
-      qualification: user.qualification,
-      experience: user.experience,
       
       // Admin fields
       permissionsString: user.permissions?.join(', ')
     });
+
+    // Handle student-specific filtering and value setting
+    if (user.role === 'student') {
+      console.log('Setting up student-specific fields');
+      
+      // Set department first
+      if (departmentId) {
+        this.userForm.patchValue({ department: departmentId });
+        this.onDepartmentChange(departmentId);
+      }
+      
+      // Use a more robust timing mechanism
+      const setRemainingFields = () => {
+        if (courseId) {
+          this.userForm.patchValue({ course: courseId });
+          this.onCourseChange(courseId);
+        }
+        
+        // Set batch after a small delay to ensure course filtering is complete
+        setTimeout(() => {
+          if (batchId) {
+            this.userForm.patchValue({ batch: batchId });
+          }
+        }, 50);
+      };
+      
+      // If we have courses loaded, set immediately, otherwise wait a bit
+      if (this.courses.length > 0) {
+        setRemainingFields();
+      } else {
+        setTimeout(setRemainingFields, 100);
+      }
+    } else {
+      // For non-student roles, set department directly
+      if (departmentId) {
+        this.userForm.patchValue({ department: departmentId });
+      }
+    }
+  }
+
+  onDepartmentChange(departmentId: string): void {
+    console.log('Department changed to:', departmentId);
+    console.log('Available courses:', this.courses);
+    
+    if (!departmentId) {
+      this.filteredCourses = [];
+      this.filteredBatches = [];
+      this.userForm.patchValue({
+        course: '',
+        batch: ''
+      });
+      return;
+    }
+    
+    // Filter courses by department
+    this.filteredCourses = this.courses.filter(course => {
+      const courseDepId = typeof course.department === 'object' 
+        ? course.department._id 
+        : course.department;
+      console.log('Comparing course department:', courseDepId, 'with selected:', departmentId);
+      return courseDepId === departmentId;
+    });
+    
+    console.log('Filtered courses:', this.filteredCourses);
+    
+    // Reset course and batch only if we're changing department (not initializing)
+    const currentCourse = this.userForm.get('course')?.value;
+    if (currentCourse && !this.filteredCourses.find(c => c._id === currentCourse)) {
+      this.userForm.patchValue({
+        course: '',
+        batch: ''
+      });
+      this.filteredBatches = [];
+    }
+  }
+
+  onCourseChange(courseId: string): void {
+    console.log('Course changed to:', courseId);
+    console.log('Available batches:', this.batches);
+    
+    if (!courseId) {
+      this.filteredBatches = [];
+      this.userForm.patchValue({
+        batch: ''
+      });
+      return;
+    }
+    
+    // Filter batches by course
+    this.filteredBatches = this.batches.filter(batch => {
+      const batchCourseId = typeof batch.course === 'object' 
+        ? batch.course._id 
+        : batch.course;
+      console.log('Comparing batch course:', batchCourseId, 'with selected:', courseId);
+      return batchCourseId === courseId;
+    });
+    
+    console.log('Filtered batches:', this.filteredBatches);
+    
+    // Reset batch only if current batch is not valid for the new course
+    const currentBatch = this.userForm.get('batch')?.value;
+    if (currentBatch && !this.filteredBatches.find(b => b._id === currentBatch)) {
+      this.userForm.patchValue({
+        batch: ''
+      });
+    }
   }
 
   getTitle(): string {

@@ -1,5 +1,8 @@
 const express = require('express');
 const User = require('../models/User');
+const Department = require('../models/Department');
+const Course = require('../models/Course');
+const Batch = require('../models/Batch');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -102,6 +105,8 @@ router.get('/by-role/:role', auth, async (req, res) => {
     const users = await User.find({ role })
       .select('-password')
       .populate('department', 'name code')
+      .populate('course', 'name code')
+      .populate('batch', 'name code')
       .sort({ createdAt: -1 });
 
     console.log(`✅ Found ${users.length} users with role: ${role}`);
@@ -152,6 +157,8 @@ router.get('/all', auth, async (req, res) => {
     const users = await User.find(query)
       .select('-password')
       .populate('department', 'name code')
+      .populate('course', 'name code')
+      .populate('batch', 'name code')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -286,6 +293,8 @@ router.get('/pending', auth, async (req, res) => {
     const users = await User.find(query)
       .select('-password')
       .populate('department', 'name code')
+      .populate('course', 'name code')
+      .populate('batch', 'name code')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
@@ -362,11 +371,17 @@ router.post('/', auth, async (req, res) => {
     const user = new User(userData);
     await user.save();
 
+    // Populate the user before returning
+    const populatedUser = await User.findById(user._id)
+      .populate('department', 'name code')
+      .populate('course', 'name code')
+      .populate('batch', 'name code');
+
     res.status(201).json({
       success: true,
       message: 'User created successfully',
       data: {
-        user: user.getPublicProfile()
+        user: populatedUser // Return the full populated user object
       }
     });
   } catch (error) {
@@ -397,7 +412,10 @@ router.put('/:id', auth, async (req, res) => {
       id,
       { ...updates, updatedAt: new Date() },
       { new: true, runValidators: true }
-    );
+    )
+    .populate('department', 'name code')
+    .populate('course', 'name code')
+    .populate('batch', 'name code');
 
     if (!user) {
       return res.status(404).json({
@@ -410,7 +428,7 @@ router.put('/:id', auth, async (req, res) => {
       success: true,
       message: 'User updated successfully',
       data: {
-        user: user.getPublicProfile()
+        user: user // Return the full populated user object instead of calling getPublicProfile()
       }
     });
   } catch (error) {
@@ -498,6 +516,9 @@ router.get('/search', auth, async (req, res) => {
     // Fetch users with pagination
     const users = await User.find(searchQuery)
       .select('-password')
+      .populate('department', 'name code')
+      .populate('course', 'name code')
+      .populate('batch', 'name code')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);

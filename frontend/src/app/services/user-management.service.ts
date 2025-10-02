@@ -21,14 +21,27 @@ export interface User {
   
   // Student specific fields
   studentId?: string;
-  course?: string;
+  course?: string | {
+    _id: string;
+    name: string;
+    code: string;
+  };
+  batch?: string | {
+    _id: string;
+    name: string;
+    code: string;
+  };
   semester?: string;
   enrollmentDate?: Date;
+  department?: string | {
+    _id: string;
+    name: string;
+    code: string;
+  };
   
   // Teacher specific fields
   teacherId?: string;
   employeeId?: string;
-  department?: string;
   qualification?: string;
   experience?: number;
   specialization?: string[];
