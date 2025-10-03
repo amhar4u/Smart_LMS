@@ -27,6 +27,11 @@ export const routes: Routes = [
     canActivate: [studentGuard]
   },
   {
+    path: 'student/assignments',
+    loadComponent: () => import('./component/student/view-assignments/view-assignments.component').then(m => m.ViewAssignmentsComponent),
+    canActivate: [studentGuard]
+  },
+  {
     path: 'lecturer/dashboard',
     loadComponent: () => import('./component/lecturer/lecturer-dashboard/lecturer-dashboard').then(m => m.LecturerDashboard),
     canActivate: [teacherGuard]
@@ -79,6 +84,11 @@ export const routes: Routes = [
   {
     path: 'admin/manage-modules',
     loadComponent: () => import('./component/admin/manage-modules/manage-modules.component').then(m => m.ManageModulesComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/manage-assignments',
+    loadComponent: () => import('./component/admin/manage-assignments/manage-assignments.component').then(m => m.ManageAssignmentsComponent),
     canActivate: [adminGuard]
   },
   {

@@ -39,6 +39,7 @@ app.use('/api/semesters', require('./routes/semesters'));
 app.use('/api/batches', require('./routes/batches'));
 app.use('/api/subjects', require('./routes/subjects'));
 app.use('/api/modules', require('./routes/modules'));
+app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/statistics', require('./routes/statistics'));
 
 // Test route for auth
