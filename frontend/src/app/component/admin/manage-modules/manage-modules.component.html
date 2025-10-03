@@ -1,20 +1,31 @@
 <app-admin-layout>
   <div class="manage-modules-container">
-    <!-- Header Section -->
-    <div class="header-section">
-      <div class="title-section">
-        <h1>
-          <mat-icon>view_module</mat-icon>
-          Manage Modules
-        </h1>
-        <p>Create and manage educational modules with documents and videos</p>
-      </div>
-      
-      <button mat-raised-button color="primary" (click)="openCreateDialog()">
-        <mat-icon>add</mat-icon>
-        Create Module
-      </button>
-    </div>
+    <!-- Header Card -->
+    <mat-card class="header-card">
+      <mat-card-header>
+        <div class="header-content">
+          <div class="header-text">
+            <mat-card-title>
+              <mat-icon>view_module</mat-icon>
+              Manage Modules
+            </mat-card-title>
+            <mat-card-subtitle>
+              Create and manage educational modules with documents and videos
+            </mat-card-subtitle>
+          </div>
+          <div class="header-actions">
+            <button 
+              mat-raised-button 
+              color="accent" 
+              class="create-btn"
+              (click)="openCreateDialog()">
+              <mat-icon>add</mat-icon>
+              Create Module
+            </button>
+          </div>
+        </div>
+      </mat-card-header>
+    </mat-card>
 
   <!-- Filters Section -->
   <mat-card class="filters-card">
