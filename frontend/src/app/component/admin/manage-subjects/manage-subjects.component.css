@@ -17,6 +17,17 @@
   padding: 24px;
 }
 
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-text {
+  flex: 1;
+}
+
 .header-card mat-card-title {
   display: flex;
   align-items: center;
@@ -37,6 +48,31 @@
   color: rgba(255, 255, 255, 0.9);
   font-size: 16px;
   margin-top: 8px;
+}
+
+.header-actions {
+  margin-left: 24px;
+}
+
+.create-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  font-weight: 500;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+}
+
+.create-btn:hover:not([disabled]) {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.create-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Filters Card */

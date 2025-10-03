@@ -4,13 +4,27 @@
   
   <mat-card class="header-card">
     <mat-card-header>
-      <mat-card-title>
-        <mat-icon>subject</mat-icon>
-        Manage Subjects
-      </mat-card-title>
-      <mat-card-subtitle>
-        Create, edit, and manage academic subjects for courses
-      </mat-card-subtitle>
+      <div class="header-content">
+        <div class="header-text">
+          <mat-card-title>
+            <mat-icon>subject</mat-icon>
+            Manage Subjects
+          </mat-card-title>
+          <mat-card-subtitle>
+            Create, edit, and manage academic subjects for courses
+          </mat-card-subtitle>
+        </div>
+        <div class="header-actions">
+          <button 
+            mat-raised-button 
+            color="accent" 
+            class="create-btn"
+            (click)="openCreateDialog()">
+            <mat-icon>add</mat-icon>
+            Add Subject
+          </button>
+        </div>
+      </div>
     </mat-card-header>
   </mat-card>
 
@@ -58,10 +72,6 @@
           <button mat-stroked-button (click)="clearFilters()">
             <mat-icon>clear</mat-icon>
             Clear
-          </button>
-          <button mat-raised-button color="primary" (click)="openCreateDialog()" class="add-btn">
-            <mat-icon>add</mat-icon>
-            Add Subject
           </button>
         </div>
       </div>
