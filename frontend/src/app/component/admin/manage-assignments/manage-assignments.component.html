@@ -1,0 +1,581 @@
+<app-admin-layout>
+  <div class="manage-assignments-container">
+    <app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
+    
+    <!-- Header Card -->
+    <mat-card class="header-card">
+      <mat-card-header>
+        <div class="header-content">
+          <div class="header-text">
+            <mat-card-title>
+              <mat-icon>assignment</mat-icon>
+              Manage Assignments
+            </mat-card-title>
+            <mat-card-subtitle>
+              Create and manage assignments with AI-generated questions for courses, subjects, and modules
+            </mat-card-subtitle>
+          </div>
+          <div class="header-actions">
+            <button 
+              mat-raised-button 
+              color="accent" 
+              class="create-btn"
+              (click)="showCreateForm()"
+              [disabled]="showForm">
+              <mat-icon>add</mat-icon>
+              Create Assignment
+            </button>
+          </div>
+        </div>
+      </mat-card-header>
+    </mat-card>
+
+  <!-- Assignment Form -->
+  <mat-card *ngIf="showForm" class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ editingAssignment ? 'edit' : 'add' }}</mat-icon>
+        {{ editingAssignment ? 'Edit Assignment' : 'Create New Assignment' }}
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="assignmentForm">
+        <mat-tab-group [(selectedIndex)]="selectedTab">
+          <!-- Assignment Details Tab -->
+          <mat-tab label="Assignment Details">
+            <div class="tab-content">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Assignment Title</mat-label>
+                  <input matInput formControlName="title" placeholder="Enter assignment title">
+                  <mat-error>{{ getFormError('title') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Description</mat-label>
+                  <textarea 
+                    matInput 
+                    formControlName="description" 
+                    rows="3"
+                    placeholder="Describe the assignment">
+                  </textarea>
+                  <mat-error>{{ getFormError('description') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- Academic Information -->
+              <div class="form-section">
+                <h3>Academic Information</h3>
+                <div class="form-row three-columns">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Department</mat-label>
+                    <mat-select formControlName="department">
+                      <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                        {{ dept.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('department') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Course</mat-label>
+                    <mat-select formControlName="course">
+                      <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
+                        {{ course.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('course') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Batch</mat-label>
+                    <mat-select formControlName="batch">
+                      <mat-option *ngFor="let batch of filteredBatches" [value]="batch._id">
+                        {{ batch.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('batch') }}</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row three-columns">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Semester</mat-label>
+                    <mat-select formControlName="semester">
+                      <mat-option *ngFor="let semester of filteredSemesters" [value]="semester._id">
+                        {{ semester.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('semester') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Subject</mat-label>
+                    <mat-select formControlName="subject">
+                      <mat-option *ngFor="let subject of filteredSubjects" [value]="subject._id">
+                        {{ subject.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('subject') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Due Date</mat-label>
+                    <input matInput [matDatepicker]="picker" formControlName="dueDate">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    <mat-error>{{ getFormError('dueDate') }}</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Modules</mat-label>
+                    <mat-select formControlName="modules" multiple>
+                      <mat-option *ngFor="let module of filteredModules" [value]="module._id">
+                        {{ module.title }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('modules') }}</mat-error>
+                    <mat-hint *ngIf="filteredModules.length === 0 && assignmentForm.get('subject')?.value">
+                      No modules available for the selected subject
+                    </mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Assignment Configuration -->
+              <div class="form-section">
+                <h3>Assignment Configuration</h3>
+                <div class="form-row three-columns">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Assignment Level</mat-label>
+                    <mat-select formControlName="assignmentLevel">
+                      <mat-option *ngFor="let level of assignmentLevels" [value]="level.value">
+                        {{ level.label }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('assignmentLevel') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Assignment Type</mat-label>
+                    <mat-select formControlName="assignmentType">
+                      <mat-option *ngFor="let type of assignmentTypes" [value]="type.value">
+                        {{ type.label }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error>{{ getFormError('assignmentType') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Number of Questions</mat-label>
+                    <input matInput type="number" formControlName="numberOfQuestions" min="1" max="100">
+                    <mat-error>{{ getFormError('numberOfQuestions') }}</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row three-columns">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Maximum Marks</mat-label>
+                    <input matInput type="number" formControlName="maxMarks" min="1">
+                    <mat-hint>Will be auto-calculated based on questions</mat-hint>
+                    <mat-error>{{ getFormError('maxMarks') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Submission Type</mat-label>
+                    <mat-select formControlName="submissionType">
+                      <mat-option *ngFor="let type of submissionTypes" [value]="type.value">
+                        {{ type.label }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Time Limit (minutes)</mat-label>
+                    <input matInput type="number" formControlName="timeLimit" min="1">
+                    <mat-hint>Optional - leave empty for no time limit</mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Content Source -->
+              <div class="form-section">
+                <h3>Question Generation Source</h3>
+                <mat-radio-group formControlName="contentSource" class="radio-group">
+                  <mat-radio-button value="module_name">Generate from module names</mat-radio-button>
+                  <mat-radio-button value="module_content">Provide custom content</mat-radio-button>
+                </mat-radio-group>
+
+                <div *ngIf="assignmentForm.get('contentSource')?.value === 'module_content'" class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Module Content</mat-label>
+                    <textarea 
+                      matInput 
+                      formControlName="moduleContent" 
+                      rows="6"
+                      placeholder="Paste or type the content for question generation">
+                    </textarea>
+                    <mat-hint>This content will be used to generate assignment questions</mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Additional Settings -->
+              <div class="form-section">
+                <h3>Additional Settings</h3>
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Instructions</mat-label>
+                    <textarea 
+                      matInput 
+                      formControlName="instructions" 
+                      rows="3"
+                      placeholder="Special instructions for students">
+                    </textarea>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-slide-toggle formControlName="allowLateSubmission">
+                    Allow Late Submission
+                  </mat-slide-toggle>
+                </div>
+
+                <div *ngIf="assignmentForm.get('allowLateSubmission')?.value" class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Late Submission Penalty (%)</mat-label>
+                    <input matInput type="number" formControlName="lateSubmissionPenalty" min="0" max="100">
+                    <mat-error>{{ getFormError('lateSubmissionPenalty') }}</mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="form-actions">
+                <button 
+                  mat-raised-button 
+                  color="primary" 
+                  type="button"
+                  (click)="previewQuestionsAction()"
+                  [disabled]="isPreviewingQuestions">
+                  <mat-icon *ngIf="!isPreviewingQuestions">preview</mat-icon>
+                  <mat-spinner *ngIf="isPreviewingQuestions" diameter="20"></mat-spinner>
+                  {{ isPreviewingQuestions ? 'Generating...' : 'Generate & Preview Questions' }}
+                </button>
+                
+                <button 
+                  mat-button 
+                  type="button" 
+                  (click)="hideForm()">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Questions Preview Tab -->
+          <mat-tab label="Questions Preview" [disabled]="previewQuestions.length === 0">
+            <div class="tab-content">
+              <div *ngIf="previewQuestions.length === 0" class="no-questions">
+                <mat-icon>help_outline</mat-icon>
+                <p>No questions generated yet. Please generate questions from the previous tab.</p>
+              </div>
+
+              <div *ngIf="previewQuestions.length > 0" class="questions-preview">
+                <div class="preview-header">
+                  <h3>Generated Questions ({{ previewQuestions.length }})</h3>
+                  <p class="total-marks">Total Marks: {{ assignmentForm.get('maxMarks')?.value || 0 }}</p>
+                </div>
+
+                <mat-expansion-panel *ngFor="let question of previewQuestions; let i = index" class="question-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <span class="question-number">Q{{ i + 1 }}</span>
+                      <span class="question-type" [ngClass]="getQuestionTypeBadgeClass(question.type)">
+                        {{ question.type }}
+                      </span>
+                      <span class="question-marks">{{ question.marks }} mark(s)</span>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ question.question.substring(0, 80) }}{{ question.question.length > 80 ? '...' : '' }}
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="question-content">
+                    <div class="question-text">
+                      <strong>Question:</strong> {{ question.question }}
+                    </div>
+
+                    <!-- MCQ Options -->
+                    <div *ngIf="question.type === 'MCQ' && question.options" class="mcq-options">
+                      <div *ngFor="let option of question.options; let j = index" 
+                           class="option"
+                           [ngClass]="{ 'correct-option': option.isCorrect }">
+                        <span class="option-label">{{ getOptionLabel(j) }}.</span>
+                        <span class="option-text">{{ option.option }}</span>
+                        <mat-icon *ngIf="option.isCorrect" class="correct-icon">check_circle</mat-icon>
+                      </div>
+                    </div>
+
+                    <!-- Short Answer -->
+                    <div *ngIf="question.type === 'short_answer' && question.correctAnswer" class="short-answer">
+                      <strong>Expected Answer:</strong> {{ question.correctAnswer }}
+                    </div>
+
+                    <!-- Essay -->
+                    <div *ngIf="question.type === 'essay' && question.maxWords" class="essay-info">
+                      <strong>Maximum Words:</strong> {{ question.maxWords }}
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+
+                <!-- Save Assignment Button -->
+                <div class="form-actions">
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    type="button"
+                    (click)="saveAssignment()"
+                    [disabled]="isLoading">
+                    <mat-icon *ngIf="!isLoading">save</mat-icon>
+                    <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+                    {{ isLoading ? 'Saving...' : (editingAssignment ? 'Update Assignment' : 'Save Assignment') }}
+                  </button>
+                  
+                  <button 
+                    mat-button 
+                    type="button" 
+                    (click)="hideForm()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Filters -->
+  <mat-card *ngIf="!showForm" class="filters-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>filter_list</mat-icon>
+        Filters
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="filterForm" (ngSubmit)="onFilterChange()">
+        <div class="filter-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Department</mat-label>
+            <mat-select formControlName="department" (selectionChange)="onFilterChange()">
+              <mat-option value="">All Departments</mat-option>
+              <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                {{ dept.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Course</mat-label>
+            <mat-select formControlName="course" (selectionChange)="onFilterChange()">
+              <mat-option value="">All Courses</mat-option>
+              <mat-option *ngFor="let course of courses" [value]="course._id">
+                {{ course.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Assignment Type</mat-label>
+            <mat-select formControlName="assignmentType" (selectionChange)="onFilterChange()">
+              <mat-option value="">All Types</mat-option>
+              <mat-option *ngFor="let type of assignmentTypes" [value]="type.value">
+                {{ type.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Level</mat-label>
+            <mat-select formControlName="assignmentLevel" (selectionChange)="onFilterChange()">
+              <mat-option value="">All Levels</mat-option>
+              <mat-option *ngFor="let level of assignmentLevels" [value]="level.value">
+                {{ level.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="isActive" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="true">Active</mat-option>
+              <mat-option value="false">Inactive</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-button type="button" (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Assignments Table -->
+  <mat-card *ngIf="!showForm" class="table-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>list</mat-icon>
+        Assignments ({{ totalCount }})
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading assignments...</p>
+      </div>
+
+      <div *ngIf="!isLoading">
+        <table mat-table [dataSource]="assignments" class="assignments-table" matSort>
+          <!-- Title Column -->
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
+            <td mat-cell *matCellDef="let assignment">
+              <div class="assignment-title">
+                <strong>{{ assignment.title }}</strong>
+                <small>{{ assignment.description | slice:0:50 }}{{ assignment.description?.length > 50 ? '...' : '' }}</small>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Department Column -->
+          <ng-container matColumnDef="department">
+            <th mat-header-cell *matHeaderCellDef>Department</th>
+            <td mat-cell *matCellDef="let assignment">{{ getEntityName(assignment.department) }}</td>
+          </ng-container>
+
+          <!-- Course Column -->
+          <ng-container matColumnDef="course">
+            <th mat-header-cell *matHeaderCellDef>Course</th>
+            <td mat-cell *matCellDef="let assignment">{{ getEntityName(assignment.course) }}</td>
+          </ng-container>
+
+          <!-- Batch Column -->
+          <ng-container matColumnDef="batch">
+            <th mat-header-cell *matHeaderCellDef>Batch</th>
+            <td mat-cell *matCellDef="let assignment">{{ getEntityName(assignment.batch) }}</td>
+          </ng-container>
+
+          <!-- Subject Column -->
+          <ng-container matColumnDef="subject">
+            <th mat-header-cell *matHeaderCellDef>Subject</th>
+            <td mat-cell *matCellDef="let assignment">{{ getEntityName(assignment.subject) }}</td>
+          </ng-container>
+
+          <!-- Assignment Type Column -->
+          <ng-container matColumnDef="assignmentType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let assignment">
+              <span class="badge" [ngClass]="getQuestionTypeBadgeClass(assignment.assignmentType)">
+                {{ assignment.assignmentType }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Assignment Level Column -->
+          <ng-container matColumnDef="assignmentLevel">
+            <th mat-header-cell *matHeaderCellDef>Level</th>
+            <td mat-cell *matCellDef="let assignment">
+              <span class="badge" [ngClass]="getLevelBadgeClass(assignment.assignmentLevel)">
+                {{ assignment.assignmentLevel }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Due Date Column -->
+          <ng-container matColumnDef="dueDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Due Date</th>
+            <td mat-cell *matCellDef="let assignment">{{ formatDate(assignment.dueDate) }}</td>
+          </ng-container>
+
+          <!-- Question Count Column -->
+          <ng-container matColumnDef="questionCount">
+            <th mat-header-cell *matHeaderCellDef>Questions</th>
+            <td mat-cell *matCellDef="let assignment">
+              <span class="question-count">{{ assignment.numberOfQuestions }}</span>
+              <small>({{ assignment.maxMarks }} marks)</small>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let assignment">
+              <mat-slide-toggle 
+                [checked]="assignment.isActive"
+                (change)="toggleAssignmentStatus(assignment)"
+                matTooltip="Click to toggle status">
+              </mat-slide-toggle>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let assignment">
+              <button 
+                mat-icon-button 
+                color="primary"
+                (click)="showEditForm(assignment)"
+                matTooltip="Edit Assignment">
+                <mat-icon>edit</mat-icon>
+              </button>
+              
+              <button 
+                mat-icon-button 
+                color="warn"
+                (click)="deleteAssignment(assignment)"
+                matTooltip="Delete Assignment">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- No Data Message -->
+        <div *ngIf="assignments.length === 0" class="no-data">
+          <mat-icon>assignment</mat-icon>
+          <h3>No assignments found</h3>
+          <p>Create your first assignment or adjust the filters</p>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator 
+          *ngIf="assignments.length > 0"
+          [length]="totalCount"
+          [pageSize]="pageSize"
+          [pageIndex]="currentPage"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  </div>
+</app-admin-layout>
