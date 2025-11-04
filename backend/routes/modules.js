@@ -6,11 +6,11 @@ const { body, validationResult } = require('express-validator');
 const Module = require('../models/Module');
 const Subject = require('../models/Subject');
 const auth = require('../middleware/auth');
-const { uploadFile, deleteFile } = require('../config/firebase');
+const { uploadFile, deleteFile, getResourceType } = require('../config/cloudinary');
 
 const router = express.Router();
 
-// Configure multer for file uploads (store in memory for Firebase upload)
+// Configure multer for file uploads (store in memory for Cloudinary upload)
 const storage = multer.memoryStorage();
 
 const upload = multer({
@@ -268,7 +268,7 @@ router.post('/', auth, upload.fields([
       createdBy: req.user.id
     });
 
-    // Handle document uploads to Firebase
+    // Handle document uploads to Cloudinary
     const documents = [];
     if (req.files && req.files.documents) {
       for (const file of req.files.documents) {
@@ -282,13 +282,14 @@ router.post('/', auth, upload.fields([
           documents.push({
             name: file.originalname,
             uniqueName: uploadResult.uniqueFileName,
-            firebaseURL: uploadResult.downloadURL,
-            firebasePath: uploadResult.filePath,
+            cloudinaryURL: uploadResult.cloudinaryURL,
+            publicId: uploadResult.publicId,
+            resourceType: uploadResult.resourceType,
             fileType: path.extname(file.originalname),
-            size: file.size
+            size: uploadResult.bytes || file.size
           });
         } catch (uploadError) {
-          console.error('Error uploading document to Firebase:', uploadError);
+          console.error('Error uploading document to Cloudinary:', uploadError);
           return res.status(500).json({ 
             message: 'Failed to upload document to cloud storage' 
           });
@@ -296,7 +297,7 @@ router.post('/', auth, upload.fields([
       }
     }
 
-    // Handle video upload to Firebase (optional)
+    // Handle video upload to Cloudinary (optional)
     let video = null;
     if (req.files && req.files.video && req.files.video[0]) {
       const videoFile = req.files.video[0];
@@ -310,13 +311,15 @@ router.post('/', auth, upload.fields([
         video = {
           name: videoFile.originalname,
           uniqueName: uploadResult.uniqueFileName,
-          firebaseURL: uploadResult.downloadURL,
-          firebasePath: uploadResult.filePath,
+          cloudinaryURL: uploadResult.cloudinaryURL,
+          publicId: uploadResult.publicId,
+          resourceType: uploadResult.resourceType,
           fileType: path.extname(videoFile.originalname),
-          size: videoFile.size
+          size: uploadResult.bytes || videoFile.size,
+          duration: uploadResult.duration
         };
       } catch (uploadError) {
-        console.error('Error uploading video to Firebase:', uploadError);
+        console.error('Error uploading video to Cloudinary:', uploadError);
         // Don't fail the entire request for optional video upload
         // Just log the error and continue without video
       }
@@ -373,7 +376,7 @@ router.put('/:id', auth, upload.fields([
     module.code = code;
     module.subject = subjectId;
 
-    // Handle new document uploads to Firebase
+    // Handle new document uploads to Cloudinary
     if (req.files && req.files.documents) {
       const newDocuments = [];
       for (const file of req.files.documents) {
@@ -387,13 +390,14 @@ router.put('/:id', auth, upload.fields([
           newDocuments.push({
             name: file.originalname,
             uniqueName: uploadResult.uniqueFileName,
-            firebaseURL: uploadResult.downloadURL,
-            firebasePath: uploadResult.filePath,
+            cloudinaryURL: uploadResult.cloudinaryURL,
+            publicId: uploadResult.publicId,
+            resourceType: uploadResult.resourceType,
             fileType: path.extname(file.originalname),
-            size: file.size
+            size: uploadResult.bytes || file.size
           });
         } catch (uploadError) {
-          console.error('Error uploading document to Firebase:', uploadError);
+          console.error('Error uploading document to Cloudinary:', uploadError);
           return res.status(500).json({ 
             message: 'Failed to upload document to cloud storage' 
           });
@@ -404,12 +408,12 @@ router.put('/:id', auth, upload.fields([
 
     // Handle video replacement
     if (req.files && req.files.video && req.files.video[0]) {
-      // Delete old video from Firebase if exists
-      if (module.video && module.video.firebasePath) {
+      // Delete old video from Cloudinary if exists
+      if (module.video && module.video.publicId) {
         try {
-          await deleteFile(module.video.firebasePath);
+          await deleteFile(module.video.publicId, module.video.resourceType || 'video');
         } catch (deleteError) {
-          console.error('Error deleting old video from Firebase:', deleteError);
+          console.error('Error deleting old video from Cloudinary:', deleteError);
           // Continue with upload even if deletion fails
         }
       }
@@ -425,13 +429,15 @@ router.put('/:id', auth, upload.fields([
         module.video = {
           name: videoFile.originalname,
           uniqueName: uploadResult.uniqueFileName,
-          firebaseURL: uploadResult.downloadURL,
-          firebasePath: uploadResult.filePath,
+          cloudinaryURL: uploadResult.cloudinaryURL,
+          publicId: uploadResult.publicId,
+          resourceType: uploadResult.resourceType,
           fileType: path.extname(videoFile.originalname),
-          size: videoFile.size
+          size: uploadResult.bytes || videoFile.size,
+          duration: uploadResult.duration
         };
       } catch (uploadError) {
-        console.error('Error uploading video to Firebase:', uploadError);
+        console.error('Error uploading video to Cloudinary:', uploadError);
         return res.status(500).json({ 
           message: 'Failed to upload video to cloud storage' 
         });
@@ -473,13 +479,13 @@ router.delete('/:id/documents/:documentId', auth, async (req, res) => {
 
     const document = module.documents[documentIndex];
 
-    // Delete from Firebase if firebasePath exists
-    if (document.firebasePath) {
+    // Delete from Cloudinary if publicId exists
+    if (document.publicId) {
       try {
-        await deleteFile(document.firebasePath);
+        await deleteFile(document.publicId, document.resourceType || 'raw');
       } catch (deleteError) {
-        console.error('Error deleting document from Firebase:', deleteError);
-        // Continue with removal from database even if Firebase deletion fails
+        console.error('Error deleting document from Cloudinary:', deleteError);
+        // Continue with removal from database even if Cloudinary deletion fails
       }
     }
 
@@ -527,10 +533,11 @@ router.post('/:id/documents', auth, upload.single('document'), async (req, res) 
       const newDocument = {
         name: req.file.originalname,
         uniqueName: uploadResult.uniqueFileName,
-        firebaseURL: uploadResult.downloadURL,
-        firebasePath: uploadResult.filePath,
+        cloudinaryURL: uploadResult.cloudinaryURL,
+        publicId: uploadResult.publicId,
+        resourceType: uploadResult.resourceType,
         fileType: path.extname(req.file.originalname),
-        size: req.file.size
+        size: uploadResult.bytes || req.file.size
       };
 
       module.documents.push(newDocument);
@@ -541,7 +548,7 @@ router.post('/:id/documents', auth, upload.single('document'), async (req, res) 
         document: newDocument
       });
     } catch (uploadError) {
-      console.error('Error uploading document to Firebase:', uploadError);
+      console.error('Error uploading document to Cloudinary:', uploadError);
       return res.status(500).json({ 
         message: 'Failed to upload document to cloud storage' 
       });
@@ -565,12 +572,12 @@ router.put('/:id/video', auth, upload.single('video'), async (req, res) => {
       return res.status(404).json({ message: 'Module not found' });
     }
 
-    // Delete existing video from Firebase if exists
-    if (module.video && module.video.firebasePath) {
+    // Delete existing video from Cloudinary if exists
+    if (module.video && module.video.publicId) {
       try {
-        await deleteFile(module.video.firebasePath);
+        await deleteFile(module.video.publicId, module.video.resourceType || 'video');
       } catch (deleteError) {
-        console.error('Error deleting old video from Firebase:', deleteError);
+        console.error('Error deleting old video from Cloudinary:', deleteError);
         // Continue with upload even if deletion fails
       }
     }
@@ -585,10 +592,12 @@ router.put('/:id/video', auth, upload.single('video'), async (req, res) => {
       module.video = {
         name: req.file.originalname,
         uniqueName: uploadResult.uniqueFileName,
-        firebaseURL: uploadResult.downloadURL,
-        firebasePath: uploadResult.filePath,
+        cloudinaryURL: uploadResult.cloudinaryURL,
+        publicId: uploadResult.publicId,
+        resourceType: uploadResult.resourceType,
         fileType: path.extname(req.file.originalname),
-        size: req.file.size
+        size: uploadResult.bytes || req.file.size,
+        duration: uploadResult.duration
       };
 
       await module.save();
@@ -598,7 +607,7 @@ router.put('/:id/video', auth, upload.single('video'), async (req, res) => {
         video: module.video
       });
     } catch (uploadError) {
-      console.error('Error uploading video to Firebase:', uploadError);
+      console.error('Error uploading video to Cloudinary:', uploadError);
       return res.status(500).json({ 
         message: 'Failed to upload video to cloud storage' 
       });
@@ -680,24 +689,24 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Module not found' });
     }
 
-    // Delete all associated files from Firebase
+    // Delete all associated files from Cloudinary
     for (const doc of module.documents) {
-      if (doc.firebasePath) {
+      if (doc.publicId) {
         try {
-          await deleteFile(doc.firebasePath);
+          await deleteFile(doc.publicId, doc.resourceType || 'raw');
         } catch (deleteError) {
-          console.error('Error deleting document from Firebase:', deleteError);
+          console.error('Error deleting document from Cloudinary:', deleteError);
           // Continue with other deletions even if one fails
         }
       }
     }
 
-    if (module.video && module.video.firebasePath) {
+    if (module.video && module.video.publicId) {
       try {
-        await deleteFile(module.video.firebasePath);
+        await deleteFile(module.video.publicId, module.video.resourceType || 'video');
       } catch (deleteError) {
-        console.error('Error deleting video from Firebase:', deleteError);
-        // Continue with module deletion even if Firebase deletion fails
+        console.error('Error deleting video from Cloudinary:', deleteError);
+        // Continue with module deletion even if Cloudinary deletion fails
       }
     }
 

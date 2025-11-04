@@ -43,17 +43,18 @@ const moduleSchema = new mongoose.Schema({
       required: true,
       trim: true
     },
-    localPath: {
+    cloudinaryURL: {
       type: String,
-      required: false // Keep for backward compatibility
+      required: true // Cloudinary secure URL
     },
-    firebaseURL: {
+    publicId: {
       type: String,
-      required: true // Firebase download URL
+      required: true // Cloudinary public ID for deletion
     },
-    firebasePath: {
+    resourceType: {
       type: String,
-      required: true // Firebase storage path for deletion
+      enum: ['image', 'video', 'raw'],
+      default: 'raw' // raw for PDFs and documents
     },
     fileType: {
       type: String,
@@ -77,14 +78,16 @@ const moduleSchema = new mongoose.Schema({
       type: String,
       trim: true
     },
-    localPath: {
-      type: String // Keep for backward compatibility
+    cloudinaryURL: {
+      type: String // Cloudinary secure URL
     },
-    firebaseURL: {
-      type: String // Firebase download URL
+    publicId: {
+      type: String // Cloudinary public ID for deletion
     },
-    firebasePath: {
-      type: String // Firebase storage path for deletion
+    resourceType: {
+      type: String,
+      enum: ['image', 'video', 'raw'],
+      default: 'video'
     },
     fileType: {
       type: String
@@ -93,7 +96,7 @@ const moduleSchema = new mongoose.Schema({
       type: Number
     },
     duration: {
-      type: String // Duration in format like "1:23:45"
+      type: Number // Duration in seconds
     },
     uploadedAt: {
       type: Date,

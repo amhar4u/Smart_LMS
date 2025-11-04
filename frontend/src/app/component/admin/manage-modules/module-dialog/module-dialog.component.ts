@@ -19,7 +19,8 @@ import { DepartmentService } from '../../../../services/department.service';
 import { CourseService } from '../../../../services/course.service';
 import { BatchService } from '../../../../services/batch.service';
 import { SemesterService } from '../../../../services/semester.service';
-import { FirebaseService } from '../../../../services/firebase.service';
+// Firebase service no longer needed - using Cloudinary direct URLs
+// import { FirebaseService } from '../../../../services/firebase.service';
 
 export interface ModuleDialogData {
   module?: any;
@@ -69,7 +70,6 @@ export class ModuleDialogComponent implements OnInit {
     private courseService: CourseService,
     private batchService: BatchService,
     private semesterService: SemesterService,
-    private firebaseService: FirebaseService,
     private snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<ModuleDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ModuleDialogData
@@ -350,24 +350,30 @@ export class ModuleDialogComponent implements OnInit {
 
   // Methods for viewing documents and videos
   viewDocument(document: any): void {
-    if (document.firebaseURL) {
-      this.firebaseService.openFile(document.firebaseURL);
+    if (document.cloudinaryURL) {
+      window.open(document.cloudinaryURL, '_blank');
     } else {
       this.snackBar.open('Document URL not available', 'Close', { duration: 3000 });
     }
   }
 
   downloadDocument(document: any): void {
-    if (document.firebaseURL) {
-      this.firebaseService.downloadFile(document.firebaseURL, document.name);
+    if (document.cloudinaryURL) {
+      const link = document.createElement('a');
+      link.href = document.cloudinaryURL;
+      link.download = document.name;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
       this.snackBar.open('Document URL not available', 'Close', { duration: 3000 });
     }
   }
 
   playVideo(): void {
-    if (this.data.module?.video?.firebaseURL) {
-      this.firebaseService.openFile(this.data.module.video.firebaseURL);
+    if (this.data.module?.video?.cloudinaryURL) {
+      window.open(this.data.module.video.cloudinaryURL, '_blank');
     } else {
       this.snackBar.open('Video URL not available', 'Close', { duration: 3000 });
     }

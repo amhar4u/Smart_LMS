@@ -26,9 +26,9 @@ export interface ModuleDocument {
   _id: string;
   name: string;
   uniqueName: string;
-  localPath?: string; // Keep for backward compatibility
-  firebaseURL: string; // Firebase download URL
-  firebasePath: string; // Firebase storage path
+  cloudinaryURL: string; // Cloudinary secure URL
+  publicId: string; // Cloudinary public ID
+  resourceType: 'image' | 'video' | 'raw';
   fileType: string;
   size?: number;
   uploadedAt: string;
@@ -37,11 +37,11 @@ export interface ModuleDocument {
 export interface ModuleVideo {
   name: string;
   uniqueName: string;
-  localPath?: string; // Keep for backward compatibility
-  firebaseURL: string; // Firebase download URL
-  firebasePath: string; // Firebase storage path
+  cloudinaryURL: string; // Cloudinary secure URL
+  publicId: string; // Cloudinary public ID
+  resourceType: 'image' | 'video' | 'raw';
   fileType: string;
-  duration?: string;
+  duration?: number; // Duration in seconds
   uploadedAt: string;
 }
 
