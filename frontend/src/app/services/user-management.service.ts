@@ -3,8 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-// Using fixed API URL since environment is not available
-// import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment';
 
 export interface User {
   _id?: string;
@@ -72,7 +71,7 @@ export interface UsersResponse {
   providedIn: 'root'
 })
 export class UserManagementService {
-  private readonly baseUrl = 'http://localhost:5000/api';
+  private readonly baseUrl = environment.apiUrl;
   
   // Cache for users by role
   private usersCache = new Map<string, BehaviorSubject<User[]>>();
