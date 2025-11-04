@@ -1,23 +1,73 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const OpenAI = require('openai');
 
 class AIService {
   constructor() {
-    this.genAI = new GoogleGenerativeAI('AIzaSyBLd1IdvsRJVJQJvrZrU7to-V--Hu5In_Q');
+    // Initialize Gemini
+    const geminiApiKey = process.env.GEMINI_API_KEY || 'AIzaSyBLd1IdvsRJVJQJvrZrU7to-V--Hu5In_Q';
+    this.genAI = new GoogleGenerativeAI(geminiApiKey);
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    
+    // Initialize OpenAI
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    
+    // Set default AI provider (can be 'openai' or 'gemini')
+    this.defaultProvider = process.env.AI_PROVIDER || 'openai';
   }
 
-  async generateQuestions(content, assignmentType, numberOfQuestions, assignmentLevel, subject) {
+  async generateQuestions(content, assignmentType, numberOfQuestions, assignmentLevel, subject, provider = this.defaultProvider) {
     try {
       const prompt = this.buildPrompt(content, assignmentType, numberOfQuestions, assignmentLevel, subject);
       
+      if (provider === 'openai') {
+        return await this.generateQuestionsWithOpenAI(prompt, assignmentType);
+      } else {
+        return await this.generateQuestionsWithGemini(prompt, assignmentType);
+      }
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      throw new Error('Failed to generate questions using AI');
+    }
+  }
+
+  async generateQuestionsWithOpenAI(prompt, assignmentType) {
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert educator who creates high-quality educational questions. Always respond with valid JSON only, without any markdown formatting or additional text."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      });
+
+      const text = completion.choices[0].message.content;
+      return this.parseResponse(text, assignmentType);
+    } catch (error) {
+      console.error('Error generating questions with OpenAI:', error);
+      throw new Error('Failed to generate questions using OpenAI');
+    }
+  }
+
+  async generateQuestionsWithGemini(prompt, assignmentType) {
+    try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
       
       return this.parseResponse(text, assignmentType);
     } catch (error) {
-      console.error('Error generating questions:', error);
-      throw new Error('Failed to generate questions using AI');
+      console.error('Error generating questions with Gemini:', error);
+      throw new Error('Failed to generate questions using Gemini');
     }
   }
 
@@ -112,14 +162,35 @@ class AIService {
     }
   }
 
-  async generateFromModuleName(moduleName, assignmentType, numberOfQuestions, assignmentLevel, subject) {
+  async generateFromModuleName(moduleName, assignmentType, numberOfQuestions, assignmentLevel, subject, provider = this.defaultProvider) {
     const content = `Module: ${moduleName}
     
 Please generate questions based on typical learning objectives and content that would be covered in a module titled "${moduleName}" for the subject "${subject}".
 
 Consider standard curriculum topics, key concepts, and learning outcomes typically associated with this module name.`;
 
-    return this.generateQuestions(content, assignmentType, numberOfQuestions, assignmentLevel, subject);
+    return this.generateQuestions(content, assignmentType, numberOfQuestions, assignmentLevel, subject, provider);
+  }
+
+  // Simple test method to demonstrate OpenAI integration
+  async generateHaiku() {
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: "write a haiku about ai"
+          }
+        ],
+        temperature: 0.7,
+      });
+
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error('Error generating haiku:', error);
+      throw new Error('Failed to generate haiku using OpenAI');
+    }
   }
 }
 
