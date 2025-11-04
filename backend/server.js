@@ -41,6 +41,7 @@ app.use('/api/subjects', require('./routes/subjects'));
 app.use('/api/modules', require('./routes/modules'));
 app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/statistics', require('./routes/statistics'));
+app.use('/api/meetings', require('./routes/meetings'));
 
 // Test route for auth
 app.get('/api/test', (req, res) => {
@@ -83,7 +84,7 @@ mongoose.connect(process.env.MONGODB_URI)
   });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 API URL: http://localhost:${PORT}`);

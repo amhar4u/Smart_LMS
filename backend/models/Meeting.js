@@ -1,64 +1,101 @@
 const mongoose = require('mongoose');
 
 const meetingSchema = new mongoose.Schema({
-  title: {
+  topic: {
     type: String,
-    required: [true, 'Meeting title is required'],
+    required: [true, 'Meeting topic is required'],
     trim: true,
-    minlength: [2, 'Meeting title must be at least 2 characters'],
-    maxlength: [200, 'Meeting title cannot exceed 200 characters']
+    minlength: [2, 'Meeting topic must be at least 2 characters'],
+    maxlength: [200, 'Meeting topic cannot exceed 200 characters']
   },
-  moduleId: {
+  description: {
     type: String,
-    required: [true, 'Module ID is required']
+    required: [true, 'Meeting description is required'],
+    trim: true,
+    maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
-  date: {
+  // Department, Course, Batch, Semester, Subject References
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    required: [true, 'Department is required']
+  },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+    required: [true, 'Course is required']
+  },
+  batchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
+    required: [true, 'Batch is required']
+  },
+  semesterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Semester',
+    required: [true, 'Semester is required']
+  },
+  subjectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subject',
+    required: [true, 'Subject is required']
+  },
+  lecturerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Lecturer is required']
+  },
+  // Support for multiple modules
+  moduleIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Module',
+    required: true
+  }],
+  // Meeting date and time
+  meetingDate: {
     type: Date,
     required: [true, 'Meeting date is required']
   },
   startTime: {
-    type: String, // Format: "HH:MM"
+    type: Date,
     required: [true, 'Start time is required']
   },
   endTime: {
-    type: String, // Format: "HH:MM"
-    required: [true, 'End time is required']
+    type: Date,
+    required: false
   },
-  mode: {
+  // Daily API Integration
+  dailyRoomName: {
     type: String,
-    required: [true, 'Meeting mode is required'],
-    enum: ['online', 'offline', 'hybrid']
+    required: true,
+    unique: true
   },
-  meetingLink: {
+  dailyRoomUrl: {
     type: String,
-    trim: true,
-    validate: {
-      validator: function(v) {
-        if (this.mode === 'online' || this.mode === 'hybrid') {
-          return v && v.length > 0;
-        }
-        return true;
-      },
-      message: 'Meeting link is required for online/hybrid meetings'
-    }
+    required: true
   },
-  location: {
-    type: String,
-    trim: true,
-    validate: {
-      validator: function(v) {
-        if (this.mode === 'offline' || this.mode === 'hybrid') {
-          return v && v.length > 0;
-        }
-        return true;
-      },
-      message: 'Location is required for offline/hybrid meetings'
-    }
+  dailyRoomConfig: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
-  description: {
+  // Meeting status
+  status: {
     type: String,
-    trim: true,
-    maxlength: [500, 'Description cannot exceed 500 characters']
+    enum: ['scheduled', 'ongoing', 'completed', 'cancelled'],
+    default: 'scheduled'
+  },
+  // Student count (manually entered by lecturer after meeting)
+  studentCount: {
+    type: Number,
+    default: 0,
+    min: [0, 'Student count cannot be negative']
+  },
+  // Meeting logs
+  startedAt: {
+    type: Date
+  },
+  endedAt: {
+    type: Date
   },
   isActive: {
     type: Boolean,
@@ -68,8 +105,35 @@ const meetingSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better performance
-meetingSchema.index({ moduleId: 1 });
-meetingSchema.index({ date: 1 });
+// Indexes for better performance
+meetingSchema.index({ departmentId: 1 });
+meetingSchema.index({ courseId: 1 });
+meetingSchema.index({ batchId: 1 });
+meetingSchema.index({ semesterId: 1 });
+meetingSchema.index({ subjectId: 1 });
+meetingSchema.index({ lecturerId: 1 });
+meetingSchema.index({ moduleIds: 1 });
+meetingSchema.index({ meetingDate: 1 });
+meetingSchema.index({ startTime: 1 });
+meetingSchema.index({ status: 1 });
+
+// Method to check if meeting can start
+meetingSchema.methods.canStartNow = function() {
+  const now = new Date();
+  const meetingStart = new Date(this.startTime);
+  return now >= meetingStart && this.status === 'scheduled';
+};
+
+// Method to get meeting details with populated references
+meetingSchema.statics.getMeetingWithDetails = function(meetingId) {
+  return this.findById(meetingId)
+    .populate('departmentId', 'name code')
+    .populate('courseId', 'name code')
+    .populate('batchId', 'name year maxStudents')
+    .populate('semesterId', 'name number')
+    .populate('subjectId', 'name code')
+    .populate('lecturerId', 'firstName lastName email')
+    .populate('moduleIds', 'name code title');
+};
 
 module.exports = mongoose.model('Meeting', meetingSchema);
