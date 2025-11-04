@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Module, CreateModuleRequest, UpdateModuleRequest } from '../models/module.model';
+import { environment } from '../../environments/environment';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -24,7 +25,7 @@ interface ModulesResponse {
   providedIn: 'root'
 })
 export class ModuleService {
-  private readonly API_URL = 'http://localhost:5000/api/modules';
+  private readonly API_URL = `${environment.apiUrl}/modules`;
 
   constructor(private http: HttpClient) {}
 

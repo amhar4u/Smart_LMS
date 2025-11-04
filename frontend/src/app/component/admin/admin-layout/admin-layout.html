@@ -89,6 +89,14 @@
           </div>
         </div>
 
+        <!-- Meetings Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-meetings" [attr.data-tooltip]="sidebarCollapsed ? 'Meetings' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">videocam</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Meetings</span>
+          </div>
+        </div>
+
         <!-- Departments Management -->
         <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments" [attr.data-tooltip]="sidebarCollapsed ? 'Departments' : null">
           <div class="nav-content">

@@ -37,6 +37,31 @@ export const routes: Routes = [
     canActivate: [teacherGuard]
   },
   {
+    path: 'lecturer/meetings',
+    loadComponent: () => import('./component/lecturer/meeting-list/meeting-list.component').then(m => m.MeetingListComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/meetings/create',
+    loadComponent: () => import('./component/lecturer/create-meeting/create-meeting.component').then(m => m.CreateMeetingComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/meetings/room/:id',
+    loadComponent: () => import('./component/lecturer/meeting-room/meeting-room.component').then(m => m.MeetingRoomComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'student/meetings',
+    loadComponent: () => import('./component/student/student-meetings/student-meetings.component').then(m => m.StudentMeetingsComponent),
+    canActivate: [studentGuard]
+  },
+  {
+    path: 'student/meetings/room/:id',
+    loadComponent: () => import('./component/student/student-meeting-room/student-meeting-room.component').then(m => m.StudentMeetingRoomComponent),
+    canActivate: [studentGuard]
+  },
+  {
     path: 'admin/dashboard',
     loadComponent: () => import('./component/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboardComponent),
     canActivate: [adminGuard]
@@ -89,6 +114,11 @@ export const routes: Routes = [
   {
     path: 'admin/manage-assignments',
     loadComponent: () => import('./component/admin/manage-assignments/manage-assignments.component').then(m => m.ManageAssignmentsComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/manage-meetings',
+    loadComponent: () => import('./component/admin/manage-meetings/manage-meetings.component').then(m => m.ManageMeetingsComponent),
     canActivate: [adminGuard]
   },
   {
