@@ -112,6 +112,11 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'admin/manage-extra-modules',
+    loadComponent: () => import('./component/admin/manage-extra-modules/manage-extra-modules.component').then(m => m.ManageExtraModulesComponent),
+    canActivate: [adminGuard]
+  },
+  {
     path: 'admin/manage-assignments',
     loadComponent: () => import('./component/admin/manage-assignments/manage-assignments.component').then(m => m.ManageAssignmentsComponent),
     canActivate: [adminGuard]
