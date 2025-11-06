@@ -2,8 +2,10 @@
   <div class="dashboard-content">
     <!-- Page Header -->
     <div class="page-header">
-      <h1>Dashboard Overview</h1>
-      <p>Welcome back! Here's what's happening with your system today.</p>
+      <div class="header-content">
+        <h1>Dashboard Overview</h1>
+        <p>Welcome back! Here's what's happening with your system today.</p>
+      </div>
       <button mat-icon-button (click)="refreshData()" class="refresh-btn" *ngIf="!isLoading">
         <mat-icon>refresh</mat-icon>
       </button>
@@ -267,6 +269,105 @@
               </mat-card-content>
             </mat-card>
           </div>
+        </div>
+      </div>
+
+      <!-- Meetings and Assignments Section -->
+      <div class="activities-section">
+        <div class="activities-grid">
+          <!-- Scheduled Meetings -->
+          <mat-card class="activity-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon class="header-icon">video_call</mat-icon>
+                Upcoming Meetings
+              </mat-card-title>
+              <mat-card-subtitle>Next 7 days</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div *ngIf="upcomingMeetings.length === 0" class="empty-state">
+                <mat-icon>event_busy</mat-icon>
+                <p>No upcoming meetings scheduled</p>
+              </div>
+              
+              <mat-list *ngIf="upcomingMeetings.length > 0" class="meeting-list">
+                <mat-list-item *ngFor="let meeting of upcomingMeetings; let last = last">
+                  <mat-icon matListItemIcon [style.color]="'#2196F3'">video_call</mat-icon>
+                  <div matListItemTitle class="meeting-title">{{ meeting.topic }}</div>
+                  <div matListItemLine class="meeting-details">
+                    <span class="meeting-subject">
+                      <mat-icon>subject</mat-icon>
+                      {{ getSubjectName(meeting.subjectId) }}
+                    </span>
+                    <span class="meeting-time">
+                      <mat-icon>schedule</mat-icon>
+                      {{ formatMeetingTime(meeting) }}
+                    </span>
+                  </div>
+                  <mat-chip [class]="getMeetingStatusClass(meeting.status)" class="status-chip">
+                    {{ meeting.status }}
+                  </mat-chip>
+                  <mat-divider *ngIf="!last"></mat-divider>
+                </mat-list-item>
+              </mat-list>
+              
+              <div class="card-footer" *ngIf="upcomingMeetings.length > 0">
+                <button mat-button color="primary" routerLink="/admin/meetings">
+                  View All Meetings
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Pending Assignments -->
+          <mat-card class="activity-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon class="header-icon">assignment</mat-icon>
+                Due Assignments
+              </mat-card-title>
+              <mat-card-subtitle>Due in next 7 days</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div *ngIf="dueAssignments.length === 0" class="empty-state">
+                <mat-icon>assignment_turned_in</mat-icon>
+                <p>No assignments due soon</p>
+              </div>
+              
+              <mat-list *ngIf="dueAssignments.length > 0" class="assignment-list">
+                <mat-list-item *ngFor="let assignment of dueAssignments; let last = last">
+                  <mat-icon matListItemIcon [style.color]="getAssignmentLevelColor(assignment.assignmentLevel)">assignment</mat-icon>
+                  <div matListItemTitle class="assignment-title">{{ assignment.title }}</div>
+                  <div matListItemLine class="assignment-details">
+                    <span class="assignment-subject">
+                      <mat-icon>subject</mat-icon>
+                      {{ getSubjectName(assignment.subject) }}
+                    </span>
+                    <span class="assignment-due">
+                      <mat-icon>event</mat-icon>
+                      Due: {{ assignment.dueDate | date:'short' }}
+                    </span>
+                    <span class="assignment-days" [style.color]="getDaysUntilDue(assignment.dueDate) <= 2 ? '#f44336' : '#FF9800'">
+                      <mat-icon>schedule</mat-icon>
+                      {{ getDaysUntilDue(assignment.dueDate) }} days left
+                    </span>
+                  </div>
+                  <mat-chip [class]="getAssignmentLevelClass(assignment.assignmentLevel)" class="level-chip">
+                    {{ assignment.assignmentLevel }}
+                  </mat-chip>
+                  <mat-divider *ngIf="!last"></mat-divider>
+                </mat-list-item>
+              </mat-list>
+              
+              <div class="card-footer" *ngIf="dueAssignments.length > 0">
+                <button mat-button color="primary" routerLink="/admin/manage-assignments">
+                  View All Assignments
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
         </div>
       </div>
 

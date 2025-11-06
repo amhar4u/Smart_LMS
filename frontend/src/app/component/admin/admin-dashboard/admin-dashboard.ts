@@ -6,6 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
 import { Subject } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
 import { of, forkJoin } from 'rxjs';
@@ -15,6 +17,8 @@ import { DepartmentService, Department } from '../../../services/department.serv
 import { CourseService, Course } from '../../../services/course.service';
 import { BatchService, Batch } from '../../../services/batch.service';
 import { SubjectService, Subject as SubjectModel } from '../../../services/subject.service';
+import { MeetingService, Meeting } from '../../../services/meeting.service';
+import { AssignmentService, Assignment } from '../../../services/assignment.service';
 import { AdminLayout } from '../admin-layout/admin-layout';
 
 interface DashboardStat {
@@ -50,6 +54,8 @@ interface Activity {
     MatButtonModule,
     MatProgressBarModule,
     MatChipsModule,
+    MatListModule,
+    MatDividerModule,
     AdminLayout
   ],
   templateUrl: './admin-dashboard.html',
@@ -70,6 +76,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   courses: Course[] = [];
   batches: Batch[] = [];
   subjects: SubjectModel[] = [];
+  
+  // Meeting and Assignment data
+  scheduledMeetings: Meeting[] = [];
+  upcomingMeetings: Meeting[] = [];
+  pendingAssignments: Assignment[] = [];
+  dueAssignments: Assignment[] = [];
   
   // Dashboard statistics - organized into two rows
   userStats: DashboardStat[] = [];
@@ -94,7 +106,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     private departmentService: DepartmentService,
     private courseService: CourseService,
     private batchService: BatchService,
-    private subjectService: SubjectService
+    private subjectService: SubjectService,
+    private meetingService: MeetingService,
+    private assignmentService: AssignmentService
   ) {}
 
   ngOnInit(): void {
@@ -141,6 +155,18 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           console.error('Error loading subjects:', error);
           return of({ success: false, data: [], count: 0 });
         })
+      ),
+      meetings: this.meetingService.getMeetings({ status: 'scheduled' }).pipe(
+        catchError(error => {
+          console.error('Error loading meetings:', error);
+          return of({ success: false, meetings: [], count: 0 });
+        })
+      ),
+      assignments: this.assignmentService.getAssignments({ isActive: true }).pipe(
+        catchError(error => {
+          console.error('Error loading assignments:', error);
+          return of({ success: false, data: [], pagination: { total: 0, page: 1, limit: 10, pages: 0 } });
+        })
       )
     }).pipe(
       takeUntil(this.destroy$)
@@ -154,6 +180,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.courses = response.courses.data?.courses || [];
       this.batches = response.batches.data || [];
       this.subjects = Array.isArray(response.subjects.data) ? response.subjects.data : [];
+      
+      // Process meetings
+      this.scheduledMeetings = response.meetings.meetings || [];
+      this.upcomingMeetings = this.getUpcomingMeetings();
+      
+      // Process assignments
+      this.pendingAssignments = response.assignments.data || [];
+      this.dueAssignments = this.getDueAssignments();
       
       // Calculate all statistics and distributions
       this.calculateStatistics();
@@ -696,5 +730,92 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
     
     return Math.round((count / totalUsers) * 100);
+  }
+
+  // Meeting helper methods
+  getUpcomingMeetings(): Meeting[] {
+    const now = new Date();
+    const next7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    return this.scheduledMeetings
+      .filter(meeting => {
+        const meetingDate = new Date(meeting.meetingDate);
+        return meetingDate >= now && meetingDate <= next7Days;
+      })
+      .sort((a, b) => new Date(a.meetingDate).getTime() - new Date(b.meetingDate).getTime())
+      .slice(0, 5);
+  }
+
+  getMeetingStatusClass(status: string): string {
+    switch (status) {
+      case 'scheduled':
+        return 'status-scheduled';
+      case 'ongoing':
+        return 'status-ongoing';
+      case 'completed':
+        return 'status-completed';
+      case 'cancelled':
+        return 'status-cancelled';
+      default:
+        return '';
+    }
+  }
+
+  // Assignment helper methods
+  getDueAssignments(): Assignment[] {
+    const now = new Date();
+    const next7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    return this.pendingAssignments
+      .filter(assignment => {
+        const dueDate = new Date(assignment.dueDate);
+        return dueDate >= now && dueDate <= next7Days;
+      })
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .slice(0, 5);
+  }
+
+  getAssignmentLevelClass(level: string): string {
+    switch (level.toLowerCase()) {
+      case 'easy':
+        return 'level-easy';
+      case 'medium':
+        return 'level-medium';
+      case 'hard':
+        return 'level-hard';
+      default:
+        return '';
+    }
+  }
+
+  getAssignmentLevelColor(level: string): string {
+    switch (level.toLowerCase()) {
+      case 'easy':
+        return '#4CAF50';
+      case 'medium':
+        return '#FF9800';
+      case 'hard':
+        return '#f44336';
+      default:
+        return '#757575';
+    }
+  }
+
+  getDaysUntilDue(dueDate: Date): number {
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
+  formatMeetingTime(meeting: Meeting): string {
+    const date = new Date(meeting.meetingDate);
+    const time = new Date(meeting.startTime);
+    return `${date.toLocaleDateString()} at ${time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  getSubjectName(subject: any): string {
+    return typeof subject === 'string' ? subject : subject?.name || 'N/A';
   }
 }

@@ -81,6 +81,14 @@
           </div>
         </div>
 
+        <!-- Extra Modules Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-extra-modules" [attr.data-tooltip]="sidebarCollapsed ? 'Extra Modules' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">extension</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Extra Modules</span>
+          </div>
+        </div>
+
         <!-- Assignments Management -->
         <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-assignments" [attr.data-tooltip]="sidebarCollapsed ? 'Assignments' : null">
           <div class="nav-content">
