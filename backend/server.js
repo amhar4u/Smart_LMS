@@ -43,6 +43,7 @@ app.use('/api/extra-modules', require('./routes/extraModules'));
 app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/statistics', require('./routes/statistics'));
 app.use('/api/meetings', require('./routes/meetings'));
+app.use('/api/lecturer', require('./routes/lecturer'));
 
 // Test route for auth
 app.get('/api/test', (req, res) => {
