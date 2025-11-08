@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +10,17 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { MeetingService, Meeting } from '../../../services/meeting.service';
+import { SubjectService } from '../../../services/subject.service';
+import { AuthService } from '../../../services/auth.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
+import { LecturerLayout } from '../lecturer-layout/lecturer-layout';
+import { MeetingDialogComponent } from '../../admin/meeting-dialog/meeting-dialog.component';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -17,6 +28,7 @@ import { interval, Subscription } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
@@ -24,212 +36,461 @@ import { interval, Subscription } from 'rxjs';
     MatChipsModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDialogModule,
+    MatPaginatorModule,
+    LecturerLayout
   ],
   template: `
-    <div class="meeting-list-container">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>My Meetings</mat-card-title>
-          <button mat-raised-button color="primary" (click)="createMeeting()">
-            <mat-icon>add</mat-icon> Create Meeting
+    <app-lecturer-layout>
+      <div class="manage-meetings-page">
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="header-left">
+            <mat-icon class="page-icon">videocam</mat-icon>
+            <div class="header-text">
+              <h1>Manage Meetings</h1>
+              <p class="subtitle">Create and manage video meetings for your subjects</p>
+            </div>
+          </div>
+          <button mat-raised-button color="primary" class="create-btn" (click)="openCreateMeetingDialog()">
+            <mat-icon>add</mat-icon>
+            Create Meeting
           </button>
-        </mat-card-header>
+        </div>
 
-        <mat-card-content>
+        <!-- Filters Section -->
+        <div class="filters-section">
+          <h3 class="filters-title">
+            <mat-icon>filter_list</mat-icon>
+            Filters
+          </h3>
+          <div class="filters-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Subject</mat-label>
+              <mat-select [(ngModel)]="filters.subjectId" (selectionChange)="onFilterChange()">
+                <mat-option value="">All Subjects</mat-option>
+                <mat-option *ngFor="let subject of lecturerSubjects" [value]="subject._id">
+                  {{ subject.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Status</mat-label>
+              <mat-select [(ngModel)]="filters.status" (selectionChange)="onFilterChange()">
+                <mat-option value="">All Status</mat-option>
+                <mat-option value="scheduled">Scheduled</mat-option>
+                <mat-option value="ongoing">Ongoing</mat-option>
+                <mat-option value="completed">Completed</mat-option>
+                <mat-option value="cancelled">Cancelled</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-stroked-button class="clear-btn" (click)="clearFilters()">
+              <mat-icon>close</mat-icon>
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Meetings List -->
+        <div class="content-section">
+          <div class="section-header">
+            <h3>
+              <mat-icon>list</mat-icon>
+              My Meetings ({{ meetings.length }})
+            </h3>
+          </div>
+
           <div *ngIf="loading" class="loading-container">
             <mat-spinner></mat-spinner>
           </div>
 
-          <div *ngIf="!loading && meetings.length === 0" class="no-meetings">
+          <div *ngIf="!loading && meetings.length === 0" class="no-data">
+            <mat-icon>event_busy</mat-icon>
             <p>No meetings found</p>
-            <button mat-raised-button color="primary" (click)="createMeeting()">
+            <button mat-raised-button color="primary" (click)="openCreateMeetingDialog()">
               Create Your First Meeting
             </button>
           </div>
 
-          <div *ngIf="!loading && meetings.length > 0" class="meetings-grid">
-            <div *ngFor="let meeting of meetings" class="meeting-card">
-              <div class="meeting-header">
-                <h3>{{ meeting.topic }}</h3>
-                <mat-chip [class]="'status-' + meeting.status">
-                  {{ meeting.status }}
-                </mat-chip>
-              </div>
+          <div *ngIf="!loading && meetings.length > 0" class="table-container">
+            <table mat-table [dataSource]="meetings" class="data-table">
+              <!-- Topic Column -->
+              <ng-container matColumnDef="topic">
+                <th mat-header-cell *matHeaderCellDef>Topic</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="topic-cell">
+                    <strong>{{ meeting.topic }}</strong>
+                    <small>{{ meeting.description | slice:0:50 }}{{ meeting.description.length > 50 ? '...' : '' }}</small>
+                  </div>
+                </td>
+              </ng-container>
 
-              <div class="meeting-details">
-                <p><strong>Description:</strong> {{ meeting.description }}</p>
-                <p><strong>Subject:</strong> {{ getSubjectName(meeting) }}</p>
-                <p><strong>Date:</strong> {{ meeting.startTime | date:'medium' }}</p>
-                <p><strong>Modules:</strong> {{ getModuleNames(meeting) }}</p>
-                <p *ngIf="meeting.studentCount > 0">
-                  <strong>Students Attended:</strong> {{ meeting.studentCount }}
-                </p>
-              </div>
+              <!-- Subject Column -->
+              <ng-container matColumnDef="subject">
+                <th mat-header-cell *matHeaderCellDef>Subject</th>
+                <td mat-cell *matCellDef="let meeting">{{ getSubjectName(meeting) }}</td>
+              </ng-container>
 
-              <div class="meeting-actions">
-                <button mat-raised-button color="primary" 
-                        *ngIf="meeting.status === 'scheduled' && canStartMeeting(meeting)"
-                        (click)="startMeeting(meeting)">
-                  <mat-icon>videocam</mat-icon> Start Meeting
-                </button>
+              <!-- Batch Column -->
+              <ng-container matColumnDef="batch">
+                <th mat-header-cell *matHeaderCellDef>Batch</th>
+                <td mat-cell *matCellDef="let meeting">{{ getBatchName(meeting) }}</td>
+              </ng-container>
 
-                <button mat-raised-button 
-                        *ngIf="meeting.status === 'scheduled' && !canStartMeeting(meeting)"
-                        disabled
-                        matTooltip="Meeting will be available at scheduled time">
-                  <mat-icon>schedule</mat-icon> Waiting
-                </button>
+              <!-- Date/Time Column -->
+              <ng-container matColumnDef="dateTime">
+                <th mat-header-cell *matHeaderCellDef>Date & Time</th>
+                <td mat-cell *matCellDef="let meeting">{{ meeting.startTime | date:'short' }}</td>
+              </ng-container>
 
-                <button mat-raised-button color="accent"
-                        *ngIf="meeting.status === 'ongoing'"
-                        (click)="joinMeeting(meeting)">
-                  <mat-icon>meeting_room</mat-icon> Join Meeting
-                </button>
+              <!-- Duration Column -->
+              <ng-container matColumnDef="duration">
+                <th mat-header-cell *matHeaderCellDef>Duration</th>
+                <td mat-cell *matCellDef="let meeting">{{ getDuration(meeting) }} min</td>
+              </ng-container>
 
-                <button mat-raised-button color="warn"
-                        *ngIf="meeting.status === 'ongoing'"
-                        (click)="endMeeting(meeting)">
-                  <mat-icon>stop</mat-icon> End Meeting
-                </button>
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <span class="status-badge" [ngClass]="'status-' + meeting.status">
+                    {{ meeting.status | uppercase }}
+                  </span>
+                </td>
+              </ng-container>
 
-                <button mat-button *ngIf="meeting.status === 'scheduled'"
-                        (click)="editMeeting(meeting)">
-                  <mat-icon>edit</mat-icon> Edit
-                </button>
+              <!-- Students Column -->
+              <ng-container matColumnDef="students">
+                <th mat-header-cell *matHeaderCellDef>Students</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <span class="student-count">{{ getMaxStudents(meeting) }}</span>
+                </td>
+              </ng-container>
 
-                <button mat-button color="warn" *ngIf="meeting.status === 'scheduled'"
-                        (click)="cancelMeeting(meeting)">
-                  <mat-icon>cancel</mat-icon> Cancel
-                </button>
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="action-buttons">
+                    <!-- Host Meeting Button -->
+                    <button mat-mini-fab color="primary" 
+                            [matTooltip]="'Host Meeting'"
+                            [disabled]="meeting.status !== 'scheduled'"
+                            (click)="hostMeeting(meeting)"
+                            class="host-btn">
+                      <mat-icon>video_call</mat-icon>
+                    </button>
+                    
+                    <button mat-icon-button color="primary" 
+                            [matTooltip]="'Edit Meeting'"
+                            [disabled]="meeting.status !== 'scheduled'"
+                            (click)="editMeeting(meeting)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="accent" 
+                            [matTooltip]="'Reschedule'"
+                            [disabled]="meeting.status !== 'scheduled'"
+                            (click)="rescheduleMeeting(meeting)">
+                      <mat-icon>schedule</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" 
+                            [matTooltip]="'Delete Meeting'"
+                            [disabled]="meeting.status === 'ongoing'"
+                            (click)="deleteMeeting(meeting)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
 
-                <button mat-button *ngIf="meeting.status === 'completed'"
-                        (click)="viewDetails(meeting)">
-                  <mat-icon>visibility</mat-icon> View Details
-                </button>
-              </div>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
 
-              <div class="time-info" *ngIf="meeting.status === 'scheduled'">
-                <small>{{ getTimeUntilMeeting(meeting) }}</small>
-              </div>
-            </div>
+            <!-- Pagination -->
+            <mat-paginator 
+              [length]="meetings.length"
+              [pageSize]="10"
+              [pageSizeOptions]="[5, 10, 25, 50]"
+              showFirstLastButtons>
+            </mat-paginator>
           </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+        </div>
+      </div>
+    </app-lecturer-layout>
   `,
   styles: [`
-    .meeting-list-container {
-      padding: 20px;
+    .manage-meetings-page {
+      padding: 30px;
+      background: #f5f7fa;
+      min-height: 100vh;
     }
 
-    mat-card-header {
+    /* Page Header */
+    .page-header {
+      background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+      padding: 40px;
+      border-radius: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(33, 150, 243, 0.3);
     }
 
-    .loading-container {
+    .header-left {
       display: flex;
-      justify-content: center;
-      padding: 40px;
-    }
-
-    .no-meetings {
-      text-align: center;
-      padding: 40px;
-    }
-
-    .meetings-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      align-items: center;
       gap: 20px;
-      margin-top: 20px;
+      color: white;
     }
 
-    .meeting-card {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 20px;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: box-shadow 0.3s;
+    .page-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
     }
 
-    .meeting-card:hover {
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .meeting-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .meeting-header h3 {
+    .header-text h1 {
       margin: 0;
+      font-size: 32px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      margin: 8px 0 0 0;
+      opacity: 0.9;
+      font-size: 16px;
+    }
+
+    .create-btn {
+      height: 48px;
+      padding: 0 32px;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* Filters Section */
+    .filters-section {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .filters-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 20px 0;
       font-size: 18px;
+      font-weight: 600;
       color: #333;
     }
 
-    .meeting-details {
-      margin-bottom: 15px;
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: center;
     }
 
-    .meeting-details p {
-      margin: 8px 0;
-      font-size: 14px;
-      color: #666;
+    .clear-btn {
+      height: 56px;
     }
 
-    .meeting-actions {
+    /* Content Section */
+    .content-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .section-header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .section-header h3 {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 15px;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
     }
 
-    .time-info {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #eee;
+    /* Loading & No Data */
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      padding: 80px 20px;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 80px 20px;
+      color: #999;
+    }
+
+    .no-data mat-icon {
+      font-size: 72px;
+      width: 72px;
+      height: 72px;
+      opacity: 0.5;
+    }
+
+    .no-data p {
+      margin-top: 16px;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+    }
+
+    .data-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      padding: 16px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      padding: 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .data-table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .topic-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 0;
+    }
+
+    .topic-cell strong {
+      color: #333;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .topic-cell small {
       color: #666;
+      font-size: 13px;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
       font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
     }
 
-    mat-chip.status-scheduled {
-      background-color: #2196F3;
-      color: white;
+    .status-badge.status-scheduled {
+      background: #e3f2fd;
+      color: #1976d2;
     }
 
-    mat-chip.status-ongoing {
-      background-color: #4CAF50;
-      color: white;
+    .status-badge.status-ongoing {
+      background: #e8f5e9;
+      color: #388e3c;
+      animation: pulse 2s infinite;
     }
 
-    mat-chip.status-completed {
-      background-color: #9E9E9E;
-      color: white;
+    .status-badge.status-completed {
+      background: #f5f5f5;
+      color: #757575;
     }
 
-    mat-chip.status-cancelled {
-      background-color: #F44336;
-      color: white;
+    .status-badge.status-cancelled {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .student-count {
+      font-weight: 600;
+      color: #2196F3;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-buttons button[disabled] {
+      opacity: 0.4;
+    }
+
+    .host-btn {
+      background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+    }
+
+    /* Pagination */
+    mat-paginator {
+      background: transparent;
+      margin-top: 16px;
     }
   `]
 })
 export class MeetingListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   private meetingService = inject(MeetingService);
+  private subjectService = inject(SubjectService);
+  private confirmationService = inject(ConfirmationService);
+  private authService = inject(AuthService);
 
   meetings: Meeting[] = [];
+  lecturerSubjects: any[] = [];
   loading = false;
+  currentUser: any = null;
   private refreshSubscription?: Subscription;
+  
+  filters = {
+    subjectId: '',
+    status: ''
+  };
+
+  displayedColumns: string[] = ['topic', 'subject', 'batch', 'dateTime', 'duration', 'status', 'students', 'actions'];
 
   ngOnInit() {
+    this.currentUser = this.authService.getCurrentUser();
+    this.loadLecturerSubjects();
     this.loadMeetings();
     
     // Refresh meeting status every minute
@@ -244,9 +505,34 @@ export class MeetingListComponent implements OnInit, OnDestroy {
     }
   }
 
+  async loadLecturerSubjects() {
+    if (!this.currentUser || !this.currentUser._id) {
+      return;
+    }
+
+    try {
+      const response = await this.subjectService.getSubjects({
+        lecturer: this.currentUser._id
+      }).toPromise();
+
+      if (response && response.success) {
+        this.lecturerSubjects = Array.isArray(response.data) ? response.data : [response.data];
+      }
+    } catch (error) {
+      console.error('Failed to load lecturer subjects', error);
+    }
+  }
+
   loadMeetings() {
     this.loading = true;
-    this.meetingService.getMeetings().subscribe({
+    const filters: any = {};
+    
+    if (this.filters.subjectId) filters.subjectId = this.filters.subjectId;
+    if (this.filters.status) filters.status = this.filters.status;
+    
+    // Note: lecturerId filter is automatically applied by backend based on user role
+
+    this.meetingService.getMeetings(filters).subscribe({
       next: (response) => {
         this.meetings = response.meetings || [];
         this.loading = false;
@@ -258,94 +544,112 @@ export class MeetingListComponent implements OnInit, OnDestroy {
     });
   }
 
-  createMeeting() {
-    this.router.navigate(['/lecturer/meetings/create']);
+  onFilterChange() {
+    this.loadMeetings();
   }
 
-  canStartMeeting(meeting: Meeting): boolean {
-    const now = new Date();
-    const startTime = new Date(meeting.startTime);
-    return now >= startTime && meeting.status === 'scheduled';
+  clearFilters() {
+    this.filters = {
+      subjectId: '',
+      status: ''
+    };
+    this.loadMeetings();
   }
 
-  startMeeting(meeting: Meeting) {
-    if (!meeting._id) return;
+  openCreateMeetingDialog() {
+    const dialogRef = this.dialog.open(MeetingDialogComponent, {
+      width: '700px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: { meeting: null, lecturerId: this.currentUser._id }
+    });
 
-    this.meetingService.canStartMeeting(meeting._id).subscribe({
-      next: (response) => {
-        if (response.canStart) {
-          this.meetingService.startMeeting(meeting._id!).subscribe({
-            next: (startResponse) => {
-              this.snackBar.open('Meeting started successfully!', 'Close', { duration: 3000 });
-              this.router.navigate(['/lecturer/meetings/room', meeting._id], {
-                state: { token: startResponse.token, roomUrl: startResponse.roomUrl }
-              });
-            },
-            error: (error) => {
-              this.snackBar.open(error.error?.message || 'Failed to start meeting', 'Close', { 
-                duration: 3000 
-              });
-            }
-          });
-        } else {
-          this.snackBar.open('Meeting cannot be started yet', 'Close', { duration: 3000 });
-        }
-      },
-      error: (error) => {
-        this.snackBar.open('Failed to check meeting status', 'Close', { duration: 3000 });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadMeetings();
       }
     });
   }
 
-  joinMeeting(meeting: Meeting) {
-    this.router.navigate(['/lecturer/meetings/room', meeting._id]);
-  }
-
-  endMeeting(meeting: Meeting) {
-    if (!meeting._id) return;
-
-    const studentCount = prompt('Enter the number of students who attended:');
-    if (studentCount !== null) {
-      const count = parseInt(studentCount, 10);
-      if (isNaN(count) || count < 0) {
-        this.snackBar.open('Please enter a valid number', 'Close', { duration: 3000 });
-        return;
-      }
-
-      this.meetingService.endMeeting(meeting._id, count).subscribe({
-        next: () => {
-          this.snackBar.open('Meeting ended successfully!', 'Close', { duration: 3000 });
-          this.loadMeetings();
-        },
-        error: (error) => {
-          this.snackBar.open('Failed to end meeting', 'Close', { duration: 3000 });
-        }
-      });
-    }
-  }
-
   editMeeting(meeting: Meeting) {
-    this.router.navigate(['/lecturer/meetings/edit', meeting._id]);
+    if (meeting.status !== 'scheduled') {
+      this.snackBar.open('Only scheduled meetings can be edited', 'Close', { duration: 3000 });
+      return;
+    }
+    
+    const dialogRef = this.dialog.open(MeetingDialogComponent, {
+      width: '700px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: { meeting: meeting, lecturerId: this.currentUser._id }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadMeetings();
+      }
+    });
   }
 
-  cancelMeeting(meeting: Meeting) {
+  rescheduleMeeting(meeting: Meeting) {
+    if (meeting.status !== 'scheduled') {
+      this.snackBar.open('Only scheduled meetings can be rescheduled', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const newDateTime = prompt('Enter new date and time (YYYY-MM-DDTHH:MM):');
+    if (!newDateTime) return;
+
     if (!meeting._id) return;
 
-    if (confirm(`Are you sure you want to cancel the meeting "${meeting.topic}"?`)) {
-      this.meetingService.deleteMeeting(meeting._id).subscribe({
-        next: () => {
-          this.snackBar.open('Meeting cancelled successfully!', 'Close', { duration: 3000 });
-          this.loadMeetings();
-        },
-        error: (error) => {
-          this.snackBar.open('Failed to cancel meeting', 'Close', { duration: 3000 });
-        }
-      });
-    }
+    this.meetingService.updateMeeting(meeting._id, {
+      startTime: new Date(newDateTime).toISOString()
+    }).subscribe({
+      next: (response) => {
+        this.snackBar.open('Meeting rescheduled successfully', 'Close', { duration: 3000 });
+        this.loadMeetings();
+      },
+      error: (error) => {
+        this.snackBar.open(
+          error.error?.message || 'Failed to reschedule meeting',
+          'Close',
+          { duration: 3000 }
+        );
+      }
+    });
   }
 
-  viewDetails(meeting: Meeting) {
-    this.router.navigate(['/lecturer/meetings/details', meeting._id]);
+  deleteMeeting(meeting: Meeting) {
+    if (meeting.status === 'ongoing') {
+      this.snackBar.open('Cannot delete an ongoing meeting', 'Close', { duration: 3000 });
+      return;
+    }
+
+    if (!meeting._id) return;
+
+    this.confirmationService.confirm({
+      title: 'Delete Meeting',
+      message: `Are you sure you want to delete the meeting "${meeting.topic}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'delete'
+    }).subscribe(confirmed => {
+      if (confirmed && meeting._id) {
+        this.meetingService.deleteMeeting(meeting._id).subscribe({
+          next: (response) => {
+            this.snackBar.open('Meeting deleted successfully', 'Close', { duration: 3000 });
+            this.loadMeetings();
+          },
+          error: (error) => {
+            this.snackBar.open(
+              error.error?.message || 'Failed to delete meeting',
+              'Close',
+              { duration: 3000 }
+            );
+          }
+        });
+      }
+    });
   }
 
   getSubjectName(meeting: Meeting): string {
@@ -355,33 +659,93 @@ export class MeetingListComponent implements OnInit, OnDestroy {
     return (meeting.subjectId as any)?.name || 'N/A';
   }
 
-  getModuleNames(meeting: Meeting): string {
-    if (!meeting.moduleIds || meeting.moduleIds.length === 0) {
-      return 'N/A';
+  getBatchName(meeting: Meeting): string {
+    if (typeof meeting.batchId === 'string') {
+      return meeting.batchId;
     }
-    
-    return meeting.moduleIds.map((module: any) => module.name || module).join(', ');
+    return (meeting.batchId as any)?.name || 'N/A';
   }
 
-  getTimeUntilMeeting(meeting: Meeting): string {
-    const now = new Date();
-    const startTime = new Date(meeting.startTime);
-    const diff = startTime.getTime() - now.getTime();
+  getMaxStudents(meeting: Meeting): number {
+    // First try to get studentCount from meeting itself (saved value)
+    if (meeting.studentCount !== undefined && meeting.studentCount !== null) {
+      return meeting.studentCount;
+    }
+    
+    // Fallback: try to get from batch if populated
+    if (typeof meeting.batchId !== 'string') {
+      const batch = meeting.batchId as any;
+      return batch?.maxStudents || 0;
+    }
+    
+    return 0;
+  }
 
-    if (diff < 0) {
-      return 'Meeting time has passed';
+  getDuration(meeting: Meeting): number {
+    // Calculate duration from startTime and endTime
+    if (meeting.startTime && meeting.endTime) {
+      const start = new Date(meeting.startTime);
+      const end = new Date(meeting.endTime);
+      
+      // Check if dates are valid
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return 0;
+      }
+      
+      const diffMs = end.getTime() - start.getTime();
+      const diffMinutes = Math.round(diffMs / (1000 * 60));
+      
+      return diffMinutes;
+    }
+    
+    return 0;
+  }
+
+  hostMeeting(meeting: Meeting) {
+    if (meeting.status !== 'scheduled') {
+      this.snackBar.open('Only scheduled meetings can be hosted', 'Close', { duration: 3000 });
+      return;
     }
 
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const days = Math.floor(hours / 24);
+    // Check if meeting time has arrived
+    const now = new Date();
+    const meetingStart = new Date(meeting.startTime);
+    const timeDiff = meetingStart.getTime() - now.getTime();
+    const minutesDiff = Math.floor(timeDiff / (1000 * 60));
 
-    if (days > 0) {
-      return `Starts in ${days} day${days > 1 ? 's' : ''}`;
-    } else if (hours > 0) {
-      return `Starts in ${hours} hour${hours > 1 ? 's' : ''} ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    // Allow hosting 15 minutes before scheduled time
+    if (minutesDiff > 15) {
+      this.snackBar.open(
+        `Meeting can be hosted starting 15 minutes before scheduled time (${minutesDiff} minutes remaining)`,
+        'Close',
+        { duration: 5000 }
+      );
+      return;
+    }
+
+    // Open meeting in new window/tab with host privileges
+    if (meeting.dailyRoomUrl) {
+      const meetingUrl = `${meeting.dailyRoomUrl}?t=host&userName=Host`;
+      window.open(meetingUrl, '_blank', 'width=1200,height=800');
+      
+      // Update meeting status to ongoing
+      if (meeting._id) {
+        this.meetingService.updateMeeting(meeting._id, {
+          status: 'ongoing',
+          startedAt: new Date().toISOString()
+        } as any).subscribe({
+          next: () => {
+            this.snackBar.open('Meeting started! Opening meeting room...', 'Close', { duration: 3000 });
+            this.loadMeetings();
+          },
+          error: (error) => {
+            console.error('Failed to update meeting status', error);
+          }
+        });
+      }
     } else {
-      return `Starts in ${minutes} minute${minutes > 1 ? 's' : ''}`;
+      this.snackBar.open('Meeting room URL not found', 'Close', { duration: 3000 });
     }
   }
 }
+
