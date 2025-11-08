@@ -1,0 +1,194 @@
+<app-lecturer-layout>
+  <div class="manage-extra-modules-page">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <mat-icon class="page-icon">auto_stories</mat-icon>
+        <div class="header-text">
+          <h1>Manage Extra Modules</h1>
+          <p class="subtitle">Create and manage supplementary learning materials for your subjects</p>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" class="create-btn" (click)="openCreateExtraModuleDialog()">
+        <mat-icon>add</mat-icon>
+        Create Extra Module
+      </button>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <h3 class="filters-title">
+        <mat-icon>filter_list</mat-icon>
+        Filters
+      </h3>
+      <div class="filters-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Subject</mat-label>
+          <mat-select [(ngModel)]="filters.subjectId" (selectionChange)="onFilterChange()">
+            <mat-option value="">All Subjects</mat-option>
+            <mat-option *ngFor="let subject of lecturerSubjects" [value]="subject._id">
+              {{ subject.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Student Level</mat-label>
+          <mat-select [(ngModel)]="filters.level" (selectionChange)="onFilterChange()">
+            <mat-option value="">All Levels</mat-option>
+            <mat-option value="Beginner">Beginner</mat-option>
+            <mat-option value="Intermediate">Intermediate</mat-option>
+            <mat-option value="Advanced">Advanced</mat-option>
+            <mat-option value="All">All</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Search</mat-label>
+          <input matInput [(ngModel)]="filters.search" (ngModelChange)="onFilterChange()" 
+                 placeholder="Search by name or code">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <button mat-stroked-button class="clear-btn" (click)="clearFilters()">
+          <mat-icon>close</mat-icon>
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- Extra Modules List -->
+    <div class="content-section">
+      <div class="section-header">
+        <h3>
+          <mat-icon>list</mat-icon>
+          My Extra Modules ({{ extraModules.length }})
+        </h3>
+      </div>
+
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+      </div>
+
+      <div *ngIf="!loading && extraModules.length === 0" class="no-data">
+        <mat-icon>auto_stories</mat-icon>
+        <p>No extra modules found</p>
+        <button mat-raised-button color="primary" (click)="openCreateExtraModuleDialog()">
+          Create Your First Extra Module
+        </button>
+      </div>
+
+      <div *ngIf="!loading && extraModules.length > 0" class="table-container">
+        <table mat-table [dataSource]="extraModules" class="data-table">
+          <!-- Code Column -->
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Code</th>
+            <td mat-cell *matCellDef="let module">
+              <span class="module-code">{{ module.code }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let module">
+              <div class="module-info">
+                <strong>{{ module.name }}</strong>
+                <small>{{ module.description | slice:0:50 }}{{ module.description.length > 50 ? '...' : '' }}</small>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Subject Column -->
+          <ng-container matColumnDef="subject">
+            <th mat-header-cell *matHeaderCellDef>Subject</th>
+            <td mat-cell *matCellDef="let module">{{ getSubjectName(module) }}</td>
+          </ng-container>
+
+          <!-- Level Column -->
+          <ng-container matColumnDef="level">
+            <th mat-header-cell *matHeaderCellDef>Level</th>
+            <td mat-cell *matCellDef="let module">
+              <span class="level-badge" [ngClass]="getLevelBadgeClass(module.studentLevel)">
+                {{ module.studentLevel }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Documents Column -->
+          <ng-container matColumnDef="documents">
+            <th mat-header-cell *matHeaderCellDef>Documents</th>
+            <td mat-cell *matCellDef="let module">
+              <mat-chip-set>
+                <mat-chip class="doc-chip">
+                  <mat-icon>description</mat-icon>
+                  {{ getDocumentCount(module) }}
+                </mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <!-- Video Column -->
+          <ng-container matColumnDef="video">
+            <th mat-header-cell *matHeaderCellDef>Video</th>
+            <td mat-cell *matCellDef="let module">
+              <mat-icon *ngIf="hasVideo(module)" class="video-icon active">videocam</mat-icon>
+              <mat-icon *ngIf="!hasVideo(module)" class="video-icon inactive">videocam_off</mat-icon>
+            </td>
+          </ng-container>
+
+          <!-- Order Column -->
+          <ng-container matColumnDef="order">
+            <th mat-header-cell *matHeaderCellDef>Order</th>
+            <td mat-cell *matCellDef="let module">
+              <span class="order-badge">{{ module.order }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let module">
+              <mat-slide-toggle 
+                [checked]="module.isActive"
+                (change)="toggleModuleStatus(module, $event)"
+                color="primary">
+                {{ module.isActive ? 'Active' : 'Inactive' }}
+              </mat-slide-toggle>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let module">
+              <div class="action-buttons">
+                <button mat-icon-button color="primary" 
+                        [matTooltip]="'Edit Extra Module'"
+                        (click)="editExtraModule(module)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button 
+                        [matTooltip]="'View Details'"
+                        (click)="viewModuleDetails(module)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- Pagination -->
+        <mat-paginator 
+          [length]="extraModules.length"
+          [pageSize]="10"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          showFirstLastButtons>
+        </mat-paginator>
+      </div>
+    </div>
+  </div>
+</app-lecturer-layout>
