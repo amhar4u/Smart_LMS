@@ -1,4 +1,4 @@
-<div class="lecturer-layout">
+<div class="lecturer-layout" [class.sidebar-collapsed]="sidebarCollapsed">
   <!-- Sidebar -->
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav 
@@ -6,6 +6,7 @@
       mode="side" 
       opened="true"
       class="sidenav"
+      [class.collapsed]="sidebarCollapsed"
       fixedInViewport="true">
       
       <!-- Sidebar Header -->
@@ -14,107 +15,60 @@
           <div class="logo-circle">
             <mat-icon>school</mat-icon>
           </div>
+          <h2 *ngIf="!sidebarCollapsed" class="logo-text">Smart LMS</h2>
         </div>
+        <button mat-icon-button (click)="toggleSidebar()" class="toggle-btn" *ngIf="!sidebarCollapsed">
+          <mat-icon>menu</mat-icon>
+        </button>
       </div>
 
       <!-- Navigation Menu -->
       <nav class="sidebar-nav">
         <!-- Dashboard -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/dashboard">
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/dashboard" [attr.data-tooltip]="sidebarCollapsed ? 'Dashboard' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">dashboard</mat-icon>
-            <span class="nav-text">Dashboard</span>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Dashboard</span>
           </div>
         </div>
 
-        <!-- My Courses -->
-        <div class="nav-item expandable" [class.expanded]="coursesExpanded">
-          <div class="nav-content" (click)="toggleCourses()">
-            <mat-icon class="nav-icon">library_books</mat-icon>
-            <span class="nav-text">My Courses</span>
-            <mat-icon class="expand-icon">{{ coursesExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
-          </div>
-          
-          <!-- Sub-menu for Courses -->
-          <div class="sub-menu" *ngIf="coursesExpanded">
-            <div class="sub-nav-item" routerLinkActive="active" routerLink="/lecturer/courses/active">
-              <mat-icon class="sub-icon">play_circle</mat-icon>
-              <span class="sub-text">Active</span>
-              <span class="count-badge">{{ totalCourses || 0 }}</span>
-            </div>
-            <div class="sub-nav-item" routerLinkActive="active" routerLink="/lecturer/courses/create">
-              <mat-icon class="sub-icon">add_circle</mat-icon>
-              <span class="sub-text">Create New</span>
-            </div>
-            <div class="sub-nav-item" routerLinkActive="active" routerLink="/lecturer/courses/archived">
-              <mat-icon class="sub-icon">archive</mat-icon>
-              <span class="sub-text">Archived</span>
-              <span class="count-badge green">3</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Students -->
-        <div class="nav-item expandable" [class.expanded]="studentsExpanded">
-          <div class="nav-content" (click)="toggleStudents()">
-            <mat-icon class="nav-icon">people</mat-icon>
-            <span class="nav-text">Students</span>
-            <mat-icon class="expand-icon">{{ studentsExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
-          </div>
-          
-          <!-- Sub-menu for Students -->
-          <div class="sub-menu" *ngIf="studentsExpanded">
-            <div class="sub-nav-item" routerLinkActive="active" routerLink="/lecturer/students/enrolled">
-              <mat-icon class="sub-icon">school</mat-icon>
-              <span class="sub-text">Enrolled</span>
-              <span class="count-badge">{{ totalStudents || 0 }}</span>
-            </div>
-            <div class="sub-nav-item" routerLinkActive="active" routerLink="/lecturer/students/performance">
-              <mat-icon class="sub-icon">trending_up</mat-icon>
-              <span class="sub-text">Performance</span>
-            </div>
+        <!-- My Subjects -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/subjects" [attr.data-tooltip]="sidebarCollapsed ? 'My Subjects' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">class</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">My Subjects</span>
           </div>
         </div>
 
         <!-- Assignments -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/assignments">
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/assignments" [attr.data-tooltip]="sidebarCollapsed ? 'Assignments' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">assignment</mat-icon>
-            <span class="nav-text">Assignments</span>
-            <mat-icon class="add-icon">add</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Assignments</span>
           </div>
         </div>
 
         <!-- Meetings -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/meetings">
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/meetings" [attr.data-tooltip]="sidebarCollapsed ? 'Meetings' : null">
           <div class="nav-content">
-            <mat-icon class="nav-icon">videocam</mat-icon>
-            <span class="nav-text">Meetings</span>
+            <mat-icon class="nav-icon">video_call</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Meetings</span>
           </div>
         </div>
 
-        <!-- Grades -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/grades">
+        <!-- Modules -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/modules" [attr.data-tooltip]="sidebarCollapsed ? 'Modules' : null">
           <div class="nav-content">
-            <mat-icon class="nav-icon">grade</mat-icon>
-            <span class="nav-text">Grades</span>
-            <span class="count-badge orange">{{ pendingGrades }}</span>
+            <mat-icon class="nav-icon">library_books</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Modules</span>
           </div>
         </div>
 
-        <!-- Schedule -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/schedule">
+        <!-- Extra Modules -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/extra-modules" [attr.data-tooltip]="sidebarCollapsed ? 'Extra Modules' : null">
           <div class="nav-content">
-            <mat-icon class="nav-icon">schedule</mat-icon>
-            <span class="nav-text">Schedule</span>
-          </div>
-        </div>
-
-        <!-- Analytics -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/analytics">
-          <div class="nav-content">
-            <mat-icon class="nav-icon">analytics</mat-icon>
-            <span class="nav-text">Analytics</span>
+            <mat-icon class="nav-icon">auto_stories</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Extra Modules</span>
           </div>
         </div>
       </nav>
@@ -124,7 +78,7 @@
     <mat-sidenav-content class="main-content">
       <!-- Top Toolbar -->
       <mat-toolbar class="top-toolbar">
-        <button mat-icon-button (click)="drawer.toggle()" class="menu-toggle">
+        <button mat-icon-button (click)="toggleSidebar()" class="menu-toggle" *ngIf="sidebarCollapsed">
           <mat-icon>menu</mat-icon>
         </button>
         

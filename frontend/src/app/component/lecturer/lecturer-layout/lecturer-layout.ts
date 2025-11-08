@@ -29,14 +29,8 @@ export class LecturerLayout implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
 
-  // Navigation state
-  coursesExpanded = false;
-  studentsExpanded = false;
-  
-  // Counters for dashboard
-  totalCourses = 8;
-  totalStudents = 156;
-  pendingGrades = 24;
+  // Sidebar state
+  sidebarCollapsed = false;
 
   // Current user
   currentUser$ = this.authService.currentUser$;
@@ -51,12 +45,8 @@ export class LecturerLayout implements OnInit {
     // Initialize any required data
   }
 
-  toggleCourses() {
-    this.coursesExpanded = !this.coursesExpanded;
-  }
-
-  toggleStudents() {
-    this.studentsExpanded = !this.studentsExpanded;
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
   logout() {
