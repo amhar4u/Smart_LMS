@@ -37,6 +37,11 @@ export const routes: Routes = [
     canActivate: [teacherGuard]
   },
   {
+    path: 'lecturer/subjects',
+    loadComponent: () => import('./component/lecturer/lecturer-subjects/lecturer-subjects').then(m => m.LecturerSubjects),
+    canActivate: [teacherGuard]
+  },
+  {
     path: 'lecturer/meetings',
     loadComponent: () => import('./component/lecturer/meeting-list/meeting-list.component').then(m => m.MeetingListComponent),
     canActivate: [teacherGuard]
@@ -49,6 +54,21 @@ export const routes: Routes = [
   {
     path: 'lecturer/meetings/room/:id',
     loadComponent: () => import('./component/lecturer/meeting-room/meeting-room.component').then(m => m.MeetingRoomComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/assignments',
+    loadComponent: () => import('./component/lecturer/manage-assignments/manage-assignments.component').then(m => m.LecturerManageAssignmentsComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/modules',
+    loadComponent: () => import('./component/lecturer/manage-modules/manage-modules.component').then(m => m.LecturerManageModulesComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/extra-modules',
+    loadComponent: () => import('./component/lecturer/manage-extra-modules/manage-extra-modules.component').then(m => m.LecturerManageExtraModulesComponent),
     canActivate: [teacherGuard]
   },
   {
