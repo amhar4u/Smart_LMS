@@ -1,0 +1,247 @@
+<app-student-layout>
+  <div class="subject-detail-container">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p>Loading subject details...</p>
+    </div>
+
+    <!-- Subject Detail Content -->
+    <div *ngIf="!isLoading && subject" class="subject-detail-content">
+      <!-- Subject Header Card -->
+      <div class="subject-header-card">
+        <div class="subject-header-content">
+          <div class="subject-title-row">
+            <h1>{{ subject.name }}</h1>
+            <div class="subject-code-badge">{{ subject.code }}</div>
+          </div>
+          <div class="subject-meta-row">
+            <div class="meta-item">
+              <mat-icon>school</mat-icon>
+              <span>{{ subject.department?.name || 'Department' }} • {{ subject.course?.name || 'Course' }} • {{ subject.batch?.name || 'Batch' }} • {{ subject.semester?.name || 'Semester' }}</span>
+            </div>
+            <div class="meta-item">
+              <mat-icon>credit_card</mat-icon>
+              <span>{{ subject.creditHours }} Credits</span>
+            </div>
+            <div class="meta-item" *ngIf="subject.lecturer">
+              <mat-icon>person</mat-icon>
+              <span>Lecturer: {{ subject.lecturer.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs Section -->
+      <mat-tab-group class="subject-tabs" animationDuration="300ms">
+        <!-- Modules Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>book</mat-icon>
+            <span>Modules</span>
+            <span class="tab-count">{{ subject.modules?.length || 0 }}</span>
+          </ng-template>
+          <div class="tab-content">
+            <div *ngIf="subject.modules && subject.modules.length > 0">
+              <mat-accordion class="modules-accordion" multi>
+                <mat-expansion-panel *ngFor="let m of subject.modules" class="module-panel" [expanded]="true">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <div class="module-title">
+                        <span class="module-number">Week {{ m.moduleNumber }}</span>
+                        <span class="module-name">{{ m.name }}</span>
+                      </div>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      <div class="module-badges">
+                        <mat-chip *ngIf="m.pdfUrl || (m.documents && m.documents.length)">
+                          <mat-icon>picture_as_pdf</mat-icon> PDF
+                        </mat-chip>
+                        <mat-chip *ngIf="m.videoUrl">
+                          <mat-icon>play_circle</mat-icon> Video
+                        </mat-chip>
+                      </div>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <!-- Module Body -->
+                  <div class="module-body">
+                    <p class="module-description">{{ m.description }}</p>
+
+                    <!-- Resources Section -->
+                    <div class="resources-section" *ngIf="m.pdfUrl || m.videoUrl || (m.documents && m.documents.length)">
+                      <h4><mat-icon>folder_open</mat-icon> Resources</h4>
+                      <div class="resource-list">
+                        <!-- PDF Resource -->
+                        <div *ngIf="m.pdfUrl" class="resource-item">
+                          <button (click)="openPdfViewer(m.pdfUrl, m.name + ' - PDF')" mat-raised-button color="primary" class="resource-button pdf">
+                            <mat-icon>visibility</mat-icon>
+                            <span>View PDF</span>
+                          </button>
+                          <a [href]="m.pdfUrl" download mat-raised-button class="resource-button download">
+                            <mat-icon>download</mat-icon>
+                            <span>Download</span>
+                          </a>
+                        </div>
+                        
+                        <!-- Video Resource -->
+                        <div *ngIf="m.videoUrl" class="resource-item">
+                          <button (click)="openVideoPlayer(m.videoUrl, m.name + ' - Video')" mat-raised-button color="accent" class="resource-button video">
+                            <mat-icon>play_circle</mat-icon>
+                            <span>Play Video</span>
+                          </button>
+                          <a [href]="m.videoUrl" download mat-raised-button class="resource-button download">
+                            <mat-icon>download</mat-icon>
+                            <span>Download</span>
+                          </a>
+                        </div>
+                        
+                        <!-- Document Resources -->
+                        <div *ngFor="let doc of m.documents || []" class="resource-item">
+                          <button (click)="openPdfViewer(doc.cloudinaryURL, doc.name)" mat-raised-button color="primary" class="resource-button doc">
+                            <mat-icon>visibility</mat-icon>
+                            <span>View {{ doc.name }}</span>
+                          </button>
+                          <a [href]="doc.cloudinaryURL" download mat-raised-button class="resource-button download">
+                            <mat-icon>download</mat-icon>
+                            <span>Download</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div *ngIf="!m.pdfUrl && !m.videoUrl && (!m.documents || !m.documents.length)" class="no-resources">
+                      <mat-icon>info</mat-icon>
+                      <p>No resources available for this module yet.</p>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+            <div *ngIf="!subject.modules || subject.modules.length === 0" class="empty-state">
+              <mat-icon>book</mat-icon>
+              <h3>No Modules Yet</h3>
+              <p>Modules will appear here once they are added to this subject.</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Assignments Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>assignment</mat-icon>
+            <span>Assignments</span>
+            <span class="tab-count">{{ subject.allAssignments?.length || 0 }}</span>
+          </ng-template>
+          <div class="tab-content">
+            <div *ngIf="subject.allAssignments && subject.allAssignments.length > 0" class="assignment-list">
+              <mat-card *ngFor="let assignment of subject.allAssignments" class="assignment-card">
+                <div class="assignment-header">
+                  <h3>{{ assignment.title }}</h3>
+                  <span class="assignment-level" [ngClass]="'level-' + (assignment.level || 'medium')">
+                    {{ assignment.level || 'Medium' }}
+                  </span>
+                </div>
+                <p class="assignment-description">{{ assignment.description }}</p>
+                <div class="assignment-meta">
+                  <div class="meta-item">
+                    <mat-icon>grade</mat-icon>
+                    <span>{{ assignment.totalMarks }} marks</span>
+                  </div>
+                  <div class="meta-item" [ngClass]="getDaysRemainingClass(getDaysRemaining(assignment.dueDate))">
+                    <mat-icon>schedule</mat-icon>
+                    <span>Due: {{ formatDate(assignment.dueDate) }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <mat-icon>quiz</mat-icon>
+                    <span>{{ assignment.type }}</span>
+                  </div>
+                </div>
+                <div class="assignment-modules" *ngIf="assignment.modules && assignment.modules.length">
+                  <span class="modules-label">Modules:</span>
+                  <mat-chip-set>
+                    <mat-chip *ngFor="let mod of assignment.modules">
+                      Week {{ mod.moduleNumber }}: {{ mod.name }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+              </mat-card>
+            </div>
+            <div *ngIf="!subject.allAssignments || subject.allAssignments.length === 0" class="empty-state">
+              <mat-icon>assignment</mat-icon>
+              <h3>No Assignments Yet</h3>
+              <p>Assignments will appear here once they are created for this subject.</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Meetings Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>video_call</mat-icon>
+            <span>Meetings</span>
+            <span class="tab-count">{{ subject.allMeetings?.length || 0 }}</span>
+          </ng-template>
+          <div class="tab-content">
+            <div *ngIf="subject.allMeetings && subject.allMeetings.length > 0" class="meeting-list">
+              <mat-card *ngFor="let meeting of subject.allMeetings" class="meeting-card">
+                <div class="meeting-header">
+                  <h3>{{ meeting.topic }}</h3>
+                  <span class="meeting-status" [ngClass]="'status-' + (meeting.status || 'scheduled')">
+                    {{ meeting.status || 'Scheduled' }}
+                  </span>
+                </div>
+                <p class="meeting-description">{{ meeting.description }}</p>
+                <div class="meeting-meta">
+                  <div class="meta-item">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ formatDateTime(meeting.meetingDate) }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <mat-icon>timer</mat-icon>
+                    <span>{{ meeting.duration }} minutes</span>
+                  </div>
+                </div>
+                <div class="meeting-modules" *ngIf="meeting.modules && meeting.modules.length">
+                  <span class="modules-label">Modules:</span>
+                  <mat-chip-set>
+                    <mat-chip *ngFor="let mod of meeting.modules">
+                      Week {{ mod.moduleNumber }}: {{ mod.name }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+                <button *ngIf="meeting.roomUrl && meeting.status === 'scheduled'" 
+                        mat-raised-button color="primary" 
+                        class="join-button"
+                        (click)="$event.stopPropagation()"
+                        [attr.href]="meeting.roomUrl"
+                        target="_blank">
+                  <mat-icon>video_call</mat-icon>
+                  Join Meeting
+                </button>
+              </mat-card>
+            </div>
+            <div *ngIf="!subject.allMeetings || subject.allMeetings.length === 0" class="empty-state">
+              <mat-icon>video_call</mat-icon>
+              <h3>No Meetings Yet</h3>
+              <p>Meetings will appear here once they are scheduled for this subject.</p>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!isLoading && !subject" class="error-state">
+      <mat-card>
+        <mat-icon>error_outline</mat-icon>
+        <h2>Subject Not Found</h2>
+        <p>We couldn't find the subject you're looking for.</p>
+        <button mat-raised-button color="primary" routerLink="/student/subjects">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Subjects
+        </button>
+      </mat-card>
+    </div>
+  </div>
+</app-student-layout>

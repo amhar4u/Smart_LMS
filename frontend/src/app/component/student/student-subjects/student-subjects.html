@@ -1,0 +1,76 @@
+<app-student-layout>
+  <div class="subjects-container">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p>Loading your subjects...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading">
+      <!-- Page Header with Gradient -->
+      <div class="page-header-gradient">
+        <div class="header-content-gradient">
+          <div class="header-title-row">
+            <h1>My Subjects</h1>
+          </div>
+          <div class="header-meta-row" *ngIf="subjects.length > 0">
+            <div class="meta-item">
+              <mat-icon>school</mat-icon>
+              <span>{{ getDepartmentNames() }} • {{ getCourseNames() }}</span>
+            </div>
+            <div class="meta-item">
+              <mat-icon>subject</mat-icon>
+              <span>{{ subjects.length }} {{ subjects.length === 1 ? 'Subject' : 'Subjects' }} Enrolled</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Subjects Message -->
+      <div *ngIf="subjects.length === 0" class="no-subjects">
+        <mat-card class="empty-state-card">
+          <mat-icon>school</mat-icon>
+          <h2>No Subjects Found</h2>
+          <p>You are not enrolled in any subjects yet.</p>
+        </mat-card>
+      </div>
+
+      <!-- Subjects Grid -->
+      <div class="subjects-grid" *ngIf="subjects.length > 0">
+          <mat-card *ngFor="let subject of subjects" class="subject-card" [routerLink]="['/student/subjects', subject._id]">
+          <mat-card-content>
+            <!-- Color Header Section -->
+            <div class="card-header">
+              <div class="subject-code">
+                <mat-icon class="subject-icon">menu_book</mat-icon>
+                <span>{{ subject.code }}</span>
+              </div>
+            </div>
+            
+            <!-- White Body Section -->
+            <div class="card-body">
+              <h2 class="subject-name">{{ subject.name }}</h2>
+              
+              <div class="subject-info-row" *ngIf="subject.batch || subject.semester">
+                <div class="info-chip" *ngIf="subject.batch">
+                  <mat-icon>groups</mat-icon>
+                  <span>{{ subject.batch.name }}</span>
+                </div>
+                <div class="info-chip" *ngIf="subject.semester">
+                  <mat-icon>event</mat-icon>
+                  <span>{{ subject.semester.name }}</span>
+                </div>
+              </div>
+              
+              <div class="subject-lecturer" *ngIf="subject.lecturer">
+                <mat-icon>person</mat-icon>
+                <span>{{ subject.lecturer.name }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</app-student-layout>
