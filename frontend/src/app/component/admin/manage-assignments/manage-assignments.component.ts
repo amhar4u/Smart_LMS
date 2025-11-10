@@ -34,6 +34,7 @@ import { ConfirmationService } from '../../../services/confirmation.service';
 import { LoadingService } from '../../../services/loading.service';
 import { AdminLayout } from '../admin-layout/admin-layout';
 import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
+import { ViewAssignmentDialogComponent } from '../view-assignment-dialog/view-assignment-dialog.component';
 
 @Component({
   selector: 'app-manage-assignments',
@@ -586,6 +587,15 @@ export class ManageAssignmentsComponent implements OnInit {
         this.snackBar.open('Error deleting assignment', 'Close', { duration: 3000 });
       }
     }
+  }
+
+  viewAssignment(assignment: Assignment) {
+    this.dialog.open(ViewAssignmentDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: { assignment }
+    });
   }
 
   async toggleAssignmentStatus(assignment: Assignment) {
