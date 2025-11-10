@@ -131,6 +131,13 @@ export class BatchService {
   }
 
   /**
+   * Get active batches by course ID for public registration (no auth required)
+   */
+  getBatchesByCoursePublic(courseId: string): Observable<BatchResponse> {
+    return this.http.get<BatchResponse>(`${this.apiUrl}/course/${courseId}/public`);
+  }
+
+  /**
    * Get batches by department ID
    */
   getBatchesByDepartment(departmentId: string): Observable<BatchResponse> {

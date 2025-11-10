@@ -67,16 +67,23 @@ export class AuthService {
   }
 
   registerStudent(registration: StudentRegistration): Observable<AuthResponse> {
+    // Exclude confirmPassword from the payload - backend doesn't expect it
     const payload = {
       firstName: registration.firstName,
       lastName: registration.lastName,
       email: registration.email,
       password: registration.password,
-      phone: registration.phone,
-      studentId: registration.studentId || '',
-      course: registration.course || '',
-      batch: registration.batch || ''
+      phone: registration.phone || undefined,
+      studentId: registration.studentId || undefined,
+      department: registration.department,
+      course: registration.course,
+      batch: registration.batch
     };
+
+    console.log('🔑 [AUTH] Sending student registration:', {
+      ...payload,
+      password: '***HIDDEN***'
+    });
 
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/register/student`, payload).pipe(
       map(response => {

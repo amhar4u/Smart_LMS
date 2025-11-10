@@ -158,7 +158,7 @@ export class StudentRegisterComponent implements OnInit {
 
   loadBatchesByCourse(courseId: string): void {
     this.isLoadingBatches = true;
-    this.batchService.getBatchesByCourse(courseId).subscribe({
+    this.batchService.getBatchesByCoursePublic(courseId).subscribe({
       next: (response: any) => {
         this.isLoadingBatches = false;
         if (response.success) {
@@ -237,6 +237,12 @@ export class StudentRegisterComponent implements OnInit {
         ...this.academicInfoForm.value
       };
 
+      console.log('📤 Submitting registration data:', {
+        ...registrationData,
+        password: '***HIDDEN***',
+        confirmPassword: '***HIDDEN***'
+      });
+
       this.authService.registerStudent(registrationData).subscribe({
         next: (response) => {
           this.loadingService.hide();
@@ -258,8 +264,21 @@ export class StudentRegisterComponent implements OnInit {
         },
         error: (error) => {
           this.loadingService.hide();
-          this.snackBar.open('Registration failed. Please try again.', 'Close', {
-            duration: 5000,
+          console.error('Registration error details:', error);
+          
+          // Extract error message from backend
+          let errorMessage = 'Registration failed. Please try again.';
+          if (error.error?.errors && error.error.errors.length > 0) {
+            // Show validation errors
+            const validationErrors = error.error.errors.map((e: any) => e.msg || e.message).join(', ');
+            errorMessage = `Validation failed: ${validationErrors}`;
+            console.error('Validation errors:', error.error.errors);
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+          
+          this.snackBar.open(errorMessage, 'Close', {
+            duration: 7000,
             panelClass: ['error-snackbar']
           });
         }
