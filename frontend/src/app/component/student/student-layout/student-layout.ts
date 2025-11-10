@@ -29,14 +29,6 @@ export class StudentLayout implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
 
-  // Navigation state
-  coursesExpanded = false;
-  
-  // Counters for dashboard
-  enrolledCourses = 6;
-  completedAssignments = 12;
-  pendingAssignments = 3;
-
   // Current user
   currentUser$ = this.authService.currentUser$;
 
@@ -48,10 +40,6 @@ export class StudentLayout implements OnInit {
 
   ngOnInit() {
     // Initialize any required data
-  }
-
-  toggleCourses() {
-    this.coursesExpanded = !this.coursesExpanded;
   }
 
   logout() {

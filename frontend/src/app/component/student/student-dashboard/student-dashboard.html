@@ -1,135 +1,252 @@
 <app-student-layout>
   <!-- Dashboard Content -->
   <div class="dashboard-content">
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1>Student Dashboard</h1>
-      <p>Welcome back! Here's your academic overview and upcoming tasks.</p>
-    </div>
-    
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <mat-card *ngFor="let stat of dashboardStats" class="stat-card" [style.border-left]="'4px solid ' + stat.color">
-        <mat-card-content>
-          <div class="stat-content">
-            <div class="stat-icon" [style.background-color]="stat.color">
-              <mat-icon>{{ stat.icon }}</mat-icon>
-            </div>
-            <div class="stat-info">
-              <h2>{{ stat.value | number }}</h2>
-              <p>{{ stat.title }}</p>
-              <span class="stat-growth" [style.color]="stat.color">{{ stat.growth }}</span>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p>Loading your dashboard...</p>
     </div>
 
-    <!-- Dashboard Grid -->
-    <div class="dashboard-grid">
-      <!-- Quick Actions -->
-      <mat-card class="quick-actions-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>flash_on</mat-icon>
-            Quick Actions
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="action-buttons">
-            <button mat-raised-button color="primary" class="action-btn">
-              <mat-icon>library_books</mat-icon>
-              Browse Courses
-            </button>
-            <button mat-raised-button color="accent" class="action-btn">
+    <!-- Main Content -->
+    <div *ngIf="!isLoading">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="header-content">
+          <div class="header-text">
+            <h1>Student Dashboard</h1>
+            <p>Welcome back, {{ currentUser?.name }}! Here's your academic overview.</p>
+          </div>
+          <button mat-raised-button color="primary" (click)="refreshData()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+      </div>
+      
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <mat-card *ngFor="let stat of dashboardStats" 
+                  class="stat-card" 
+                  [style.border-left]="'4px solid ' + stat.color"
+                  (click)="navigateToPage(stat.route)">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon" [style.background-color]="stat.color">
+                <mat-icon>{{ stat.icon }}</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h2>{{ stat.value }}</h2>
+                <p>{{ stat.title }}</p>
+                <span class="stat-subtitle">{{ stat.subtitle }}</span>
+                <span class="stat-growth" [style.color]="stat.color">{{ stat.growth }}</span>
+              </div>
+            </div>
+            <div class="stat-progress">
+              <mat-progress-bar 
+                mode="determinate" 
+                [value]="getProgressPercentage(stat)"
+                [color]="'primary'">
+              </mat-progress-bar>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Next Assignments Table -->
+      <mat-card class="table-card">
+        <mat-card-header class="table-header">
+          <div class="header-with-action">
+            <div class="header-title">
               <mat-icon>assignment</mat-icon>
-              Submit Assignment
-            </button>
-            <button mat-stroked-button class="action-btn">
-              <mat-icon>schedule</mat-icon>
-              View Schedule
-            </button>
-            <button mat-stroked-button class="action-btn">
-              <mat-icon>grade</mat-icon>
-              Check Grades
+              <mat-card-title>Next 3 Upcoming Assignments</mat-card-title>
+            </div>
+            <button mat-raised-button color="primary" routerLink="/student/assignments">
+              <mat-icon>open_in_new</mat-icon>
+              View All
             </button>
           </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Upcoming Assignments -->
-      <mat-card class="assignments-card">
-        <mat-card-header>
-          <mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="!studentDashboardStats?.nextAssignments?.length" class="no-data">
             <mat-icon>assignment</mat-icon>
-            Upcoming Assignments
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="assignments-list">
-            <div *ngFor="let assignment of upcomingAssignments" class="assignment-item">
-              <div class="assignment-icon" [class]="assignment.priority">
-                <mat-icon>assignment</mat-icon>
-              </div>
-              <div class="assignment-content">
-                <p class="assignment-title">{{ assignment.title }}</p>
-                <span class="assignment-course">{{ assignment.course }}</span>
-                <span class="assignment-due">Due: {{ assignment.dueDate | date:'short' }}</span>
-              </div>
-              <div class="assignment-status" [class]="assignment.status">
-                <span>{{ assignment.status | titlecase }}</span>
-              </div>
-            </div>
+            <p>No upcoming assignments</p>
+          </div>
+          <div *ngIf="studentDashboardStats?.nextAssignments?.length" class="table-container">
+            <table mat-table [dataSource]="studentDashboardStats?.nextAssignments || []" class="assignments-table">
+              <!-- Subject Column -->
+              <ng-container matColumnDef="subject">
+                <th mat-header-cell *matHeaderCellDef>Subject</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="subject-cell">
+                    <mat-icon class="subject-icon">subject</mat-icon>
+                    <span>{{ getSubjectName(assignment.subjectId) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Title Column -->
+              <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef>Assignment Title</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="title-cell">
+                    <strong>{{ assignment.title }}</strong>
+                    <div class="assignment-badges">
+                      <span class="badge badge-type">{{ assignment.type || 'Assignment' }}</span>
+                      <span class="badge" [ngClass]="getAssignmentLevelBadgeClass(assignment.level)">
+                        {{ assignment.level || 'Medium' }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Modules Column -->
+              <ng-container matColumnDef="modules">
+                <th mat-header-cell *matHeaderCellDef>Modules</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="modules-cell">
+                    <mat-chip-set>
+                      <mat-chip *ngFor="let module of assignment.modules?.slice(0, 2)">
+                        {{ typeof module === 'string' ? module : module?.name }}
+                      </mat-chip>
+                      <mat-chip *ngIf="assignment.modules?.length > 2">
+                        +{{ assignment.modules.length - 2 }}
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Total Marks Column -->
+              <ng-container matColumnDef="totalMarks">
+                <th mat-header-cell *matHeaderCellDef>Total Marks</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="marks-cell">
+                    <span class="marks-value">{{ assignment.totalMarks || 0 }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Due Date Column -->
+              <ng-container matColumnDef="dueDate">
+                <th mat-header-cell *matHeaderCellDef>Due Date</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="date-cell">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ formatDate(assignment.dueDate) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Days Remaining Column -->
+              <ng-container matColumnDef="daysRemaining">
+                <th mat-header-cell *matHeaderCellDef>Days Left</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="days-cell">
+                    <span class="days-badge" [ngClass]="getDaysRemainingClass(assignment.daysRemaining)">
+                      <mat-icon>schedule</mat-icon>
+                      {{ getDaysRemainingText(assignment.daysRemaining) }}
+                    </span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="assignmentColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: assignmentColumns;" class="assignment-row"></tr>
+            </table>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <!-- Current Courses -->
-      <mat-card class="courses-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>library_books</mat-icon>
-            Current Courses
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="courses-list">
-            <div *ngFor="let course of currentCourses" class="course-item">
-              <div class="course-progress">
-                <div class="progress-circle" [style.background]="'conic-gradient(#4CAF50 0deg ' + (course.progress * 3.6) + 'deg, #e0e0e0 ' + (course.progress * 3.6) + 'deg 360deg)'">
-                  <span>{{ course.progress }}%</span>
-                </div>
-              </div>
-              <div class="course-content">
-                <p class="course-name">{{ course.name }}</p>
-                <span class="course-instructor">{{ course.instructor }}</span>
-                <span class="course-next">{{ course.nextClass }}</span>
-              </div>
+      <!-- Recent Meetings Table -->
+      <mat-card class="table-card">
+        <mat-card-header class="table-header">
+          <div class="header-with-action">
+            <div class="header-title">
+              <mat-icon>video_call</mat-icon>
+              <mat-card-title>Recent 3 Meetings</mat-card-title>
             </div>
+            <button mat-raised-button color="primary" routerLink="/student/meetings">
+              <mat-icon>open_in_new</mat-icon>
+              View All
+            </button>
           </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Recent Activities -->
-      <mat-card class="activities-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>history</mat-icon>
-            Recent Activities
-          </mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <div class="activities-list">
-            <div *ngFor="let activity of recentActivities" class="activity-item">
-              <div class="activity-icon">
-                <mat-icon>{{ activity.icon }}</mat-icon>
-              </div>
-              <div class="activity-content">
-                <p class="activity-action">{{ activity.action }}</p>
-                <span class="activity-user">{{ activity.user }}</span>
-                <span class="activity-time">{{ activity.time }}</span>
-              </div>
-            </div>
+          <div *ngIf="!studentDashboardStats?.recentMeetings?.length" class="no-data">
+            <mat-icon>video_call</mat-icon>
+            <p>No recent meetings</p>
+          </div>
+          <div *ngIf="studentDashboardStats?.recentMeetings?.length" class="table-container">
+            <table mat-table [dataSource]="studentDashboardStats?.recentMeetings || []" class="meetings-table">
+              <!-- Subject Column -->
+              <ng-container matColumnDef="subject">
+                <th mat-header-cell *matHeaderCellDef>Subject</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="subject-cell">
+                    <mat-icon class="subject-icon">subject</mat-icon>
+                    <span>{{ getSubjectName(meeting.subjectId) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Topic Column -->
+              <ng-container matColumnDef="topic">
+                <th mat-header-cell *matHeaderCellDef>Topic / Link</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="topic-cell">
+                    <strong>{{ meeting.topic || 'No topic' }}</strong>
+                    <a *ngIf="meeting.meetingLink" 
+                       [href]="meeting.meetingLink" 
+                       target="_blank" 
+                       class="meeting-link"
+                       (click)="$event.stopPropagation()">
+                      <mat-icon>link</mat-icon>
+                      Join Meeting
+                    </a>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Meeting Date Column -->
+              <ng-container matColumnDef="meetingDate">
+                <th mat-header-cell *matHeaderCellDef>Date & Time</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="datetime-cell">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ formatDateTime(meeting.meetingDate, meeting.meetingTime) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Duration Column -->
+              <ng-container matColumnDef="duration">
+                <th mat-header-cell *matHeaderCellDef>Duration</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="duration-cell">
+                    <mat-icon>timer</mat-icon>
+                    <span>{{ formatDuration(meeting.duration) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="status-cell">
+                    <span class="status-badge" 
+                          [style.background-color]="getMeetingStatusColor(meeting.status)"
+                          [matTooltip]="meeting.status">
+                      {{ meeting.status || 'Scheduled' }}
+                    </span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="meetingColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: meetingColumns;" class="meeting-row"></tr>
+            </table>
           </div>
         </mat-card-content>
       </mat-card>
