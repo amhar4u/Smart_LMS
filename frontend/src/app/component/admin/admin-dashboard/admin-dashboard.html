@@ -22,7 +22,9 @@
       <div class="stats-section">
         <h3 class="section-title">User Management Statistics</h3>
         <div class="stats-grid">
-          <mat-card *ngFor="let stat of userStats" class="stat-card" [style.border-left]="'4px solid ' + stat.color">
+          <mat-card *ngFor="let stat of userStats" class="stat-card clickable-card" 
+                    [style.border-left]="'4px solid ' + stat.color"
+                    (click)="navigateToPage(stat.title)">
             <mat-card-content>
               <div class="stat-content">
                 <div class="stat-icon" [style.background-color]="stat.color">
@@ -57,7 +59,9 @@
       <div class="stats-section">
         <h3 class="section-title">System Management Statistics</h3>
         <div class="stats-grid">
-          <mat-card *ngFor="let stat of systemStats" class="stat-card" [style.border-left]="'4px solid ' + stat.color">
+          <mat-card *ngFor="let stat of systemStats" class="stat-card clickable-card" 
+                    [style.border-left]="'4px solid ' + stat.color"
+                    (click)="navigateToPage(stat.title)">
             <mat-card-content>
               <div class="stat-content">
                 <div class="stat-icon" [style.background-color]="stat.color">
@@ -87,6 +91,241 @@
           </mat-card>
         </div>
       </div>
+
+      <!-- Third Row: Content Statistics (NEW) -->
+      <div class="stats-section" *ngIf="contentStats.length > 0">
+        <h3 class="section-title">Content Management Statistics</h3>
+        <div class="stats-grid">
+          <mat-card *ngFor="let stat of contentStats" class="stat-card clickable-card" 
+                    [style.border-left]="'4px solid ' + stat.color"
+                    (click)="navigateToPage(stat.title)">
+            <mat-card-content>
+              <div class="stat-content">
+                <div class="stat-icon" [style.background-color]="stat.color">
+                  <mat-icon>{{ stat.icon }}</mat-icon>
+                </div>
+                <div class="stat-info">
+                  <h2>{{ stat.value | number }}</h2>
+                  <p>{{ stat.title }}</p>
+                  <span class="stat-subtitle">{{ stat.subtitle }}</span>
+                  <span class="stat-growth" [style.color]="stat.color">{{ stat.growth }}</span>
+                  
+                  <!-- Progress Bar -->
+                  <div class="progress-container">
+                    <div class="progress-label">
+                      <span>Progress</span>
+                      <span>{{ getProgressPercentage(stat) }}%</span>
+                    </div>
+                    <mat-progress-bar 
+                      mode="determinate" 
+                      [value]="getProgressPercentage(stat)"
+                      [color]="'primary'">
+                    </mat-progress-bar>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+
+      <!-- Recent Assignments Table -->
+      <div class="table-section" *ngIf="adminDashboardStats && adminDashboardStats.recentAssignments.length > 0">
+        <h3 class="section-title">
+          <mat-icon>assignment</mat-icon>
+          Recent Assignments (Last 3)
+        </h3>
+        <mat-card class="table-card">
+          <mat-card-content>
+            <table mat-table [dataSource]="adminDashboardStats.recentAssignments" class="modern-table">
+              <!-- Subject Column -->
+              <ng-container matColumnDef="subject">
+                <th mat-header-cell *matHeaderCellDef>Subject</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="cell-with-icon">
+                    <mat-icon color="primary">subject</mat-icon>
+                    <span>{{ getSubjectName(assignment.subject) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Title Column -->
+              <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef>Assignment Title</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="assignment-title-cell">
+                    <strong>{{ assignment.title }}</strong>
+                    <span class="assignment-description" *ngIf="assignment.description">
+                      {{ assignment.description.substring(0, 100) }}{{ assignment.description.length > 100 ? '...' : '' }}
+                    </span>
+                    <div class="assignment-badges">
+                      <span [class]="getAssignmentLevelBadgeClass(assignment.assignmentLevel)">
+                        {{ assignment.assignmentLevel }}
+                      </span>
+                      <span class="badge-type">{{ assignment.assignmentType }}</span>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Modules Column -->
+              <ng-container matColumnDef="modules">
+                <th mat-header-cell *matHeaderCellDef>Modules</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <span class="module-count" matTooltip="{{ getModuleNames(assignment.modules) }}">
+                    <mat-icon>library_books</mat-icon>
+                    {{ assignment.modules?.length || 0 }} module(s)
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Total Marks Column -->
+              <ng-container matColumnDef="totalMarks">
+                <th mat-header-cell *matHeaderCellDef>Marks / Questions</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="marks-cell">
+                    <span class="total-marks">{{ assignment.totalMarks }} marks</span>
+                    <span class="question-count">{{ assignment.questionCount }} questions</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Due Date Column -->
+              <ng-container matColumnDef="dueDate">
+                <th mat-header-cell *matHeaderCellDef>Due Date</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <div class="due-date-cell">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ formatDate(assignment.dueDate) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Duration Column -->
+              <ng-container matColumnDef="duration">
+                <th mat-header-cell *matHeaderCellDef>Days Remaining</th>
+                <td mat-cell *matCellDef="let assignment">
+                  <span 
+                    class="duration-badge" 
+                    [class.urgent]="getDaysRemaining(assignment.dueDate) <= 2"
+                    [class.warning]="getDaysRemaining(assignment.dueDate) > 2 && getDaysRemaining(assignment.dueDate) <= 5">
+                    <mat-icon>schedule</mat-icon>
+                    {{ getDaysRemainingText(getDaysRemaining(assignment.dueDate)) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="assignmentColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: assignmentColumns;" class="table-row"></tr>
+            </table>
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button mat-button color="primary" routerLink="/admin/manage-assignments">
+              View All Assignments
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <!-- Recent Meetings Table -->
+      <div class="table-section" *ngIf="adminDashboardStats && adminDashboardStats.recentMeetings.length > 0">
+        <h3 class="section-title">
+          <mat-icon>video_call</mat-icon>
+          Recent Meetings (Last 3)
+        </h3>
+        <mat-card class="table-card">
+          <mat-card-content>
+            <table mat-table [dataSource]="adminDashboardStats.recentMeetings" class="modern-table">
+              <!-- Subject Column -->
+              <ng-container matColumnDef="subject">
+                <th mat-header-cell *matHeaderCellDef>Subject</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="cell-with-icon">
+                    <mat-icon color="primary">subject</mat-icon>
+                    <span>{{ getSubjectName(meeting.subject) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Topic Column -->
+              <ng-container matColumnDef="topic">
+                <th mat-header-cell *matHeaderCellDef>Meeting Topic</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="meeting-topic-cell">
+                    <strong>{{ meeting.topic }}</strong>
+                    <span class="meeting-description" *ngIf="meeting.description">
+                      {{ meeting.description.substring(0, 100) }}{{ meeting.description.length > 100 ? '...' : '' }}
+                    </span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Batch Column -->
+              <ng-container matColumnDef="batch">
+                <th mat-header-cell *matHeaderCellDef>Batch / Semester</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="batch-cell">
+                    <span class="batch-name">
+                      <mat-icon>groups</mat-icon>
+                      {{ getBatchName(meeting.batch) }}
+                    </span>
+                    <span class="semester-name">
+                      <mat-icon>event</mat-icon>
+                      {{ getSemesterName(meeting.semester) }}
+                    </span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Meeting Date Column -->
+              <ng-container matColumnDef="meetingDate">
+                <th mat-header-cell *matHeaderCellDef>Date & Time</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <div class="meeting-datetime-cell">
+                    <mat-icon>schedule</mat-icon>
+                    <span>{{ formatDateTime(meeting.meetingDate, meeting.startTime) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Duration Column -->
+              <ng-container matColumnDef="duration">
+                <th mat-header-cell *matHeaderCellDef>Duration</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <span class="duration-chip">
+                    <mat-icon>timer</mat-icon>
+                    {{ formatDuration(meeting.duration) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let meeting">
+                  <span 
+                    class="status-badge" 
+                    [style.background-color]="getMeetingStatusColor(meeting.status)"
+                    [style.color]="'white'">
+                    {{ meeting.status | titlecase }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="meetingColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: meetingColumns;" class="table-row"></tr>
+            </table>
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button mat-button color="primary" routerLink="/admin/meetings">
+              View All Meetings
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
 
       <!-- Charts Section -->
       <div class="charts-section">
@@ -272,104 +511,201 @@
         </div>
       </div>
 
-      <!-- Meetings and Assignments Section -->
-      <div class="activities-section">
-        <div class="activities-grid">
-          <!-- Scheduled Meetings -->
-          <mat-card class="activity-card">
+      <!-- NEW: Meetings and Assignments Analytics Graphs -->
+      <div class="charts-section" *ngIf="adminDashboardStats">
+        <div class="charts-row">
+          <!-- Meetings Status Chart -->
+          <mat-card class="chart-card modern-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon class="header-icon">video_call</mat-icon>
-                Upcoming Meetings
+                <mat-icon>video_call</mat-icon>
+                Meeting Statistics
               </mat-card-title>
-              <mat-card-subtitle>Next 7 days</mat-card-subtitle>
+              <mat-card-subtitle>Total Meetings: {{ adminDashboardStats.meetings.total }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <div *ngIf="upcomingMeetings.length === 0" class="empty-state">
-                <mat-icon>event_busy</mat-icon>
-                <p>No upcoming meetings scheduled</p>
-              </div>
-              
-              <mat-list *ngIf="upcomingMeetings.length > 0" class="meeting-list">
-                <mat-list-item *ngFor="let meeting of upcomingMeetings; let last = last">
-                  <mat-icon matListItemIcon [style.color]="'#2196F3'">video_call</mat-icon>
-                  <div matListItemTitle class="meeting-title">{{ meeting.topic }}</div>
-                  <div matListItemLine class="meeting-details">
-                    <span class="meeting-subject">
-                      <mat-icon>subject</mat-icon>
-                      {{ getSubjectName(meeting.subjectId) }}
-                    </span>
-                    <span class="meeting-time">
-                      <mat-icon>schedule</mat-icon>
-                      {{ formatMeetingTime(meeting) }}
-                    </span>
+              <div class="chart-container">
+                <div class="donut-chart-wrapper">
+                  <div class="donut-chart">
+                    <!-- Center Info -->
+                    <div class="chart-center">
+                      <span class="total-number">{{ adminDashboardStats.meetings.total }}</span>
+                      <span class="total-label">Total Meetings</span>
+                    </div>
+                    
+                    <!-- SVG Meetings Donut Chart -->
+                    <svg width="220" height="220" viewBox="0 0 200 200" class="donut-svg">
+                      <!-- Background Circle -->
+                      <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="20"></circle>
+                      
+                      <!-- Scheduled Arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" 
+                              stroke="#2196F3" 
+                              stroke-width="20"
+                              [attr.stroke-dasharray]="getMeetingsStrokeDashArray('scheduled')"
+                              class="donut-segment"
+                              transform="rotate(-90 100 100)"
+                              *ngIf="adminDashboardStats.meetings.scheduled > 0">
+                      </circle>
+                      
+                      <!-- Ongoing Arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" 
+                              stroke="#4CAF50" 
+                              stroke-width="20"
+                              [attr.stroke-dasharray]="getMeetingsStrokeDashArray('ongoing')"
+                              class="donut-segment"
+                              [attr.transform]="'rotate(' + getMeetingsRotation('ongoing') + ' 100 100)'"
+                              *ngIf="adminDashboardStats.meetings.ongoing > 0">
+                      </circle>
+                      
+                      <!-- Completed Arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" 
+                              stroke="#757575" 
+                              stroke-width="20"
+                              [attr.stroke-dasharray]="getMeetingsStrokeDashArray('completed')"
+                              class="donut-segment"
+                              [attr.transform]="'rotate(' + getMeetingsRotation('completed') + ' 100 100)'"
+                              *ngIf="adminDashboardStats.meetings.completed > 0">
+                      </circle>
+                      
+                      <!-- Cancelled Arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" 
+                              stroke="#f44336" 
+                              stroke-width="20"
+                              [attr.stroke-dasharray]="getMeetingsStrokeDashArray('cancelled')"
+                              class="donut-segment"
+                              [attr.transform]="'rotate(' + getMeetingsRotation('cancelled') + ' 100 100)'"
+                              *ngIf="adminDashboardStats.meetings.cancelled > 0">
+                      </circle>
+                    </svg>
                   </div>
-                  <mat-chip [class]="getMeetingStatusClass(meeting.status)" class="status-chip">
-                    {{ meeting.status }}
-                  </mat-chip>
-                  <mat-divider *ngIf="!last"></mat-divider>
-                </mat-list-item>
-              </mat-list>
-              
-              <div class="card-footer" *ngIf="upcomingMeetings.length > 0">
-                <button mat-button color="primary" routerLink="/admin/meetings">
-                  View All Meetings
-                  <mat-icon>arrow_forward</mat-icon>
-                </button>
+                  
+                  <!-- Meetings Legend -->
+                  <div class="chart-legend-compact">
+                    <div class="legend-item-compact">
+                      <div class="legend-color" style="background-color: #2196F3;"></div>
+                      <span class="legend-label-compact">Scheduled</span>
+                      <span class="legend-percentage">{{ getMeetingPercentage('scheduled') }}%</span>
+                      <span class="legend-count">({{ adminDashboardStats.meetings.scheduled }})</span>
+                    </div>
+                    <div class="legend-item-compact" *ngIf="adminDashboardStats.meetings.ongoing > 0">
+                      <div class="legend-color" style="background-color: #4CAF50;"></div>
+                      <span class="legend-label-compact">Ongoing</span>
+                      <span class="legend-percentage">{{ getMeetingPercentage('ongoing') }}%</span>
+                      <span class="legend-count">({{ adminDashboardStats.meetings.ongoing }})</span>
+                    </div>
+                    <div class="legend-item-compact">
+                      <div class="legend-color" style="background-color: #757575;"></div>
+                      <span class="legend-label-compact">Completed</span>
+                      <span class="legend-percentage">{{ getMeetingPercentage('completed') }}%</span>
+                      <span class="legend-count">({{ adminDashboardStats.meetings.completed }})</span>
+                    </div>
+                    <div class="legend-item-compact" *ngIf="adminDashboardStats.meetings.cancelled > 0">
+                      <div class="legend-color" style="background-color: #f44336;"></div>
+                      <span class="legend-label-compact">Cancelled</span>
+                      <span class="legend-percentage">{{ getMeetingPercentage('cancelled') }}%</span>
+                      <span class="legend-count">({{ adminDashboardStats.meetings.cancelled }})</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </mat-card-content>
           </mat-card>
 
-          <!-- Pending Assignments -->
-          <mat-card class="activity-card">
+          <!-- Assignments Status Chart -->
+          <mat-card class="chart-card modern-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon class="header-icon">assignment</mat-icon>
-                Due Assignments
+                <mat-icon>assignment</mat-icon>
+                Assignment Statistics
               </mat-card-title>
-              <mat-card-subtitle>Due in next 7 days</mat-card-subtitle>
+              <mat-card-subtitle>Total Assignments: {{ adminDashboardStats.assignments.total }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <div *ngIf="dueAssignments.length === 0" class="empty-state">
-                <mat-icon>assignment_turned_in</mat-icon>
-                <p>No assignments due soon</p>
-              </div>
-              
-              <mat-list *ngIf="dueAssignments.length > 0" class="assignment-list">
-                <mat-list-item *ngFor="let assignment of dueAssignments; let last = last">
-                  <mat-icon matListItemIcon [style.color]="getAssignmentLevelColor(assignment.assignmentLevel)">assignment</mat-icon>
-                  <div matListItemTitle class="assignment-title">{{ assignment.title }}</div>
-                  <div matListItemLine class="assignment-details">
-                    <span class="assignment-subject">
-                      <mat-icon>subject</mat-icon>
-                      {{ getSubjectName(assignment.subject) }}
-                    </span>
-                    <span class="assignment-due">
-                      <mat-icon>event</mat-icon>
-                      Due: {{ assignment.dueDate | date:'short' }}
-                    </span>
-                    <span class="assignment-days" [style.color]="getDaysUntilDue(assignment.dueDate) <= 2 ? '#f44336' : '#FF9800'">
-                      <mat-icon>schedule</mat-icon>
-                      {{ getDaysUntilDue(assignment.dueDate) }} days left
-                    </span>
+              <div class="chart-container">
+                <div class="donut-chart-wrapper">
+                  <div class="donut-chart">
+                    <!-- Center Info -->
+                    <div class="chart-center">
+                      <span class="total-number">{{ adminDashboardStats.assignments.total }}</span>
+                      <span class="total-label">Total Assignments</span>
+                    </div>
+                    
+                    <!-- SVG Assignments Donut Chart -->
+                    <svg width="220" height="220" viewBox="0 0 200 200" class="donut-svg">
+                      <!-- Background Circle -->
+                      <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="20"></circle>
+                      
+                      <!-- Active Arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" 
+                              stroke="#2196F3" 
+                              stroke-width="20"
+                              [attr.stroke-dasharray]="getAssignmentsStrokeDashArray('active')"
+                              class="donut-segment"
+                              transform="rotate(-90 100 100)"
+                              *ngIf="adminDashboardStats.assignments.active > 0">
+                      </circle>
+                      
+                      <!-- Pending Arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" 
+                              stroke="#FF9800" 
+                              stroke-width="20"
+                              [attr.stroke-dasharray]="getAssignmentsStrokeDashArray('pending')"
+                              class="donut-segment"
+                              [attr.transform]="'rotate(' + getAssignmentsRotation('pending') + ' 100 100)'"
+                              *ngIf="adminDashboardStats.assignments.pending > 0">
+                      </circle>
+                      
+                      <!-- Completed Arc -->
+                      <circle cx="100" cy="100" r="80" fill="none" 
+                              stroke="#4CAF50" 
+                              stroke-width="20"
+                              [attr.stroke-dasharray]="getAssignmentsStrokeDashArray('completed')"
+                              class="donut-segment"
+                              [attr.transform]="'rotate(' + getAssignmentsRotation('completed') + ' 100 100)'"
+                              *ngIf="adminDashboardStats.assignments.completed > 0">
+                      </circle>
+                    </svg>
                   </div>
-                  <mat-chip [class]="getAssignmentLevelClass(assignment.assignmentLevel)" class="level-chip">
-                    {{ assignment.assignmentLevel }}
-                  </mat-chip>
-                  <mat-divider *ngIf="!last"></mat-divider>
-                </mat-list-item>
-              </mat-list>
-              
-              <div class="card-footer" *ngIf="dueAssignments.length > 0">
-                <button mat-button color="primary" routerLink="/admin/manage-assignments">
-                  View All Assignments
-                  <mat-icon>arrow_forward</mat-icon>
-                </button>
+                  
+                  <!-- Assignments Legend -->
+                  <div class="chart-legend-compact">
+                    <div class="legend-item-compact">
+                      <div class="legend-color" style="background-color: #2196F3;"></div>
+                      <span class="legend-label-compact">Active</span>
+                      <span class="legend-percentage">{{ getAssignmentPercentage('active') }}%</span>
+                      <span class="legend-count">({{ adminDashboardStats.assignments.active }})</span>
+                    </div>
+                    <div class="legend-item-compact">
+                      <div class="legend-color" style="background-color: #FF9800;"></div>
+                      <span class="legend-label-compact">Pending</span>
+                      <span class="legend-percentage">{{ getAssignmentPercentage('pending') }}%</span>
+                      <span class="legend-count">({{ adminDashboardStats.assignments.pending }})</span>
+                    </div>
+                    <div class="legend-item-compact">
+                      <div class="legend-color" style="background-color: #4CAF50;"></div>
+                      <span class="legend-label-compact">Completed</span>
+                      <span class="legend-percentage">{{ getAssignmentPercentage('completed') }}%</span>
+                      <span class="legend-count">({{ adminDashboardStats.assignments.completed }})</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Additional Stats -->
+                  <div class="status-cards" style="margin-top: 20px;">
+                    <div class="status-card" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                      <mat-icon style="color: #2196F3;">check_circle</mat-icon>
+                      <span class="status-count">{{ adminDashboardStats.assignments.submissions }}</span>
+                      <span class="status-label">Submissions</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </mat-card-content>
           </mat-card>
         </div>
       </div>
+
+    
 
       <!-- Quick Actions -->
       <div class="dashboard-grid">

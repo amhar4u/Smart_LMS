@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +19,11 @@ import { BatchService, Batch } from '../../../services/batch.service';
 import { SubjectService, Subject as SubjectModel } from '../../../services/subject.service';
 import { MeetingService, Meeting } from '../../../services/meeting.service';
 import { AssignmentService, Assignment } from '../../../services/assignment.service';
+import { StatisticsService } from '../../../services/statistics.service';
 import { AdminLayout } from '../admin-layout/admin-layout';
+import { MatTableModule } from '@angular/material/table';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 interface DashboardStat {
   title: string;
@@ -28,6 +32,30 @@ interface DashboardStat {
   color: string;
   subtitle: string;
   growth: string;
+}
+
+interface AdminDashboardStats {
+  subjects: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
+  assignments: {
+    total: number;
+    active: number;
+    pending: number;
+    completed: number;
+    submissions: number;
+  };
+  meetings: {
+    total: number;
+    scheduled: number;
+    ongoing: number;
+    completed: number;
+    cancelled: number;
+  };
+  recentAssignments: any[];
+  recentMeetings: any[];
 }
 
 interface UserStatusDistribution {
@@ -56,6 +84,9 @@ interface Activity {
     MatChipsModule,
     MatListModule,
     MatDividerModule,
+    MatTableModule,
+    MatBadgeModule,
+    MatTooltipModule,
     AdminLayout
   ],
   templateUrl: './admin-dashboard.html',
@@ -86,11 +117,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // Dashboard statistics - organized into two rows
   userStats: DashboardStat[] = [];
   systemStats: DashboardStat[] = [];
+  contentStats: DashboardStat[] = [];
+  
+  // Admin dashboard specific stats
+  adminDashboardStats: AdminDashboardStats | null = null;
   
   // Recent data
   recentStudents: User[] = [];
   recentTeachers: User[] = [];
   recentActivities: Activity[] = [];
+  
+  // Table columns for recent assignments and meetings
+  assignmentColumns: string[] = ['subject', 'title', 'modules', 'totalMarks', 'dueDate', 'duration'];
+  meetingColumns: string[] = ['subject', 'topic', 'batch', 'meetingDate', 'duration', 'status'];
   
   // Distributions
   userStatusDistribution: UserStatusDistribution = {
@@ -108,7 +147,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     private batchService: BatchService,
     private subjectService: SubjectService,
     private meetingService: MeetingService,
-    private assignmentService: AssignmentService
+    private assignmentService: AssignmentService,
+    private statisticsService: StatisticsService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -156,16 +197,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           return of({ success: false, data: [], count: 0 });
         })
       ),
-      meetings: this.meetingService.getMeetings({ status: 'scheduled' }).pipe(
+      adminDashboard: this.statisticsService.getAdminDashboardStats().pipe(
         catchError(error => {
-          console.error('Error loading meetings:', error);
-          return of({ success: false, meetings: [], count: 0 });
-        })
-      ),
-      assignments: this.assignmentService.getAssignments({ isActive: true }).pipe(
-        catchError(error => {
-          console.error('Error loading assignments:', error);
-          return of({ success: false, data: [], pagination: { total: 0, page: 1, limit: 10, pages: 0 } });
+          console.error('Error loading admin dashboard stats:', error);
+          return of({ success: false, data: null });
         })
       )
     }).pipe(
@@ -181,13 +216,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.batches = response.batches.data || [];
       this.subjects = Array.isArray(response.subjects.data) ? response.subjects.data : [];
       
-      // Process meetings
-      this.scheduledMeetings = response.meetings.meetings || [];
-      this.upcomingMeetings = this.getUpcomingMeetings();
-      
-      // Process assignments
-      this.pendingAssignments = response.assignments.data || [];
-      this.dueAssignments = this.getDueAssignments();
+      // Process admin dashboard stats
+      if (response.adminDashboard.success && response.adminDashboard.data) {
+        this.adminDashboardStats = response.adminDashboard.data;
+      }
       
       // Calculate all statistics and distributions
       this.calculateStatistics();
@@ -272,13 +304,51 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       },
       {
         title: 'Total Subjects',
-        value: this.subjects.length,
+        value: this.adminDashboardStats?.subjects.total || this.subjects.length,
         icon: 'subject',
         color: '#3F51B5',
         subtitle: 'Course subjects',
-        growth: this.subjects.filter(s => s.isActive).length + ' active'
+        growth: (this.adminDashboardStats?.subjects.active || this.subjects.filter(s => s.isActive).length) + ' active'
       }
     ];
+
+    // Third row: Content-related statistics (NEW)
+    if (this.adminDashboardStats) {
+      this.contentStats = [
+        {
+          title: 'Total Assignments',
+          value: this.adminDashboardStats.assignments.total,
+          icon: 'assignment',
+          color: '#E91E63',
+          subtitle: 'Created assignments',
+          growth: `${this.adminDashboardStats.assignments.active} active`
+        },
+        {
+          title: 'Pending Assignments',
+          value: this.adminDashboardStats.assignments.pending,
+          icon: 'pending_actions',
+          color: '#FF9800',
+          subtitle: 'Not yet due',
+          growth: `${this.adminDashboardStats.assignments.completed} completed`
+        },
+        {
+          title: 'Total Meetings',
+          value: this.adminDashboardStats.meetings.total,
+          icon: 'video_call',
+          color: '#00BCD4',
+          subtitle: 'All meetings',
+          growth: `${this.adminDashboardStats.meetings.completed} completed`
+        },
+        {
+          title: 'Scheduled Meetings',
+          value: this.adminDashboardStats.meetings.scheduled,
+          icon: 'schedule',
+          color: '#009688',
+          subtitle: 'Upcoming meetings',
+          growth: `${this.adminDashboardStats.meetings.ongoing} ongoing`
+        }
+      ];
+    }
   }
 
   private calculateDistributions(): void {
@@ -817,5 +887,271 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   getSubjectName(subject: any): string {
     return typeof subject === 'string' ? subject : subject?.name || 'N/A';
+  }
+
+  getBatchName(batch: any): string {
+    return typeof batch === 'string' ? batch : batch?.name || 'N/A';
+  }
+
+  getSemesterName(semester: any): string {
+    return typeof semester === 'string' ? semester : semester?.name || 'N/A';
+  }
+
+  getModuleNames(modules: any[]): string {
+    if (!modules || modules.length === 0) return 'None';
+    return modules.map(m => typeof m === 'string' ? m : m?.name || '').filter(n => n).join(', ');
+  }
+
+  formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${mins}m`;
+  }
+
+  formatDate(date: any): string {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  formatDateTime(date: any, time: any): string {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    const dateStr = d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    
+    if (time) {
+      const t = new Date(time);
+      const timeStr = t.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      return `${dateStr}, ${timeStr}`;
+    }
+    return dateStr;
+  }
+
+  getDaysRemaining(dueDate: any): number {
+    if (!dueDate) return 0;
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
+  getDaysRemainingText(days: number): string {
+    if (days < 0) return 'Overdue';
+    if (days === 0) return 'Today';
+    if (days === 1) return '1 day';
+    return `${days} days`;
+  }
+
+  getMeetingStatusColor(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'scheduled':
+        return '#2196F3';
+      case 'ongoing':
+        return '#4CAF50';
+      case 'completed':
+        return '#757575';
+      case 'cancelled':
+        return '#f44336';
+      default:
+        return '#9E9E9E';
+    }
+  }
+
+  getAssignmentLevelBadgeClass(level: string): string {
+    switch (level?.toLowerCase()) {
+      case 'easy':
+        return 'badge-easy';
+      case 'medium':
+        return 'badge-medium';
+      case 'hard':
+        return 'badge-hard';
+      default:
+        return 'badge-default';
+    }
+  }
+
+  // Navigation method
+  navigateToPage(title: string): void {
+    const routeMap: { [key: string]: string } = {
+      'Total Students': '/admin/manage-students',
+      'Total Lecturers': '/admin/manage-lecturers',
+      'Pending Approvals': '/admin/manage-students',
+      'Approved Users': '/admin/manage-students',
+      'Total Departments': '/admin/manage-departments',
+      'Total Courses': '/admin/manage-courses',
+      'Total Batches': '/admin/manage-batches',
+      'Total Subjects': '/admin/manage-subjects',
+      'Total Assignments': '/admin/manage-assignments',
+      'Pending Assignments': '/admin/manage-assignments',
+      'Total Meetings': '/admin/meetings',
+      'Scheduled Meetings': '/admin/meetings'
+    };
+
+    const route = routeMap[title];
+    if (route) {
+      this.router.navigate([route]);
+    }
+  }
+
+  // Meetings Graph Methods
+  getMeetingsStrokeDashArray(status: string): string {
+    if (!this.adminDashboardStats) return '0 502';
+    
+    const radius = 80;
+    const circumference = 2 * Math.PI * radius;
+    const total = this.adminDashboardStats.meetings.total;
+    
+    if (total === 0) return `0 ${circumference}`;
+    
+    let count = 0;
+    switch (status) {
+      case 'scheduled':
+        count = this.adminDashboardStats.meetings.scheduled;
+        break;
+      case 'ongoing':
+        count = this.adminDashboardStats.meetings.ongoing;
+        break;
+      case 'completed':
+        count = this.adminDashboardStats.meetings.completed;
+        break;
+      case 'cancelled':
+        count = this.adminDashboardStats.meetings.cancelled;
+        break;
+    }
+    
+    const percentage = count / total;
+    const strokeLength = percentage * circumference;
+    const gapLength = circumference - strokeLength;
+    
+    return `${strokeLength} ${gapLength}`;
+  }
+
+  getMeetingsRotation(status: string): number {
+    if (!this.adminDashboardStats) return -90;
+    
+    const total = this.adminDashboardStats.meetings.total;
+    if (total === 0) return -90;
+    
+    let previousPercentage = 0;
+    
+    // Calculate cumulative percentage for rotation
+    if (status === 'ongoing') {
+      previousPercentage = this.adminDashboardStats.meetings.scheduled / total;
+    } else if (status === 'completed') {
+      previousPercentage = (this.adminDashboardStats.meetings.scheduled + this.adminDashboardStats.meetings.ongoing) / total;
+    } else if (status === 'cancelled') {
+      previousPercentage = (this.adminDashboardStats.meetings.scheduled + this.adminDashboardStats.meetings.ongoing + this.adminDashboardStats.meetings.completed) / total;
+    }
+    
+    return -90 + (previousPercentage * 360);
+  }
+
+  getMeetingPercentage(status: string): number {
+    if (!this.adminDashboardStats) return 0;
+    
+    const total = this.adminDashboardStats.meetings.total;
+    if (total === 0) return 0;
+    
+    let count = 0;
+    switch (status) {
+      case 'scheduled':
+        count = this.adminDashboardStats.meetings.scheduled;
+        break;
+      case 'ongoing':
+        count = this.adminDashboardStats.meetings.ongoing;
+        break;
+      case 'completed':
+        count = this.adminDashboardStats.meetings.completed;
+        break;
+      case 'cancelled':
+        count = this.adminDashboardStats.meetings.cancelled;
+        break;
+    }
+    
+    return Math.round((count / total) * 100);
+  }
+
+  // Assignments Graph Methods
+  getAssignmentsStrokeDashArray(status: string): string {
+    if (!this.adminDashboardStats) return '0 502';
+    
+    const radius = 80;
+    const circumference = 2 * Math.PI * radius;
+    const total = this.adminDashboardStats.assignments.total;
+    
+    if (total === 0) return `0 ${circumference}`;
+    
+    let count = 0;
+    switch (status) {
+      case 'active':
+        count = this.adminDashboardStats.assignments.active;
+        break;
+      case 'pending':
+        count = this.adminDashboardStats.assignments.pending;
+        break;
+      case 'completed':
+        count = this.adminDashboardStats.assignments.completed;
+        break;
+    }
+    
+    const percentage = count / total;
+    const strokeLength = percentage * circumference;
+    const gapLength = circumference - strokeLength;
+    
+    return `${strokeLength} ${gapLength}`;
+  }
+
+  getAssignmentsRotation(status: string): number {
+    if (!this.adminDashboardStats) return -90;
+    
+    const total = this.adminDashboardStats.assignments.total;
+    if (total === 0) return -90;
+    
+    let previousPercentage = 0;
+    
+    // Calculate cumulative percentage for rotation
+    if (status === 'pending') {
+      previousPercentage = this.adminDashboardStats.assignments.active / total;
+    } else if (status === 'completed') {
+      previousPercentage = (this.adminDashboardStats.assignments.active + this.adminDashboardStats.assignments.pending) / total;
+    }
+    
+    return -90 + (previousPercentage * 360);
+  }
+
+  getAssignmentPercentage(status: string): number {
+    if (!this.adminDashboardStats) return 0;
+    
+    const total = this.adminDashboardStats.assignments.total;
+    if (total === 0) return 0;
+    
+    let count = 0;
+    switch (status) {
+      case 'active':
+        count = this.adminDashboardStats.assignments.active;
+        break;
+      case 'pending':
+        count = this.adminDashboardStats.assignments.pending;
+        break;
+      case 'completed':
+        count = this.adminDashboardStats.assignments.completed;
+        break;
+    }
+    
+    return Math.round((count / total) * 100);
   }
 }
