@@ -88,6 +88,47 @@ router.get('/active', auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/batches/course/:courseId/public
+// @desc    Get active batches by course for registration (public)
+// @access  Public
+router.get('/course/:courseId/public', async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    
+    // Only return active batches with available slots for public registration
+    const batches = await Batch.find({ 
+      course: courseId,
+      status: 'active',
+      isActive: true
+    })
+      .populate('course', 'name code')
+      .populate('department', 'name code')
+      .populate('currentSemester', 'name code year type')
+      .sort({ startYear: -1, name: 1 });
+    
+    // Filter to only include batches with:
+    // 1. Available slots
+    // 2. Current semester assigned (required for registration)
+    const availableBatches = batches.filter(batch => 
+      batch.currentEnrollment < batch.maxStudents && batch.currentSemester
+    );
+    
+    console.log(`📚 [BATCHES] Found ${availableBatches.length} available batches for course ${courseId}`);
+    
+    res.json({
+      success: true,
+      data: availableBatches
+    });
+  } catch (error) {
+    console.error('Error fetching batches by course (public):', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching batches by course',
+      error: error.message
+    });
+  }
+});
+
 // @route   GET /api/batches/course/:courseId
 // @desc    Get batches by course
 // @access  Private

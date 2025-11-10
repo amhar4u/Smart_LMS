@@ -27,6 +27,16 @@ export const routes: Routes = [
     canActivate: [studentGuard]
   },
   {
+    path: 'student/subjects',
+    loadComponent: () => import('./component/student/student-subjects/student-subjects').then(m => m.StudentSubjects),
+    canActivate: [studentGuard]
+  },
+  {
+    path: 'student/subjects/:id',
+    loadComponent: () => import('./component/student/student-subject-detail/student-subject-detail').then(m => m.StudentSubjectDetail),
+    canActivate: [studentGuard]
+  },
+  {
     path: 'student/assignments',
     loadComponent: () => import('./component/student/view-assignments/view-assignments.component').then(m => m.ViewAssignmentsComponent),
     canActivate: [studentGuard]

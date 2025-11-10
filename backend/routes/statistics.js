@@ -4,6 +4,329 @@ const User = require('../models/User');
 const Department = require('../models/Department');
 const Course = require('../models/Course');
 const Batch = require('../models/Batch');
+const Subject = require('../models/Subject');
+const Assignment = require('../models/Assignment');
+const AssignmentSubmission = require('../models/AssignmentSubmission');
+const Meeting = require('../models/Meeting');
+
+// @route   GET /api/statistics/student-dashboard/:studentId
+// @desc    Get comprehensive student dashboard statistics
+// @access  Private (Student only)
+router.get('/student-dashboard/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    console.log('📊 [STUDENT DASHBOARD] Fetching statistics for student:', studentId);
+
+    // Get student details with populated fields
+    const student = await User.findById(studentId)
+      .populate('department', 'name')
+      .populate('course', 'name')
+      .populate('batch', 'name')
+      .populate('semester', 'name')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    // Get subjects for the student's batch and semester
+    const subjects = await Subject.find({
+      department: student.department._id,
+      course: student.course._id,
+      semester: student.semester._id,
+      isActive: true
+    }).lean();
+
+    const subjectIds = subjects.map(s => s._id);
+
+    // Get assignments for student's subjects
+    const [
+      totalAssignments,
+      pendingAssignments,
+      completedSubmissions,
+      assignmentSubmissions
+    ] = await Promise.all([
+      Assignment.countDocuments({
+        subject: { $in: subjectIds },
+        isActive: true
+      }),
+      Assignment.countDocuments({
+        subject: { $in: subjectIds },
+        isActive: true,
+        dueDate: { $gte: new Date() }
+      }),
+      AssignmentSubmission.countDocuments({
+        studentId: studentId,
+        status: 'completed'
+      }),
+      AssignmentSubmission.find({ studentId: studentId }).lean()
+    ]);
+
+    // Get meetings for student's batch and semester
+    const [
+      totalMeetings,
+      scheduledMeetings,
+      upcomingMeetings,
+      completedMeetings
+    ] = await Promise.all([
+      Meeting.countDocuments({
+        batchId: student.batch._id,
+        semesterId: student.semester._id
+      }),
+      Meeting.countDocuments({
+        batchId: student.batch._id,
+        semesterId: student.semester._id,
+        status: 'scheduled'
+      }),
+      Meeting.countDocuments({
+        batchId: student.batch._id,
+        semesterId: student.semester._id,
+        status: 'scheduled',
+        meetingDate: { $gte: new Date() }
+      }),
+      Meeting.countDocuments({
+        batchId: student.batch._id,
+        semesterId: student.semester._id,
+        status: 'completed'
+      })
+    ]);
+
+    // Get next 3 upcoming assignments
+    const upcomingAssignmentsList = await Assignment.find({
+      subject: { $in: subjectIds },
+      isActive: true,
+      dueDate: { $gte: new Date() }
+    })
+      .populate('subject', 'name code')
+      .populate('modules', 'name')
+      .sort({ dueDate: 1 })
+      .limit(3)
+      .select('title description subject modules totalMarks dueDate questionCount assignmentType assignmentLevel createdAt')
+      .lean();
+
+    // Get next 3 upcoming meetings
+    const upcomingMeetingsList = await Meeting.find({
+      batchId: student.batch._id,
+      semesterId: student.semester._id,
+      meetingDate: { $gte: new Date() }
+    })
+      .populate('subjectId', 'name code')
+      .populate('batchId', 'name')
+      .populate('semesterId', 'name')
+      .populate('moduleIds', 'name')
+      .sort({ meetingDate: 1 })
+      .limit(3)
+      .select('topic description subjectId batchId semesterId moduleIds meetingDate startTime duration status roomUrl')
+      .lean();
+
+    const dashboardStats = {
+      student: {
+        name: `${student.firstName} ${student.lastName}`,
+        email: student.email,
+        department: student.department?.name || 'N/A',
+        course: student.course?.name || 'N/A',
+        batch: student.batch?.name || 'N/A',
+        semester: student.semester?.name || 'N/A'
+      },
+      subjects: {
+        total: subjects.length,
+        active: subjects.filter(s => s.isActive).length
+      },
+      assignments: {
+        total: totalAssignments,
+        pending: pendingAssignments,
+        completed: completedSubmissions,
+        submissionRate: totalAssignments > 0 ? Math.round((completedSubmissions / totalAssignments) * 100) : 0
+      },
+      meetings: {
+        total: totalMeetings,
+        scheduled: scheduledMeetings,
+        upcoming: upcomingMeetings,
+        completed: completedMeetings
+      },
+      upcomingAssignments: upcomingAssignmentsList.map(assignment => ({
+        _id: assignment._id,
+        title: assignment.title,
+        description: assignment.description,
+        subject: assignment.subject,
+        modules: assignment.modules,
+        totalMarks: assignment.totalMarks,
+        questionCount: assignment.questionCount,
+        dueDate: assignment.dueDate,
+        assignmentType: assignment.assignmentType,
+        assignmentLevel: assignment.assignmentLevel,
+        createdAt: assignment.createdAt,
+        daysRemaining: Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24))
+      })),
+      upcomingMeetings: upcomingMeetingsList.map(meeting => ({
+        _id: meeting._id,
+        topic: meeting.topic,
+        description: meeting.description,
+        subject: meeting.subjectId,
+        batch: meeting.batchId,
+        semester: meeting.semesterId,
+        modules: meeting.moduleIds,
+        meetingDate: meeting.meetingDate,
+        startTime: meeting.startTime,
+        duration: meeting.duration,
+        status: meeting.status,
+        roomUrl: meeting.roomUrl
+      }))
+    };
+
+    console.log(`✅ [STUDENT DASHBOARD] Statistics fetched successfully`);
+    console.log(`   📚 Total Subjects: ${subjects.length}`);
+    console.log(`   📝 Total Assignments: ${totalAssignments} (Pending: ${pendingAssignments})`);
+    console.log(`   🎥 Total Meetings: ${totalMeetings} (Upcoming: ${upcomingMeetings})`);
+    console.log(`   📄 Upcoming Assignments: ${upcomingAssignmentsList.length}`);
+    console.log(`   📹 Upcoming Meetings: ${upcomingMeetingsList.length}`);
+
+    res.json({
+      success: true,
+      data: dashboardStats
+    });
+  } catch (error) {
+    console.error('❌ [STUDENT DASHBOARD] Error fetching statistics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching student dashboard statistics',
+      error: error.message
+    });
+  }
+});
+
+// @route   GET /api/statistics/admin-dashboard
+// @desc    Get comprehensive admin dashboard statistics
+// @access  Private (Admin only)
+router.get('/admin-dashboard', async (req, res) => {
+  try {
+    console.log('📊 [ADMIN DASHBOARD] Fetching comprehensive statistics');
+
+    // Get all counts
+    const [
+      totalSubjects,
+      activeSubjects,
+      totalAssignments,
+      activeAssignments,
+      pendingAssignments,
+      completedSubmissions,
+      totalMeetings,
+      scheduledMeetings,
+      ongoingMeetings,
+      completedMeetings
+    ] = await Promise.all([
+      Subject.countDocuments({}),
+      Subject.countDocuments({ isActive: true }),
+      Assignment.countDocuments({}),
+      Assignment.countDocuments({ isActive: true }),
+      Assignment.countDocuments({ 
+        isActive: true,
+        dueDate: { $gte: new Date() }
+      }),
+      AssignmentSubmission.countDocuments({ status: 'completed' }),
+      Meeting.countDocuments({}),
+      Meeting.countDocuments({ status: 'scheduled' }),
+      Meeting.countDocuments({ status: 'ongoing' }),
+      Meeting.countDocuments({ status: 'completed' })
+    ]);
+
+    // Get recent 3 assignments with populated data
+    const recentAssignments = await Assignment.find({ isActive: true })
+      .populate('subject', 'name code')
+      .populate('modules', 'name')
+      .populate('batch', 'name')
+      .populate('semester', 'name')
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .select('title description subject modules batch semester assignmentType assignmentLevel totalMarks dueDate questionCount createdAt')
+      .lean();
+
+    // Get recent 3 meetings with populated data
+    const recentMeetings = await Meeting.find({})
+      .populate('subjectId', 'name code')
+      .populate('batchId', 'name')
+      .populate('semesterId', 'name')
+      .populate('moduleIds', 'name')
+      .sort({ meetingDate: -1 })
+      .limit(3)
+      .select('topic description subjectId batchId semesterId moduleIds meetingDate startTime duration status roomUrl')
+      .lean();
+
+    const dashboardStats = {
+      subjects: {
+        total: totalSubjects,
+        active: activeSubjects,
+        inactive: totalSubjects - activeSubjects
+      },
+      assignments: {
+        total: totalAssignments,
+        active: activeAssignments,
+        pending: pendingAssignments,
+        completed: totalAssignments - pendingAssignments,
+        submissions: completedSubmissions
+      },
+      meetings: {
+        total: totalMeetings,
+        scheduled: scheduledMeetings,
+        ongoing: ongoingMeetings,
+        completed: completedMeetings,
+        cancelled: totalMeetings - (scheduledMeetings + ongoingMeetings + completedMeetings)
+      },
+      recentAssignments: recentAssignments.map(assignment => ({
+        _id: assignment._id,
+        title: assignment.title,
+        description: assignment.description,
+        subject: assignment.subject,
+        modules: assignment.modules,
+        batch: assignment.batch,
+        semester: assignment.semester,
+        assignmentType: assignment.assignmentType,
+        assignmentLevel: assignment.assignmentLevel,
+        totalMarks: assignment.totalMarks,
+        questionCount: assignment.questionCount,
+        dueDate: assignment.dueDate,
+        createdAt: assignment.createdAt,
+        duration: assignment.dueDate ? Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24)) : null
+      })),
+      recentMeetings: recentMeetings.map(meeting => ({
+        _id: meeting._id,
+        topic: meeting.topic,
+        description: meeting.description,
+        subject: meeting.subjectId,
+        batch: meeting.batchId,
+        semester: meeting.semesterId,
+        modules: meeting.moduleIds,
+        meetingDate: meeting.meetingDate,
+        startTime: meeting.startTime,
+        duration: meeting.duration,
+        status: meeting.status,
+        roomUrl: meeting.roomUrl
+      }))
+    };
+
+    console.log(`✅ [ADMIN DASHBOARD] Statistics fetched successfully`);
+    console.log(`   📚 Total Subjects: ${totalSubjects} (Active: ${activeSubjects})`);
+    console.log(`   📝 Total Assignments: ${totalAssignments} (Pending: ${pendingAssignments})`);
+    console.log(`   🎥 Total Meetings: ${totalMeetings} (Scheduled: ${scheduledMeetings})`);
+    console.log(`   📄 Recent Assignments: ${recentAssignments.length}`);
+    console.log(`   📹 Recent Meetings: ${recentMeetings.length}`);
+
+    res.json({
+      success: true,
+      data: dashboardStats
+    });
+  } catch (error) {
+    console.error('❌ [ADMIN DASHBOARD] Error fetching statistics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching admin dashboard statistics',
+      error: error.message
+    });
+  }
+});
 
 // @route   GET /api/statistics
 // @desc    Get overall platform statistics

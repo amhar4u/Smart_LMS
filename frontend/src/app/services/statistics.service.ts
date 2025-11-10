@@ -32,6 +32,59 @@ export interface DepartmentStatistics {
   successRate: number;
 }
 
+export interface AdminDashboardStats {
+  subjects: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
+  assignments: {
+    total: number;
+    active: number;
+    pending: number;
+    completed: number;
+    submissions: number;
+  };
+  meetings: {
+    total: number;
+    scheduled: number;
+    ongoing: number;
+    completed: number;
+    cancelled: number;
+  };
+  recentAssignments: any[];
+  recentMeetings: any[];
+}
+
+export interface StudentDashboardStats {
+  student?: {
+    name: string;
+    email: string;
+    department: string;
+    course: string;
+    batch: string;
+    semester: string;
+  };
+  subjects: {
+    total: number;
+    active: number;
+  };
+  assignments: {
+    total: number;
+    pending: number;
+    completed: number;
+    submissionRate: number;
+  };
+  meetings: {
+    total: number;
+    scheduled: number;
+    upcoming: number;
+    completed: number;
+  };
+  nextAssignments: any[];
+  recentMeetings: any[];
+}
+
 export interface StatisticsResponse {
   overall: OverallStatistics;
   departments: DepartmentStatistics[];
@@ -44,6 +97,20 @@ export class StatisticsService {
   private apiUrl = `${environment.apiUrl}/statistics`;
 
   constructor(private http: HttpClient) { }
+
+  /**
+   * Get comprehensive admin dashboard statistics
+   */
+  getAdminDashboardStats(): Observable<{ success: boolean; data: AdminDashboardStats }> {
+    return this.http.get<{ success: boolean; data: AdminDashboardStats }>(`${this.apiUrl}/admin-dashboard`);
+  }
+
+  /**
+   * Get comprehensive student dashboard statistics
+   */
+  getStudentDashboardStats(studentId: string): Observable<{ success: boolean; data: StudentDashboardStats }> {
+    return this.http.get<{ success: boolean; data: StudentDashboardStats }>(`${this.apiUrl}/student-dashboard/${studentId}`);
+  }
 
   /**
    * Get overall platform statistics
