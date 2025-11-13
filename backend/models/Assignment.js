@@ -14,8 +14,11 @@ const questionSchema = new mongoose.Schema({
     option: String,
     isCorrect: Boolean
   }], // For MCQ questions
-  correctAnswer: String, // For short answer questions
+  correctAnswer: String, // For short answer questions and reference for MCQ
+  explanation: String, // Explanation for MCQ or guidelines for other types
   maxWords: Number, // For essay questions
+  minLength: Number, // For essay questions
+  maxLength: Number, // For short answer and essay questions
   marks: {
     type: Number,
     default: 1
@@ -122,9 +125,35 @@ const assignmentSchema = new mongoose.Schema({
     type: Number, // in minutes
     min: [1, 'Time limit must be at least 1 minute']
   },
+  startDate: {
+    type: Date,
+    required: [true, 'Start date is required'],
+    default: Date.now
+  },
+  endDate: {
+    type: Date,
+    required: [true, 'End date is required'],
+    validate: {
+      validator: function(value) {
+        return !this.startDate || value >= this.startDate;
+      },
+      message: 'End date must be after or equal to start date'
+    }
+  },
+  passingMarks: {
+    type: Number,
+    required: [true, 'Passing marks are required'],
+    min: [0, 'Passing marks cannot be negative'],
+    validate: {
+      validator: function(value) {
+        return !this.maxMarks || value <= this.maxMarks;
+      },
+      message: 'Passing marks cannot exceed maximum marks'
+    }
+  },
   isActive: {
     type: Boolean,
-    default: true
+    default: false // Default to inactive until admin/lecturer activates
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -138,6 +167,21 @@ const assignmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Pre-save hook to set defaults
+assignmentSchema.pre('save', function(next) {
+  // If endDate is not set, default to dueDate
+  if (!this.endDate && this.dueDate) {
+    this.endDate = this.dueDate;
+  }
+  
+  // If passingMarks is not set or is 0, calculate 40% of maxMarks
+  if ((!this.passingMarks || this.passingMarks === 0) && this.maxMarks) {
+    this.passingMarks = Math.ceil(this.maxMarks * 0.4);
+  }
+  
+  next();
+});
+
 // Index for better performance
 assignmentSchema.index({ department: 1 });
 assignmentSchema.index({ course: 1 });
@@ -147,5 +191,8 @@ assignmentSchema.index({ subject: 1 });
 assignmentSchema.index({ dueDate: 1 });
 assignmentSchema.index({ assignmentLevel: 1 });
 assignmentSchema.index({ assignmentType: 1 });
+assignmentSchema.index({ isActive: 1 });
+assignmentSchema.index({ startDate: 1, endDate: 1 });
+assignmentSchema.index({ subject: 1, isActive: 1 }); // For fetching active assignments by subject
 
 module.exports = mongoose.model('Assignment', assignmentSchema);
