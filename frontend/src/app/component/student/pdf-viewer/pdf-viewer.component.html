@@ -1,0 +1,20 @@
+<div class="pdf-viewer-dialog">
+  <div class="dialog-header">
+    <h2>{{ data.title || 'PDF Viewer' }}</h2>
+    <div class="header-actions">
+      <button mat-icon-button (click)="openInNewTab()" matTooltip="Open in new tab">
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+      <button mat-icon-button (click)="downloadPdf()" matTooltip="Download PDF">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button mat-icon-button (click)="close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+  
+  <div class="pdf-viewer-container">
+    <iframe [src]="safeUrl" class="pdf-iframe"></iframe>
+  </div>
+</div>

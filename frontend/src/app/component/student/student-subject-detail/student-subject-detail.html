@@ -54,10 +54,10 @@
                     </mat-panel-title>
                     <mat-panel-description>
                       <div class="module-badges">
-                        <mat-chip *ngIf="m.pdfUrl || (m.documents && m.documents.length)">
+                        <mat-chip *ngIf="m.documents && m.documents.length">
                           <mat-icon>picture_as_pdf</mat-icon> PDF
                         </mat-chip>
-                        <mat-chip *ngIf="m.videoUrl">
+                        <mat-chip *ngIf="m.video && m.video.cloudinaryURL">
                           <mat-icon>play_circle</mat-icon> Video
                         </mat-chip>
                       </div>
@@ -69,28 +69,16 @@
                     <p class="module-description">{{ m.description }}</p>
 
                     <!-- Resources Section -->
-                    <div class="resources-section" *ngIf="m.pdfUrl || m.videoUrl || (m.documents && m.documents.length)">
+                    <div class="resources-section" *ngIf="(m.documents && m.documents.length) || (m.video && m.video.cloudinaryURL)">
                       <h4><mat-icon>folder_open</mat-icon> Resources</h4>
                       <div class="resource-list">
-                        <!-- PDF Resource -->
-                        <div *ngIf="m.pdfUrl" class="resource-item">
-                          <button (click)="openPdfViewer(m.pdfUrl, m.name + ' - PDF')" mat-raised-button color="primary" class="resource-button pdf">
-                            <mat-icon>visibility</mat-icon>
-                            <span>View PDF</span>
-                          </button>
-                          <a [href]="m.pdfUrl" download mat-raised-button class="resource-button download">
-                            <mat-icon>download</mat-icon>
-                            <span>Download</span>
-                          </a>
-                        </div>
-                        
-                        <!-- Video Resource -->
-                        <div *ngIf="m.videoUrl" class="resource-item">
-                          <button (click)="openVideoPlayer(m.videoUrl, m.name + ' - Video')" mat-raised-button color="accent" class="resource-button video">
+                        <!-- Video Resource (show first if exists) -->
+                        <div *ngIf="m.video && m.video.cloudinaryURL" class="resource-item">
+                          <button (click)="openVideoPlayer(m.video.cloudinaryURL, m.name + ' - Video')" mat-raised-button color="accent" class="resource-button video">
                             <mat-icon>play_circle</mat-icon>
                             <span>Play Video</span>
                           </button>
-                          <a [href]="m.videoUrl" download mat-raised-button class="resource-button download">
+                          <a [href]="m.video.cloudinaryURL" download mat-raised-button class="resource-button download">
                             <mat-icon>download</mat-icon>
                             <span>Download</span>
                           </a>
@@ -110,7 +98,7 @@
                       </div>
                     </div>
 
-                    <div *ngIf="!m.pdfUrl && !m.videoUrl && (!m.documents || !m.documents.length)" class="no-resources">
+                    <div *ngIf="(!m.documents || !m.documents.length) && (!m.video || !m.video.cloudinaryURL)" class="no-resources">
                       <mat-icon>info</mat-icon>
                       <p>No resources available for this module yet.</p>
                     </div>

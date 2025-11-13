@@ -131,6 +131,8 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
   openPdfViewer(url: string, title: string): void {
     this.dialog.open(PdfViewerComponent, {
       data: { url, title },
+      width: '95vw',
+      height: '95vh',
       maxWidth: '95vw',
       maxHeight: '95vh',
       panelClass: 'pdf-viewer-dialog'
