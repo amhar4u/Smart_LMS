@@ -53,3 +53,32 @@ This project aims to improve the online learning experience by detecting student
 | Video Calls   | Jitsi Meet / WebRTC |
 | Auth          | JWT (JSON Web Token) |
 | Storage       | Local file system |
+| AI Evaluation | OpenAI GPT-4       |
+
+---
+
+## 📖 Documentation
+
+### Core System Documentation
+- **[README.md](./README.md)** - Main project overview (this file)
+- **[ASSIGNMENT_COMPLETE_GUIDE.md](./ASSIGNMENT_COMPLETE_GUIDE.md)** - Complete assignment system documentation
+- **[STUDENT_SUBJECT_LEVEL_TRACKING.md](./STUDENT_SUBJECT_LEVEL_TRACKING.md)** - Student performance tracking system
+- **[IMPLEMENTATION_CHECKLIST.md](./IMPLEMENTATION_CHECKLIST.md)** - Feature implementation status
+
+### Admin Documentation
+- **[ADMIN_GUIDE.md](./ADMIN_GUIDE.md)** - Admin panel user guide
+- **[ADMIN_DELETE_GUIDE.md](./ADMIN_DELETE_GUIDE.md)** - Data management guide
+
+### Lecturer Documentation
+- **[LECTURER_GUIDE.md](./LECTURER_GUIDE.md)** - Lecturer features and usage
+- **[LECTURER_DASHBOARD_GUIDE.md](./LECTURER_DASHBOARD_GUIDE.md)** - Dashboard overview
+- **[LECTURER_MEETING_MANAGEMENT.md](./LECTURER_MEETING_MANAGEMENT.md)** - Meeting/class management
+
+### API & Technical Documentation
+- **[API_REFERENCE_STUDENT_LEVELS.md](./API_REFERENCE_STUDENT_LEVELS.md)** - Student level API reference
+- **[STUDENT_LEVEL_TRACKING_SUMMARY.md](./STUDENT_LEVEL_TRACKING_SUMMARY.md)** - Quick reference for level tracking
+- **[DEEP_DEBUG_GUIDE.md](./DEEP_DEBUG_GUIDE.md)** - Debugging and troubleshooting
+- **[TESTING_CHECKLIST.md](./TESTING_CHECKLIST.md)** - Testing procedures
+
+### Visual Documentation
+- **[VISUAL_GUIDE.md](./VISUAL_GUIDE.md)** - UI/UX guide with screenshots
