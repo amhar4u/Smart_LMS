@@ -12,10 +12,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTabsModule } from '@angular/material/tabs';
 import { LecturerLayout } from '../lecturer-layout/lecturer-layout';
 import { AuthService } from '../../../services/auth.service';
 import { LecturerService, SubjectDetail } from '../../../services/lecturer.service';
 import { Router } from '@angular/router';
+import { LecturerAssignmentsListComponent } from '../lecturer-assignments-list/lecturer-assignments-list.component';
+import { LecturerSubmissionsListComponent } from '../lecturer-submissions-list/lecturer-submissions-list.component';
 
 @Component({
   selector: 'app-subject-detail-dialog',
@@ -403,7 +406,10 @@ export class SubjectDetailDialog {
     MatFormFieldModule,
     MatDialogModule,
     MatSelectModule,
-    LecturerLayout
+    MatTabsModule,
+    LecturerLayout,
+    LecturerAssignmentsListComponent,
+    LecturerSubmissionsListComponent
   ],
   templateUrl: './lecturer-subjects.html',
   styleUrl: './lecturer-subjects.css'
@@ -425,6 +431,11 @@ export class LecturerSubjects implements OnInit {
   batches: string[] = [];
   semesters: string[] = [];
   
+  // Tab management
+  selectedTabIndex = 0;
+  totalAssignments = 0;
+  totalSubmissions = 0;
+  
   // Table columns
   displayedColumns: string[] = ['subject', 'course', 'batch', 'semester', 'modules', 'assignments', 'meetings', 'students', 'actions'];
 
@@ -441,6 +452,7 @@ export class LecturerSubjects implements OnInit {
     if (currentUser && currentUser._id) {
       this.lecturerId = currentUser._id;
       this.loadSubjects();
+      this.loadCounts();
     } else {
       console.error('No user logged in');
       this.loading = false;
@@ -462,6 +474,32 @@ export class LecturerSubjects implements OnInit {
       error: (error) => {
         console.error('Error loading subjects:', error);
         this.loading = false;
+      }
+    });
+  }
+
+  loadCounts(): void {
+    // Load assignments count
+    this.lecturerService.getAssignments(this.lecturerId, { page: 1, limit: 1 }).subscribe({
+      next: (response) => {
+        if (response.success && response.pagination) {
+          this.totalAssignments = response.pagination.total;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading assignments count:', error);
+      }
+    });
+
+    // Load submissions count
+    this.lecturerService.getSubmissions(this.lecturerId, { page: 1, limit: 1 }).subscribe({
+      next: (response) => {
+        if (response.success && response.pagination) {
+          this.totalSubmissions = response.pagination.total;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading submissions count:', error);
       }
     });
   }

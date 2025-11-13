@@ -48,6 +48,14 @@
           </div>
         </div>
 
+        <!-- Assignment Submissions -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/assignment-submissions" [attr.data-tooltip]="sidebarCollapsed ? 'Assignment Submissions' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">upload_file</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Assignment Submissions</span>
+          </div>
+        </div>
+
         <!-- Meetings -->
         <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/meetings" [attr.data-tooltip]="sidebarCollapsed ? 'Meetings' : null">
           <div class="nav-content">

@@ -118,6 +118,76 @@ export interface ApiResponse<T> {
   data: T;
   message?: string;
   error?: string;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+  statistics?: {
+    totalSubmissions: number;
+    evaluated: number;
+    pending: number;
+    avgPercentage: number;
+    beginners: number;
+    intermediates: number;
+    advanced: number;
+  };
+}
+
+export interface LecturerAssignment {
+  _id: string;
+  title: string;
+  description: string;
+  department: { _id: string; name: string };
+  course: { _id: string; name: string };
+  batch: { _id: string; name: string };
+  semester: { _id: string; name: string };
+  subject: { _id: string; name: string; code: string };
+  modules: Array<{ _id: string; title: string }>;
+  dueDate: Date;
+  startDate: Date;
+  endDate: Date;
+  passingMarks: number;
+  assignmentLevel: string;
+  assignmentType: string;
+  numberOfQuestions: number;
+  maxMarks: number;
+  isActive: boolean;
+  createdBy: { _id: string; firstName: string; lastName: string; email: string };
+  createdAt: Date;
+}
+
+export interface LecturerSubmission {
+  _id: string;
+  assignmentId: {
+    _id: string;
+    title: string;
+    maxMarks: number;
+    dueDate: Date;
+    assignmentType: string;
+    assignmentLevel: string;
+    subject: {
+      _id: string;
+      name: string;
+      code: string;
+    };
+  };
+  studentId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    studentId: string;
+  };
+  submittedAt: Date;
+  marks: number | null;
+  percentage: number | null;
+  level: string | null;
+  evaluationStatus: string;
+  status: string;
+  isLateSubmission: boolean;
+  isPublished: boolean;
 }
 
 @Injectable({
@@ -168,6 +238,42 @@ export class LecturerService {
     return this.http.get<ApiResponse<SingleSubjectDetail>>(
       `${this.baseUrl}/subject/${subjectId}/details`,
       { headers: this.getHeaders() }
+    );
+  }
+
+  /**
+   * Get all assignments for lecturer's subjects
+   * @param lecturerId - The ID of the lecturer
+   * @param filters - Optional filters for assignments
+   * @returns Observable with array of assignments
+   */
+  getAssignments(lecturerId: string, filters?: any): Observable<ApiResponse<LecturerAssignment[]>> {
+    let params: any = { ...filters };
+    
+    return this.http.get<ApiResponse<LecturerAssignment[]>>(
+      `${this.baseUrl}/${lecturerId}/assignments`,
+      { 
+        headers: this.getHeaders(),
+        params 
+      }
+    );
+  }
+
+  /**
+   * Get all submissions for lecturer's assignments
+   * @param lecturerId - The ID of the lecturer
+   * @param filters - Optional filters for submissions
+   * @returns Observable with array of submissions
+   */
+  getSubmissions(lecturerId: string, filters?: any): Observable<ApiResponse<LecturerSubmission[]>> {
+    let params: any = { ...filters };
+    
+    return this.http.get<ApiResponse<LecturerSubmission[]>>(
+      `${this.baseUrl}/${lecturerId}/submissions`,
+      { 
+        headers: this.getHeaders(),
+        params 
+      }
     );
   }
 }
