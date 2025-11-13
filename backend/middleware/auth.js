@@ -56,6 +56,8 @@ const auth = async (req, res, next) => {
       // Add user to request with standardized format
       req.user = {
         id: user._id.toString(),
+        userId: user._id.toString(), // Add userId for compatibility
+        _id: user._id.toString(), // Add _id for compatibility
         email: user.email,
         role: user.role,
         firstName: user.firstName,
