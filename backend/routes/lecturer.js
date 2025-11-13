@@ -672,3 +672,99 @@ router.get('/:lecturerId/submissions', async (req, res) => {
 });
 
 module.exports = router;
+
+// @route   GET /api/lecturer/extra-modules/:lecturerId
+// @desc    Get extra modules for lecturer's authorized subjects
+// @access  Private (Lecturer)
+router.get('/extra-modules/:lecturerId', async (req, res) => {
+  try {
+    const { lecturerId } = req.params;
+    const { studentLevel, search, page = 1, limit = 50 } = req.query;
+    
+    console.log(`Ì≥ã [LECTURER] Fetching extra modules for lecturer: ${lecturerId}`);
+
+    // Get all subjects taught by this lecturer
+    const lecturerSubjects = await Subject.find({ 
+      lecturerId: lecturerId, 
+      isActive: true 
+    }).select('_id');
+
+    if (!lecturerSubjects || lecturerSubjects.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No subjects found for this lecturer',
+        data: {
+          extraModules: [],
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages: 0,
+            totalItems: 0,
+            itemsPerPage: parseInt(limit)
+          }
+        }
+      });
+    }
+
+    const subjectIds = lecturerSubjects.map(s => s._id);
+    const ExtraModule = require('../models/ExtraModule');
+
+    // Build filter for extra modules
+    let filter = {
+      subject: { $in: subjectIds }
+    };
+
+    if (studentLevel && studentLevel !== 'All') {
+      filter.studentLevel = { $in: [studentLevel, 'All'] };
+    }
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { code: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    console.log('Ì≥ã [LECTURER] Filter:', filter);
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Get extra modules with pagination
+    const extraModules = await ExtraModule.find(filter)
+      .populate('subject', 'name code departmentId courseId batchId semesterId')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const totalItems = await ExtraModule.countDocuments(filter);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    console.log(`‚úÖ [LECTURER] Found ${extraModules.length} extra modules for lecturer (${totalItems} total)`);
+
+    res.json({
+      success: true,
+      message: 'Extra modules fetched successfully',
+      data: {
+        extraModules,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalItems,
+          itemsPerPage: parseInt(limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('‚ùå [LECTURER] Error fetching extra modules:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching lecturer extra modules',
+      error: error.message
+    });
+  }
+});

@@ -276,4 +276,22 @@ export class LecturerService {
       }
     );
   }
+
+  /**
+   * Get extra modules for lecturer's authorized subjects
+   * @param lecturerId - The ID of the lecturer
+   * @param filters - Optional filters (studentLevel, search, page, limit)
+   * @returns Observable with array of extra modules
+   */
+  getExtraModules(lecturerId: string, filters?: any): Observable<any> {
+    let params: any = { ...filters };
+    
+    return this.http.get<any>(
+      `${this.baseUrl}/extra-modules/${lecturerId}`,
+      { 
+        headers: this.getHeaders(),
+        params 
+      }
+    );
+  }
 }

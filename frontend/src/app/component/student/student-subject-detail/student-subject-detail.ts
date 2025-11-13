@@ -21,6 +21,8 @@ import { takeUntil, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PdfViewerComponent } from '../pdf-viewer/pdf-viewer.component';
 import { VideoPlayerComponent } from '../video-player/video-player.component';
+import { StudentSubjectLevelService } from '../../../services/student-subject-level.service';
+import { ExtraModuleService } from '../../../services/extra-module.service';
 
 @Component({
   selector: 'app-student-subject-detail',
@@ -52,12 +54,17 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
   currentUser: any = null;
   subjectId: string | null = null;
   subject: any = null;
+  studentLevel: string = 'beginner'; // Student's level for this subject
+  extraModules: any[] = []; // Extra modules based on student level
+  loadingExtraModules = false;
 
   constructor(
     private route: ActivatedRoute, 
     private http: HttpClient,
     private authService: AuthService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private studentSubjectLevelService: StudentSubjectLevelService,
+    private extraModuleService: ExtraModuleService
   ) {}
 
   ngOnInit(): void {
@@ -98,9 +105,92 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
       .subscribe(res => {
         if (res.success && res.data) {
           this.subject = res.data;
+          // Load student level and extra modules after subject is loaded
+          this.loadStudentLevel();
         }
         this.isLoading = false;
       });
+  }
+
+  loadStudentLevel(): void {
+    if (!this.currentUser || !this.subjectId) return;
+
+    this.studentSubjectLevelService.getStudentSubjectLevel(this.currentUser._id, this.subjectId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(err => {
+          console.log('No student level found yet, defaulting to beginner');
+          this.studentLevel = 'beginner';
+          this.loadExtraModules();
+          return of({ success: false, data: null });
+        })
+      )
+      .subscribe(res => {
+        if (res.success && res.data) {
+          this.studentLevel = res.data.level || 'beginner';
+          console.log('Student level for this subject:', this.studentLevel);
+        } else {
+          this.studentLevel = 'beginner';
+        }
+        this.loadExtraModules();
+      });
+  }
+
+  loadExtraModules(): void {
+    if (!this.subjectId || !this.studentLevel) return;
+
+    this.loadingExtraModules = true;
+    
+    // Convert student level to match extra module enum format
+    const levelMap: { [key: string]: 'Beginner' | 'Intermediate' | 'Advanced' } = {
+      'beginner': 'Beginner',
+      'intermediate': 'Intermediate',
+      'advanced': 'Advanced'
+    };
+    
+    const formattedLevel = levelMap[this.studentLevel.toLowerCase()];
+    
+    // Fetch extra modules for this subject and student level
+    // The backend will filter by studentLevel matching the extra module type
+    this.extraModuleService.getExtraModules({
+      subject: this.subjectId,
+      studentLevel: formattedLevel
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(err => {
+          console.error('Error loading extra modules:', err);
+          this.loadingExtraModules = false;
+          return of({ success: false, data: [] });
+        })
+      )
+      .subscribe(res => {
+        if (res.success && res.data) {
+          this.extraModules = Array.isArray(res.data) ? res.data : (res.data.extraModules || []);
+          console.log(`Found ${this.extraModules.length} extra modules for level: ${this.studentLevel}`);
+        } else {
+          this.extraModules = [];
+        }
+        this.loadingExtraModules = false;
+      });
+  }
+
+  capitalizeFirstLetter(str: string): string {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
+
+  getLevelBadgeClass(level: string): string {
+    const levelMap: any = {
+      'beginner': 'level-beginner',
+      'intermediate': 'level-intermediate',
+      'advanced': 'level-advanced',
+      'Beginner': 'level-beginner',
+      'Intermediate': 'level-intermediate',
+      'Advanced': 'level-advanced',
+      'All': 'level-all'
+    };
+    return levelMap[level] || 'level-beginner';
   }
 
   formatDate(date: any): string {

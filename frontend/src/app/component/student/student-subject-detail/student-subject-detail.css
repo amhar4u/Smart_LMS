@@ -587,3 +587,100 @@
   margin-bottom: 2rem;
 }
 
+/* Student Level Info */
+.student-level-info {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 2px solid #dee2e6;
+}
+
+.student-level-info mat-chip {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  height: auto;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.student-level-info mat-chip mat-icon {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.level-description {
+  margin: 1rem 0 0 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Level Badge Classes */
+.level-beginner {
+  background: linear-gradient(135deg, #f44336 0%, #e91e63 100%) !important;
+  color: white !important;
+}
+
+.level-intermediate {
+  background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%) !important;
+  color: white !important;
+}
+
+.level-advanced {
+  background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%) !important;
+  color: white !important;
+}
+
+.level-all {
+  background: linear-gradient(135deg, #2196f3 0%, #03a9f4 100%) !important;
+  color: white !important;
+}
+
+/* Extra Module Panel Styling */
+.extra-module-panel {
+  border-left: 4px solid #9c27b0 !important;
+}
+
+.extra-module-panel ::ng-deep .mat-expansion-panel-header {
+  background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 100%) !important;
+  border-bottom-color: #e1bee7;
+}
+
+.extra-module-panel ::ng-deep .mat-expansion-panel-header:hover {
+  background: linear-gradient(135deg, #f8bbd0 0%, #e1bee7 100%) !important;
+}
+
+.extra-module-panel.mat-expanded ::ng-deep .mat-expansion-panel-header {
+  background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%) !important;
+  border-bottom-color: #9c27b0;
+}
+
+.module-code {
+  background: #9c27b0;
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+  border: 2px solid #9c27b0;
+  transition: all 0.3s ease;
+}
+
+.extra-module-panel.mat-expanded ::ng-deep .mat-expansion-panel-header .module-code {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: #999;
+  font-style: italic;
+  margin-top: 0.5rem;
+}

@@ -18,6 +18,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatMenuModule } from '@angular/material/menu';
 import { ExtraModuleService } from '../../../services/extra-module.service';
 import { SubjectService } from '../../../services/subject.service';
+import { LecturerService } from '../../../services/lecturer.service';
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { LecturerLayout } from '../lecturer-layout/lecturer-layout';
@@ -56,6 +57,7 @@ export class LecturerManageExtraModulesComponent implements OnInit {
   private dialog = inject(MatDialog);
   private extraModuleService = inject(ExtraModuleService);
   private subjectService = inject(SubjectService);
+  private lecturerService = inject(LecturerService);
   private confirmationService = inject(ConfirmationService);
   private authService = inject(AuthService);
 
@@ -97,29 +99,28 @@ export class LecturerManageExtraModulesComponent implements OnInit {
   }
 
   loadExtraModules() {
+    if (!this.currentUser || !this.currentUser._id) {
+      this.snackBar.open('User information not available', 'Close', { duration: 3000 });
+      return;
+    }
+
     this.loading = true;
     const params: any = {};
     
-    if (this.filters.subjectId) params.subject = this.filters.subjectId;
     if (this.filters.level) params.studentLevel = this.filters.level;
     if (this.filters.search) params.search = this.filters.search;
 
-    this.extraModuleService.getExtraModules(params).subscribe({
+    // Use lecturer-specific endpoint that filters by authorized subjects
+    this.lecturerService.getExtraModules(this.currentUser._id, params).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          const allModules = response.data.extraModules || [];
-          // Filter to show only extra modules for lecturer's subjects
-          const lecturerSubjectIds = this.lecturerSubjects.map(s => s._id);
-          this.extraModules = allModules.filter((module: ExtraModule) => {
-            const subjectId = typeof module.subject === 'string' 
-              ? module.subject 
-              : (module.subject as any)?._id;
-            return lecturerSubjectIds.includes(subjectId);
-          });
+          this.extraModules = response.data.extraModules || [];
+          console.log(`✅ Loaded ${this.extraModules.length} extra modules for lecturer`);
         }
         this.loading = false;
       },
       error: (error) => {
+        console.error('Error loading extra modules:', error);
         this.loading = false;
         this.snackBar.open('Failed to load extra modules', 'Close', { duration: 3000 });
       }

@@ -216,6 +216,110 @@
             </div>
           </div>
         </mat-tab>
+
+        <!-- Extra Learning Resources Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>extension</mat-icon>
+            <span>Extra Resources</span>
+            <span class="tab-count">{{ extraModules.length || 0 }}</span>
+          </ng-template>
+          <div class="tab-content">
+            <!-- Student Level Badge -->
+            <div class="student-level-info" *ngIf="studentLevel">
+              <mat-chip [ngClass]="getLevelBadgeClass(studentLevel)">
+                <mat-icon>trending_up</mat-icon>
+                Your Level: {{ capitalizeFirstLetter(studentLevel) }}
+              </mat-chip>
+              <p class="level-description">
+                These extra resources are recommended based on your current performance level in this subject.
+              </p>
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="loadingExtraModules" class="loading-container">
+              <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+              <p>Loading extra resources...</p>
+            </div>
+
+            <!-- Extra Modules List -->
+            <div *ngIf="!loadingExtraModules && extraModules && extraModules.length > 0">
+              <mat-accordion class="modules-accordion" multi>
+                <mat-expansion-panel *ngFor="let module of extraModules" class="module-panel extra-module-panel" [expanded]="true">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <div class="module-title">
+                        <span class="module-code">{{ module.code }}</span>
+                        <span class="module-name">{{ module.name || module.title }}</span>
+                      </div>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      <div class="module-badges">
+                        <mat-chip [ngClass]="getLevelBadgeClass(module.studentLevel)">
+                          {{ module.studentLevel }}
+                        </mat-chip>
+                        <mat-chip *ngIf="module.documents && module.documents.length">
+                          <mat-icon>picture_as_pdf</mat-icon> {{ module.documents.length }} Doc{{ module.documents.length > 1 ? 's' : '' }}
+                        </mat-chip>
+                        <mat-chip *ngIf="module.video && module.video.cloudinaryURL">
+                          <mat-icon>play_circle</mat-icon> Video
+                        </mat-chip>
+                      </div>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <!-- Extra Module Body -->
+                  <div class="module-body">
+                    <p class="module-description">{{ module.description }}</p>
+
+                    <!-- Resources Section -->
+                    <div class="resources-section" *ngIf="(module.documents && module.documents.length) || (module.video && module.video.cloudinaryURL)">
+                      <h4><mat-icon>folder_open</mat-icon> Resources</h4>
+                      <div class="resource-list">
+                        <!-- Video Resource (show first if exists) -->
+                        <div *ngIf="module.video && module.video.cloudinaryURL" class="resource-item">
+                          <button (click)="openVideoPlayer(module.video.cloudinaryURL, module.name + ' - Video')" mat-raised-button color="accent" class="resource-button video">
+                            <mat-icon>play_circle</mat-icon>
+                            <span>Play Video</span>
+                          </button>
+                          <a [href]="module.video.cloudinaryURL" download mat-raised-button class="resource-button download">
+                            <mat-icon>download</mat-icon>
+                            <span>Download</span>
+                          </a>
+                        </div>
+                        
+                        <!-- Document Resources -->
+                        <div *ngFor="let doc of module.documents || []" class="resource-item">
+                          <button (click)="openPdfViewer(doc.cloudinaryURL, doc.name)" mat-raised-button color="primary" class="resource-button doc">
+                            <mat-icon>visibility</mat-icon>
+                            <span>View {{ doc.name }}</span>
+                          </button>
+                          <a [href]="doc.cloudinaryURL" download mat-raised-button class="resource-button download">
+                            <mat-icon>download</mat-icon>
+                            <span>Download</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div *ngIf="(!module.documents || !module.documents.length) && (!module.video || !module.video.cloudinaryURL)" class="no-resources">
+                      <mat-icon>info</mat-icon>
+                      <p>No resources available for this extra module yet.</p>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!loadingExtraModules && (!extraModules || extraModules.length === 0)" class="empty-state">
+              <mat-icon>extension</mat-icon>
+              <h3>No Extra Resources Yet</h3>
+              <p>Extra learning resources for your level ({{ capitalizeFirstLetter(studentLevel) }}) will appear here once they are added.</p>
+              <p class="hint">Keep completing assignments to improve your level and unlock more resources!</p>
+            </div>
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </div>
 
