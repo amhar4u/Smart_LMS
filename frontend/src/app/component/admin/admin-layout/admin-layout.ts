@@ -94,10 +94,15 @@ export class AdminLayout implements OnInit {
 
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
-    // If collapsing sidebar, also collapse user management submenu
+    // If collapsing sidebar, also collapse submenus
     if (this.sidebarCollapsed) {
       this.userManagementExpanded = false;
     }
+  }
+
+  navigateToSubmissions() {
+    // Navigate to submissions overview page
+    this.router.navigate(['/admin/assignment-submissions']);
   }
 
   navigateTo(route: string) {

@@ -90,10 +90,18 @@
         </div>
 
         <!-- Assignments Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-assignments" [attr.data-tooltip]="sidebarCollapsed ? 'Assignments' : null">
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-assignments" [routerLinkActiveOptions]="{exact: true}" [attr.data-tooltip]="sidebarCollapsed ? 'Assignments' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">assignment</mat-icon>
             <span *ngIf="!sidebarCollapsed" class="nav-text">Assignments</span>
+          </div>
+        </div>
+
+        <!-- Assignment Submissions -->
+        <div class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}" [attr.data-tooltip]="sidebarCollapsed ? 'Assignment Submissions' : null">
+          <div class="nav-content" (click)="navigateToSubmissions()">
+            <mat-icon class="nav-icon">assignment_turned_in</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Assignment Submissions</span>
           </div>
         </div>
 
