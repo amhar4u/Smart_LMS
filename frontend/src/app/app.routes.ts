@@ -42,6 +42,16 @@ export const routes: Routes = [
     canActivate: [studentGuard]
   },
   {
+    path: 'student/take-assignment/:id',
+    loadComponent: () => import('./component/student/take-assignment/take-assignment.component').then(m => m.TakeAssignmentComponent),
+    canActivate: [studentGuard]
+  },
+  {
+    path: 'student/assignment-result/:id',
+    loadComponent: () => import('./component/student/assignment-result/assignment-result.component').then(m => m.AssignmentResultComponent),
+    canActivate: [studentGuard]
+  },
+  {
     path: 'lecturer/dashboard',
     loadComponent: () => import('./component/lecturer/lecturer-dashboard/lecturer-dashboard').then(m => m.LecturerDashboard),
     canActivate: [teacherGuard]
@@ -69,6 +79,16 @@ export const routes: Routes = [
   {
     path: 'lecturer/assignments',
     loadComponent: () => import('./component/lecturer/manage-assignments/manage-assignments.component').then(m => m.LecturerManageAssignmentsComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/assignment-submissions',
+    loadComponent: () => import('./component/lecturer/assignment-submissions/assignment-submissions.component').then(m => m.LecturerAssignmentSubmissionsComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/assignments/:id/submissions',
+    loadComponent: () => import('./component/lecturer/assignment-submissions/assignment-submissions.component').then(m => m.LecturerAssignmentSubmissionsComponent),
     canActivate: [teacherGuard]
   },
   {
@@ -149,6 +169,16 @@ export const routes: Routes = [
   {
     path: 'admin/manage-assignments',
     loadComponent: () => import('./component/admin/manage-assignments/manage-assignments.component').then(m => m.ManageAssignmentsComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/assignment-submissions',
+    loadComponent: () => import('./component/admin/assignment-submissions/assignment-submissions.component').then(m => m.AssignmentSubmissionsComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/assignments/:id/submissions',
+    loadComponent: () => import('./component/admin/assignment-submissions/assignment-submissions.component').then(m => m.AssignmentSubmissionsComponent),
     canActivate: [adminGuard]
   },
   {

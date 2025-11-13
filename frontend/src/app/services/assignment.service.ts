@@ -13,7 +13,10 @@ export interface Assignment {
   semester: { _id: string; name: string } | string;
   subject: { _id: string; name: string } | string;
   modules: Array<{ _id: string; title: string }> | string[];
-  dueDate: Date;
+  startDate?: Date; // When students can start the assignment
+  dueDate: Date; // Due date for submission
+  endDate?: Date; // When assignment closes
+  passingMarks?: number; // Minimum marks to pass
   assignmentLevel: 'easy' | 'medium' | 'hard';
   assignmentType: 'MCQ' | 'short_answer' | 'essay';
   numberOfQuestions: number;
@@ -37,7 +40,10 @@ export interface Question {
   type: 'MCQ' | 'short_answer' | 'essay';
   options?: Option[];
   correctAnswer?: string;
+  explanation?: string; // Explanation for MCQ or additional context
   maxWords?: number;
+  minLength?: number; // Minimum length for essays
+  maxLength?: number; // Maximum length for short answers and essays
   marks: number;
 }
 
@@ -154,5 +160,60 @@ export class AssignmentService {
   // Get assignments statistics
   getAssignmentsStats(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/stats`);
+  }
+
+  // Get submissions for an assignment
+  getAssignmentSubmissions(
+    assignmentId: string,
+    filters: {
+      page?: number;
+      limit?: number;
+      evaluationStatus?: string;
+      level?: string;
+      minPercentage?: number;
+      maxPercentage?: number;
+      search?: string;
+    } = {}
+  ): Observable<any> {
+    const params = new URLSearchParams();
+    
+    Object.keys(filters).forEach(key => {
+      const value = filters[key as keyof typeof filters];
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const queryString = params.toString();
+    const url = queryString 
+      ? `${this.apiUrl}/${assignmentId}/submissions?${queryString}` 
+      : `${this.apiUrl}/${assignmentId}/submissions`;
+    
+    return this.http.get<any>(url);
+  }
+
+  // Get single submission details
+  getSubmissionDetails(assignmentId: string, submissionId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${assignmentId}/submissions/${submissionId}`);
+  }
+
+  // Evaluate single submission
+  evaluateSubmission(assignmentId: string, submissionId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${assignmentId}/submissions/${submissionId}/evaluate`, {});
+  }
+
+  // Evaluate all pending submissions
+  evaluateAllSubmissions(assignmentId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${assignmentId}/submissions/evaluate-all`, {});
+  }
+
+  // Publish single evaluation
+  publishEvaluation(assignmentId: string, submissionId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${assignmentId}/submissions/${submissionId}/publish`, {});
+  }
+
+  // Publish all evaluated submissions
+  publishAllEvaluations(assignmentId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${assignmentId}/submissions/publish-all`, {});
   }
 }

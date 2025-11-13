@@ -597,3 +597,14 @@ html, body {
   75% { background-position: 75% 75%, 30px 30px; }
   100% { background-position: 100% 100%, 40px 40px; }
 }
+
+/* PDF Viewer Dialog Styles */
+.pdf-viewer-dialog .mat-mdc-dialog-container {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.pdf-viewer-dialog .mat-mdc-dialog-surface {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
