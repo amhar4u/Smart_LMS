@@ -1,0 +1,242 @@
+<app-student-layout>
+  <div class="assignments-page">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-left">
+          <mat-icon class="header-icon">assignment</mat-icon>
+          <div class="header-text">
+            <h1>My Assignments</h1>
+            <p>View and manage your assignments</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button mat-raised-button color="primary" (click)="refreshAssignments()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <mat-card class="filters-card">
+        <div class="filters-content">
+          <div class="filter-group">
+            <mat-icon>subject</mat-icon>
+            <mat-form-field appearance="outline">
+              <mat-label>Filter by Subject</mat-label>
+              <mat-select [(value)]="selectedSubject" (selectionChange)="applyFilters()">
+                <mat-option value="">All Subjects</mat-option>
+                <mat-option *ngFor="let subject of subjects" [value]="subject._id">
+                  {{ subject.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-group">
+            <mat-icon>calendar_today</mat-icon>
+            <mat-form-field appearance="outline">
+              <mat-label>Filter by Due Date</mat-label>
+              <mat-select [(value)]="selectedDueDateRange" (selectionChange)="applyFilters()">
+                <mat-option value="">All Dates</mat-option>
+                <mat-option value="today">Due Today</mat-option>
+                <mat-option value="tomorrow">Due Tomorrow</mat-option>
+                <mat-option value="this_week">Due This Week</mat-option>
+                <mat-option value="next_week">Due Next Week</mat-option>
+                <mat-option value="overdue">Overdue</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-group">
+            <mat-icon>quiz</mat-icon>
+            <mat-form-field appearance="outline">
+              <mat-label>Filter by Type</mat-label>
+              <mat-select [(value)]="selectedType" (selectionChange)="applyFilters()">
+                <mat-option value="">All Types</mat-option>
+                <mat-option value="MCQ">Multiple Choice</mat-option>
+                <mat-option value="short_answer">Short Answer</mat-option>
+                <mat-option value="essay">Essay</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-group">
+            <mat-icon>check_circle</mat-icon>
+            <mat-form-field appearance="outline">
+              <mat-label>Filter by Status</mat-label>
+              <mat-select [(value)]="selectedStatus" (selectionChange)="applyFilters()">
+                <mat-option value="">All Status</mat-option>
+                <mat-option value="available">Available</mat-option>
+                <mat-option value="submitted">Submitted</mat-option>
+                <mat-option value="graded">Graded</mat-option>
+                <mat-option value="expired">Expired</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <button mat-stroked-button (click)="clearFilters()" *ngIf="hasActiveFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Assignments Table -->
+    <div class="table-section">
+      <mat-card class="table-card">
+        <div class="table-header">
+          <h2>
+            <mat-icon>list</mat-icon>
+            Assignments List
+          </h2>
+          <span class="assignment-count">{{ filteredAssignments.length }} assignments</span>
+        </div>
+
+        <div class="table-container" *ngIf="!isLoading">
+          <table mat-table [dataSource]="filteredAssignments" class="assignments-table">
+            
+            <!-- Title Column -->
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Assignment Title</th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="assignment-title-cell">
+                  <strong>{{ assignment.title }}</strong>
+                  <span class="assignment-subtitle" *ngIf="assignment.description">
+                    {{ assignment.description | slice:0:50 }}{{ assignment.description.length > 50 ? '...' : '' }}
+                  </span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Subject Column -->
+            <ng-container matColumnDef="subject">
+              <th mat-header-cell *matHeaderCellDef>Subject</th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="subject-cell">
+                  <span class="subject-name">{{ assignment.subject?.name || 'N/A' }}</span>
+                  <span class="subject-code">{{ assignment.subject?.code }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let assignment">
+                <mat-chip [class]="getTypeBadgeClass(assignment.assignmentType)">
+                  {{ getTypeLabel(assignment.assignmentType) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Total Marks Column -->
+            <ng-container matColumnDef="totalMarks">
+              <th mat-header-cell *matHeaderCellDef>Total Marks</th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="marks-cell">
+                  <strong>{{ assignment.totalMarks || assignment.maxMarks }}</strong>
+                  <span class="marks-label">marks</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Due Date Column -->
+            <ng-container matColumnDef="dueDate">
+              <th mat-header-cell *matHeaderCellDef>Due Date</th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="due-date-cell">
+                  <span class="date">{{ formatDate(assignment.dueDate) }}</span>
+                  <mat-chip [class]="getUrgencyClass(assignment.dueDate)" class="time-chip">
+                    {{ getTimeRemaining(assignment.dueDate) }}
+                  </mat-chip>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Duration Column (Time Limit) -->
+            <ng-container matColumnDef="duration">
+              <th mat-header-cell *matHeaderCellDef>Time Limit</th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="duration-cell">
+                  <mat-icon>schedule</mat-icon>
+                  {{ getDuration(assignment) }}
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let assignment">
+                <mat-chip [class]="getStatusBadgeClass(assignment)">
+                  {{ getStatusText(assignment) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="action-buttons">
+                  <!-- Start Assignment Button -->
+                  <button 
+                    mat-raised-button 
+                    color="primary"
+                    *ngIf="canStartAssignment(assignment)"
+                    (click)="startAssignment(assignment)"
+                    matTooltip="Start Assignment">
+                    <mat-icon>play_arrow</mat-icon>
+                    Start
+                  </button>
+
+                  <!-- View Results Button - Only show if graded/evaluated -->
+                  <button 
+                    mat-raised-button 
+                    color="accent"
+                    *ngIf="assignment.hasSubmitted && assignment.submissionStatus?.evaluationStatus === 'completed'"
+                    (click)="viewResults(assignment)"
+                    matTooltip="View Results">
+                    <mat-icon>visibility</mat-icon>
+                    Results
+                  </button>
+
+                  <!-- View Details Button -->
+                  <button 
+                    mat-stroked-button
+                    (click)="viewAssignmentDetails(assignment)"
+                    matTooltip="View Details">
+                    <mat-icon>info</mat-icon>
+                    Details
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+                [class.highlight-row]="isUrgent(row)"></tr>
+          </table>
+
+          <!-- No Data Message -->
+          <div class="no-data" *ngIf="filteredAssignments.length === 0">
+            <mat-icon>assignment</mat-icon>
+            <h3>No Assignments Found</h3>
+            <p>There are no assignments matching your filters.</p>
+          </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-container" *ngIf="isLoading">
+          <mat-spinner></mat-spinner>
+          <p>Loading assignments...</p>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</app-student-layout>

@@ -1,0 +1,263 @@
+<div class="assignments-container">
+  <div class="page-header">
+    <h1>My Assignments</h1>
+    <p class="subtitle">View and manage your assignments</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+    <p>Loading assignments...</p>
+  </div>
+
+  <!-- Assignments Content -->
+  <div *ngIf="!isLoading" class="content">
+    <!-- Tabs for different assignment states -->
+    <mat-tab-group class="assignments-tabs">
+      
+      <!-- Available Assignments Tab -->
+      <mat-tab [label]="'Available (' + availableAssignments.length + ')'">
+        <div class="tab-content">
+          <div *ngIf="availableAssignments.length === 0" class="empty-state">
+            <mat-icon>assignment_turned_in</mat-icon>
+            <h3>No Available Assignments</h3>
+            <p>You're all caught up! Check back later for new assignments.</p>
+          </div>
+
+          <div class="assignments-grid" *ngIf="availableAssignments.length > 0">
+            <mat-card *ngFor="let assignment of availableAssignments" class="assignment-card available">
+              <mat-card-header>
+                <mat-card-title>{{ assignment.title }}</mat-card-title>
+                <mat-card-subtitle>
+                  <mat-icon>book</mat-icon> {{ assignment.subject.name }}
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="assignment-info">
+                  <div class="info-row">
+                    <mat-icon>schedule</mat-icon>
+                    <span><strong>Time Limit:</strong> {{ assignment.timeLimit }} minutes</span>
+                  </div>
+                  <div class="info-row">
+                    <mat-icon>event</mat-icon>
+                    <span><strong>Available Until:</strong> {{ formatDate(assignment.endDate) }}</span>
+                  </div>
+                  <div class="info-row">
+                    <mat-icon>timer</mat-icon>
+                    <span class="time-remaining" [ngClass]="getUrgencyClass(assignment.endDate)">
+                      {{ getTimeRemaining(assignment.endDate) }}
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <mat-icon>score</mat-icon>
+                    <span><strong>Marks:</strong> {{ assignment.maxMarks }} (Pass: {{ assignment.passingMarks }})</span>
+                  </div>
+                  <div class="info-row">
+                    <mat-icon>help_outline</mat-icon>
+                    <span><strong>Questions:</strong> {{ assignment.numberOfQuestions }}</span>
+                  </div>
+                </div>
+
+                <div class="badges">
+                  <mat-chip [ngClass]="getLevelBadgeClass(assignment.assignmentLevel)">
+                    {{ assignment.assignmentLevel | titlecase }}
+                  </mat-chip>
+                  <mat-chip [ngClass]="getTypeBadgeClass(assignment.assignmentType)">
+                    {{ assignment.assignmentType === 'MCQ' ? 'Multiple Choice' : 
+                       assignment.assignmentType === 'short_answer' ? 'Short Answer' : 'Essay' }}
+                  </mat-chip>
+                </div>
+
+                <div class="instructions" *ngIf="assignment.instructions">
+                  <p class="instructions-label"><strong>Instructions:</strong></p>
+                  <p class="instructions-text">{{ assignment.instructions }}</p>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions>
+                <button 
+                  mat-raised-button 
+                  color="primary" 
+                  (click)="startAssignment(assignment)"
+                  [disabled]="!canStartAssignment(assignment)">
+                  <mat-icon>play_arrow</mat-icon>
+                  Start Assignment
+                </button>
+                <button mat-button (click)="viewAssignmentDetails(assignment)">
+                  <mat-icon>info</mat-icon>
+                  Details
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Completed Assignments Tab -->
+      <mat-tab [label]="'Completed (' + completedAssignments.length + ')'">
+        <div class="tab-content">
+          <div *ngIf="completedAssignments.length === 0" class="empty-state">
+            <mat-icon>assignment</mat-icon>
+            <h3>No Completed Assignments</h3>
+            <p>Complete available assignments to see them here.</p>
+          </div>
+
+          <div class="assignments-grid" *ngIf="completedAssignments.length > 0">
+            <mat-card *ngFor="let assignment of completedAssignments" class="assignment-card completed">
+              <mat-card-header>
+                <mat-card-title>{{ assignment.title }}</mat-card-title>
+                <mat-card-subtitle>
+                  <mat-icon>book</mat-icon> {{ assignment.subject.name }}
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="assignment-info">
+                  <div class="info-row">
+                    <mat-icon>check_circle</mat-icon>
+                    <span><strong>Submitted:</strong> {{ formatDate(assignment.submissionStatus!.submittedAt) }}</span>
+                  </div>
+                  <div class="info-row" *ngIf="assignment.submissionStatus?.evaluationStatus === 'completed'">
+                    <mat-icon>grade</mat-icon>
+                    <span><strong>Marks:</strong> {{ assignment.submissionStatus?.marks }}/{{ assignment.maxMarks }} 
+                      ({{ assignment.submissionStatus?.percentage }}%)</span>
+                  </div>
+                  <div class="info-row" *ngIf="assignment.submissionStatus?.level">
+                    <mat-icon>star</mat-icon>
+                    <span><strong>Level:</strong> 
+                      <mat-chip [ngClass]="getLevelBadgeClass(assignment.submissionStatus?.level || '')">
+                        {{ assignment.submissionStatus?.level | titlecase }}
+                      </mat-chip>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="badges">
+                  <mat-chip [ngClass]="getStatusBadgeClass(assignment)">
+                    {{ getStatusText(assignment) }}
+                  </mat-chip>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions>
+                <button 
+                  mat-raised-button 
+                  color="accent" 
+                  (click)="viewResults(assignment)"
+                  [disabled]="assignment.submissionStatus?.evaluationStatus !== 'completed'">
+                  <mat-icon>assessment</mat-icon>
+                  View Results
+                </button>
+                <button mat-button (click)="viewAssignmentDetails(assignment)">
+                  <mat-icon>info</mat-icon>
+                  Details
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Upcoming Assignments Tab -->
+      <mat-tab [label]="'Upcoming (' + upcomingAssignments.length + ')'">
+        <div class="tab-content">
+          <div *ngIf="upcomingAssignments.length === 0" class="empty-state">
+            <mat-icon>schedule</mat-icon>
+            <h3>No Upcoming Assignments</h3>
+            <p>No assignments scheduled for the future.</p>
+          </div>
+
+          <div class="assignments-grid" *ngIf="upcomingAssignments.length > 0">
+            <mat-card *ngFor="let assignment of upcomingAssignments" class="assignment-card upcoming">
+              <mat-card-header>
+                <mat-card-title>{{ assignment.title }}</mat-card-title>
+                <mat-card-subtitle>
+                  <mat-icon>book</mat-icon> {{ assignment.subject.name }}
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="assignment-info">
+                  <div class="info-row">
+                    <mat-icon>event</mat-icon>
+                    <span><strong>Starts:</strong> {{ formatDate(assignment.startDate) }}</span>
+                  </div>
+                  <div class="info-row">
+                    <mat-icon>event_available</mat-icon>
+                    <span><strong>Ends:</strong> {{ formatDate(assignment.endDate) }}</span>
+                  </div>
+                  <div class="info-row">
+                    <mat-icon>schedule</mat-icon>
+                    <span><strong>Time Limit:</strong> {{ assignment.timeLimit }} minutes</span>
+                  </div>
+                </div>
+
+                <div class="badges">
+                  <mat-chip class="status-upcoming">
+                    Starts {{ formatDate(assignment.startDate) }}
+                  </mat-chip>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions>
+                <button mat-button disabled>
+                  <mat-icon>lock</mat-icon>
+                  Not Started Yet
+                </button>
+                <button mat-button (click)="viewAssignmentDetails(assignment)">
+                  <mat-icon>info</mat-icon>
+                  Details
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Expired Assignments Tab -->
+      <mat-tab [label]="'Expired (' + expiredAssignments.length + ')'">
+        <div class="tab-content">
+          <div *ngIf="expiredAssignments.length === 0" class="empty-state">
+            <mat-icon>event_busy</mat-icon>
+            <h3>No Expired Assignments</h3>
+            <p>Great! You haven't missed any assignments.</p>
+          </div>
+
+          <div class="assignments-grid" *ngIf="expiredAssignments.length > 0">
+            <mat-card *ngFor="let assignment of expiredAssignments" class="assignment-card expired">
+              <mat-card-header>
+                <mat-card-title>{{ assignment.title }}</mat-card-title>
+                <mat-card-subtitle>
+                  <mat-icon>book</mat-icon> {{ assignment.subject.name }}
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="assignment-info">
+                  <div class="info-row">
+                    <mat-icon>event_busy</mat-icon>
+                    <span><strong>Expired:</strong> {{ formatDate(assignment.endDate) }}</span>
+                  </div>
+                </div>
+
+                <div class="badges">
+                  <mat-chip class="status-expired">
+                    Expired
+                  </mat-chip>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions>
+                <button mat-button disabled>
+                  <mat-icon>block</mat-icon>
+                  Cannot Submit
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

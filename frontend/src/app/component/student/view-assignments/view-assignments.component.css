@@ -4,8 +4,27 @@
   margin: 0 auto;
 }
 
+.assignments-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
 .page-header {
   margin-bottom: 30px;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1a237e;
+  margin: 0 0 8px 0;
+}
+
+.page-header .subtitle {
+  color: #666;
+  margin: 0;
+  font-size: 1rem;
 }
 
 .page-title {
@@ -31,6 +50,263 @@
   p {
     color: #666;
     font-size: 1.1rem;
+  }
+}
+
+/* Tabs */
+.assignments-tabs {
+  margin-top: 20px;
+}
+
+.tab-content {
+  padding: 24px 0;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: #bbb;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  margin: 16px 0 8px 0;
+  color: #333;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Assignments Grid */
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 24px;
+  padding: 8px;
+}
+
+/* Assignment Cards */
+.assignment-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid #ddd;
+}
+
+.assignment-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.assignment-card.available {
+  border-left-color: #4caf50;
+}
+
+.assignment-card.completed {
+  border-left-color: #2196f3;
+}
+
+.assignment-card.upcoming {
+  border-left-color: #ff9800;
+}
+
+.assignment-card.expired {
+  border-left-color: #f44336;
+  opacity: 0.8;
+}
+
+.assignment-card mat-card-header {
+  margin-bottom: 16px;
+}
+
+.assignment-card mat-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a237e;
+  margin-bottom: 8px;
+}
+
+.assignment-card mat-card-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.assignment-card mat-card-subtitle mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Assignment Info */
+.assignment-info {
+  margin: 16px 0;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.info-row mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
+.info-row strong {
+  color: #333;
+}
+
+.time-remaining {
+  font-weight: 600;
+}
+
+.time-remaining.urgent {
+  color: #f44336;
+}
+
+.time-remaining.soon {
+  color: #ff9800;
+}
+
+.time-remaining.normal {
+  color: #4caf50;
+}
+
+.time-remaining.expired {
+  color: #999;
+}
+
+/* Badges */
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+mat-chip {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.level-easy, .level-beginner {
+  background-color: #c8e6c9 !important;
+  color: #2e7d32 !important;
+}
+
+.level-medium, .level-intermediate {
+  background-color: #fff9c4 !important;
+  color: #f57f17 !important;
+}
+
+.level-hard, .level-advanced {
+  background-color: #ffccbc !important;
+  color: #d84315 !important;
+}
+
+.type-mcq {
+  background-color: #bbdefb !important;
+  color: #1565c0 !important;
+}
+
+.type-short {
+  background-color: #d1c4e9 !important;
+  color: #4527a0 !important;
+}
+
+.type-essay {
+  background-color: #f8bbd0 !important;
+  color: #c2185b !important;
+}
+
+.status-available {
+  background-color: #c8e6c9 !important;
+  color: #2e7d32 !important;
+}
+
+.status-submitted {
+  background-color: #bbdefb !important;
+  color: #1565c0 !important;
+}
+
+.status-graded {
+  background-color: #b2dfdb !important;
+  color: #00695c !important;
+}
+
+.status-upcoming {
+  background-color: #ffe0b2 !important;
+  color: #e65100 !important;
+}
+
+.status-expired {
+  background-color: #ffcdd2 !important;
+  color: #c62828 !important;
+}
+
+/* Instructions */
+.instructions {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border-left: 3px solid #2196f3;
+}
+
+.instructions-label {
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.instructions-text {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Card Actions */
+mat-card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px !important;
+  border-top: 1px solid #eee;
+}
+
+mat-card-actions button {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .assignments-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .assignments-container {
+    padding: 16px;
+  }
+  
+  .page-header h1 {
+    font-size: 1.5rem;
   }
 }
 

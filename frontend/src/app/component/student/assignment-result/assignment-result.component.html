@@ -1,0 +1,136 @@
+<div class="result-container">
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+    <p>Loading results...</p>
+  </div>
+
+  <!-- Results -->
+  <div *ngIf="!isLoading && result" class="result-content">
+    <div class="result-header">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Assignment Results</h1>
+    </div>
+
+    <!-- Submission Status Card -->
+    <mat-card class="status-card" *ngIf="result.data.submission.evaluationStatus !== 'completed'">
+      <mat-card-content>
+        <div class="status-content">
+          <mat-icon *ngIf="result.data.submission.evaluationStatus === 'evaluating'">hourglass_empty</mat-icon>
+          <mat-icon *ngIf="result.data.submission.evaluationStatus === 'pending'">pending</mat-icon>
+          
+          <h2>{{ result.data.submission.evaluationStatus === 'evaluating' ? 'Evaluation in Progress' : 'Pending Evaluation' }}</h2>
+          <p>Your assignment has been submitted successfully. AI evaluation is in progress. Please check back later for your results.</p>
+          
+          <div class="submission-info">
+            <p><strong>Submitted:</strong> {{ result.data.submission.submittedAt | date:'medium' }}</p>
+            <p><strong>Time Taken:</strong> {{ formatTime(result.data.submission.timeTaken) }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Results Card (when evaluation is complete) -->
+    <div *ngIf="result.data.submission.evaluationStatus === 'completed'" class="results-section">
+      <!-- Score Card -->
+      <mat-card class="score-card">
+        <mat-card-content>
+          <div class="score-display">
+            <div class="score-circle" [ngClass]="getPercentageClass(result.data.submission.percentage)">
+              <div class="percentage">{{ result.data.submission.percentage }}%</div>
+              <div class="marks">{{ result.data.submission.marks }}/{{ result.data.assignment.maxMarks }}</div>
+            </div>
+            
+            <div class="score-details">
+              <h2>{{ result.data.assignment.title }}</h2>
+              <p class="subject">{{ result.data.assignment.subject.name }}</p>
+              
+              <div class="badges">
+                <mat-chip [ngClass]="getLevelClass(result.data.submission.level)">
+                  <mat-icon>star</mat-icon>
+                  {{ result.data.submission.level | titlecase }}
+                </mat-chip>
+                
+                <mat-chip [ngClass]="result.data.submission.percentage >= result.data.assignment.passingMarks ? 'passed' : 'failed'">
+                  <mat-icon>{{ result.data.submission.percentage >= result.data.assignment.passingMarks ? 'check_circle' : 'cancel' }}</mat-icon>
+                  {{ result.data.submission.percentage >= result.data.assignment.passingMarks ? 'Passed' : 'Failed' }}
+                </mat-chip>
+              </div>
+
+              <div class="meta-info">
+                <div class="meta-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>Time Taken: {{ formatTime(result.data.submission.timeTaken) }}</span>
+                </div>
+                <div class="meta-item">
+                  <mat-icon>event</mat-icon>
+                  <span>Submitted: {{ result.data.submission.submittedAt | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Feedback Card -->
+      <mat-card class="feedback-card" *ngIf="result.data.submission.feedback">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>feedback</mat-icon>
+            AI Feedback & Evaluation
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="feedback-text">{{ result.data.submission.feedback }}</p>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Subject Performance Card -->
+      <mat-card class="performance-card" *ngIf="result.data.subjectPerformance">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>trending_up</mat-icon>
+            Subject Performance Overview
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="performance-grid">
+            <div class="perf-item">
+              <div class="perf-label">Average Marks</div>
+              <div class="perf-value">{{ result.data.subjectPerformance.averageMarks.toFixed(1) }}</div>
+            </div>
+            
+            <div class="perf-item">
+              <div class="perf-label">Average Percentage</div>
+              <div class="perf-value">{{ result.data.subjectPerformance.averagePercentage.toFixed(1) }}%</div>
+            </div>
+            
+            <div class="perf-item">
+              <div class="perf-label">Subject Level</div>
+              <div class="perf-value">
+                <mat-chip [ngClass]="getLevelClass(result.data.subjectPerformance.level)">
+                  {{ result.data.subjectPerformance.level | titlecase }}
+                </mat-chip>
+              </div>
+            </div>
+            
+            <div class="perf-item">
+              <div class="perf-label">Completed Assignments</div>
+              <div class="perf-value">{{ result.data.subjectPerformance.totalAssignments }}</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button mat-raised-button (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Assignments
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

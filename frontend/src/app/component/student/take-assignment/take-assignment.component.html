@@ -1,0 +1,203 @@
+<div class="take-assignment-container">
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+    <p>Loading assignment...</p>
+  </div>
+
+  <!-- Assignment Content -->
+  <div *ngIf="!isLoading && assignment" class="assignment-content">
+    
+    <!-- Before Start -->
+    <div *ngIf="!hasStarted" class="start-screen">
+      <mat-card class="start-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>assignment</mat-icon>
+            {{ assignment.title }}
+          </mat-card-title>
+          <mat-card-subtitle>{{ assignment.subject.name }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="assignment-overview">
+            <h3>Assignment Overview</h3>
+            
+            <div class="overview-grid">
+              <div class="overview-item">
+                <mat-icon>schedule</mat-icon>
+                <div>
+                  <strong>Time Limit</strong>
+                  <p>{{ assignment.timeLimit }} minutes</p>
+                </div>
+              </div>
+
+              <div class="overview-item">
+                <mat-icon>help_outline</mat-icon>
+                <div>
+                  <strong>Questions</strong>
+                  <p>{{ assignment.numberOfQuestions }} questions</p>
+                </div>
+              </div>
+
+              <div class="overview-item">
+                <mat-icon>score</mat-icon>
+                <div>
+                  <strong>Total Marks</strong>
+                  <p>{{ assignment.maxMarks }} marks</p>
+                </div>
+              </div>
+
+              <div class="overview-item">
+                <mat-icon>check_circle</mat-icon>
+                <div>
+                  <strong>Passing Marks</strong>
+                  <p>{{ assignment.passingMarks }} marks</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="instructions" *ngIf="assignment.instructions">
+              <h4><mat-icon>info</mat-icon> Instructions</h4>
+              <p>{{ assignment.instructions }}</p>
+            </div>
+
+            <div class="important-notes">
+              <h4><mat-icon>warning</mat-icon> Important Notes</h4>
+              <ul>
+                <li>Once you start, the timer cannot be paused</li>
+                <li>The assignment will auto-submit when time expires</li>
+                <li>Make sure you have a stable internet connection</li>
+                <li>You cannot change answers after submission</li>
+                <li>Do not refresh or close this page during the assignment</li>
+              </ul>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-raised-button (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            Cancel
+          </button>
+          <button mat-raised-button color="primary" (click)="startAssignment()" [disabled]="isStarting">
+            <mat-icon>play_arrow</mat-icon>
+            {{ isStarting ? 'Starting...' : 'Start Assignment' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- During Assignment -->
+    <div *ngIf="hasStarted && assignmentForm" class="taking-screen">
+      <!-- Timer Header -->
+      <div class="timer-header" [ngClass]="getTimerClass()">
+        <div class="timer-info">
+          <h2>{{ assignment.title }}</h2>
+          <p>{{ assignment.subject.name }}</p>
+        </div>
+        
+        <div class="timer-display" [ngClass]="getTimerClass()">
+          <mat-icon>timer</mat-icon>
+          <span class="time">{{ timerDisplay }}</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <mat-progress-bar 
+        mode="determinate" 
+        [value]="progressPercentage"
+        [color]="getProgressBarColor()">
+      </mat-progress-bar>
+
+      <!-- Warning Message -->
+      <div class="warning-message" *ngIf="showWarning && timeRemaining > 0 && timeRemaining <= 300">
+        <mat-icon>warning</mat-icon>
+        <span>Hurry up! Only {{ Math.floor(timeRemaining / 60) }} minutes remaining!</span>
+      </div>
+
+      <!-- Questions Form -->
+      <form [formGroup]="assignmentForm" class="questions-form">
+        <div formArrayName="answers">
+          <mat-card 
+            *ngFor="let answer of answersArray.controls; let i = index" 
+            [formGroupName]="i" 
+            class="question-card">
+            
+            <mat-card-header>
+              <mat-card-title>
+                Question {{ i + 1 }} of {{ assignment.numberOfQuestions }}
+                <span class="marks-badge">{{ assignment.questions![i].marks }} marks</span>
+              </mat-card-title>
+            </mat-card-header>
+
+            <mat-card-content>
+              <div class="question-text">
+                {{ assignment.questions![i].question }}
+              </div>
+
+              <!-- MCQ Options -->
+              <div *ngIf="assignment.questions![i].type === 'MCQ'" class="mcq-options">
+                <mat-radio-group formControlName="selectedOption">
+                  <mat-radio-button 
+                    *ngFor="let option of assignment.questions![i].options" 
+                    [value]="option.option"
+                    class="mcq-option">
+                    {{ option.option }}
+                  </mat-radio-button>
+                </mat-radio-group>
+              </div>
+
+              <!-- Short Answer -->
+              <div *ngIf="assignment.questions![i].type === 'short_answer'" class="answer-input">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Your Answer</mat-label>
+                  <input matInput formControlName="answer" placeholder="Type your answer here...">
+                </mat-form-field>
+              </div>
+
+              <!-- Essay -->
+              <div *ngIf="assignment.questions![i].type === 'essay'" class="answer-input">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Your Answer</mat-label>
+                  <textarea 
+                    matInput 
+                    formControlName="answer" 
+                    rows="8"
+                    placeholder="Type your detailed answer here..."
+                    [maxlength]="assignment.questions![i].maxWords || 1000">
+                  </textarea>
+                  <mat-hint align="end">
+                    {{ answer.get('answer')?.value?.length || 0 }} / {{ assignment.questions![i].maxWords || 1000 }}
+                  </mat-hint>
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="submit-section">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="button"
+            (click)="confirmSubmit()"
+            [disabled]="isSubmitting || !assignmentForm.valid">
+            <mat-icon>send</mat-icon>
+            {{ isSubmitting ? 'Submitting...' : 'Submit Assignment' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Submitting Overlay -->
+    <div class="submitting-overlay" *ngIf="isSubmitting">
+      <div class="submitting-content">
+        <mat-spinner></mat-spinner>
+        <h3>Submitting your answers...</h3>
+        <p>Please wait while we process your submission</p>
+      </div>
+    </div>
+  </div>
+</div>
