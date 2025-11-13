@@ -110,16 +110,53 @@ import { Assignment, Question } from '../../../services/assignment.service';
                     <span class="option-text">{{ option.option }}</span>
                     <mat-icon *ngIf="option.isCorrect" class="correct-icon">check_circle</mat-icon>
                   </div>
+                  <div *ngIf="question.explanation" class="explanation">
+                    <mat-icon>info</mat-icon>
+                    <strong>Explanation:</strong> {{ question.explanation }}
+                  </div>
                 </div>
 
                 <!-- Short Answer -->
-                <div *ngIf="question.type === 'short_answer' && question.correctAnswer" class="short-answer">
-                  <strong>Expected Answer:</strong> {{ question.correctAnswer }}
+                <div *ngIf="question.type === 'short_answer'" class="answer-section">
+                  <div *ngIf="question.correctAnswer" class="correct-answer">
+                    <mat-icon>check_circle</mat-icon>
+                    <div>
+                      <strong>Model Answer:</strong>
+                      <p>{{ question.correctAnswer }}</p>
+                    </div>
+                  </div>
+                  <div *ngIf="!question.correctAnswer" class="no-answer">
+                    <mat-icon>warning</mat-icon>
+                    <span>No model answer provided</span>
+                  </div>
+                  <div *ngIf="question.maxLength" class="answer-info">
+                    <mat-icon>text_fields</mat-icon>
+                    <span>Max Length: {{ question.maxLength }} characters</span>
+                  </div>
                 </div>
 
                 <!-- Essay -->
-                <div *ngIf="question.type === 'essay' && question.maxWords" class="essay-info">
-                  <strong>Maximum Words:</strong> {{ question.maxWords }}
+                <div *ngIf="question.type === 'essay'" class="answer-section">
+                  <div *ngIf="question.correctAnswer" class="correct-answer">
+                    <mat-icon>check_circle</mat-icon>
+                    <div>
+                      <strong>Guidelines / Key Points to Cover:</strong>
+                      <p>{{ question.correctAnswer }}</p>
+                    </div>
+                  </div>
+                  <div *ngIf="!question.correctAnswer" class="no-answer">
+                    <mat-icon>warning</mat-icon>
+                    <span>No guidelines provided</span>
+                  </div>
+                  <div class="answer-info">
+                    <mat-icon>text_fields</mat-icon>
+                    <span>
+                      <span *ngIf="question.minLength">Min: {{ question.minLength }} words</span>
+                      <span *ngIf="question.minLength && question.maxLength"> | </span>
+                      <span *ngIf="question.maxLength">Max: {{ question.maxLength }} words</span>
+                      <span *ngIf="!question.minLength && !question.maxLength && question.maxWords">Max: {{ question.maxWords }} words</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </mat-expansion-panel>
@@ -316,6 +353,107 @@ import { Assignment, Question } from '../../../services/assignment.service';
       font-size: 20px;
       width: 20px;
       height: 20px;
+    }
+
+    .explanation {
+      margin-top: 12px;
+      padding: 12px;
+      background: #fff3cd;
+      border-radius: 8px;
+      border-left: 4px solid #ffc107;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .explanation mat-icon {
+      color: #ff9800;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+    }
+
+    .answer-section {
+      margin-top: 12px;
+    }
+
+    .correct-answer {
+      padding: 16px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      border-left: 4px solid #4CAF50;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .correct-answer mat-icon {
+      color: #4CAF50;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .correct-answer div {
+      flex: 1;
+    }
+
+    .correct-answer strong {
+      display: block;
+      color: #2e7d32;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .correct-answer p {
+      margin: 0;
+      color: #333;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .no-answer {
+      padding: 12px;
+      background: #ffebee;
+      border-radius: 8px;
+      border-left: 4px solid #f44336;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .no-answer mat-icon {
+      color: #f44336;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .no-answer span {
+      color: #c62828;
+      font-weight: 500;
+    }
+
+    .answer-info {
+      padding: 8px 12px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .answer-info mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #757575;
     }
 
     .short-answer, .essay-info {

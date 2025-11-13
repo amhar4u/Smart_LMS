@@ -1,0 +1,593 @@
+<app-admin-layout>
+<div class="assignment-submissions-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <button mat-icon-button class="back-button" (click)="goBack()" matTooltip="Back">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">assignment_turned_in</mat-icon>
+          <span *ngIf="!assignmentId || assignmentId === 'all'">All Assignment Submissions</span>
+          <span *ngIf="assignmentId && assignmentId !== 'all'">Assignment Submissions</span>
+        </h1>
+        <p class="page-subtitle" *ngIf="assignment">
+          {{ assignment.title }} - {{ assignment.subject?.name }} ({{ assignment.batch?.name }})
+        </p>
+      </div>
+    </div>
+    <div class="header-actions" *ngIf="assignmentId && assignmentId !== 'all'">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="evaluateAllSubmissions()"
+        [disabled]="evaluatingAll || loading || statistics?.pending === 0"
+        class="action-button">
+        <mat-icon>psychology</mat-icon>
+        <span *ngIf="!evaluatingAll">Evaluate All ({{ statistics?.pending || 0 }})</span>
+        <span *ngIf="evaluatingAll">Evaluating...</span>
+      </button>
+      <button 
+        mat-raised-button 
+        color="accent" 
+        (click)="publishAllEvaluations()"
+        [disabled]="loading || statistics?.evaluated === 0"
+        class="action-button">
+        <mat-icon>publish</mat-icon>
+        Publish All
+      </button>
+    </div>
+  </div>
+
+  <!-- Body Content -->
+  <div class="content-body">
+  <!-- Show All Assignments List -->
+  <div *ngIf="!assignmentId || assignmentId === 'all'">
+    <div class="assignments-grid" *ngIf="!loading && assignments.length > 0">
+      <mat-card *ngFor="let assignment of assignments" class="assignment-card" (click)="viewAssignmentSubmissions(assignment)">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="assignment-icon">assignment</mat-icon>
+          <mat-card-title>{{ assignment.title }}</mat-card-title>
+          <mat-card-subtitle>{{ assignment.subject?.name || 'N/A' }}</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div class="assignment-info">
+            <div class="info-row">
+              <mat-icon>school</mat-icon>
+              <span>{{ assignment.course?.name || 'N/A' }}</span>
+            </div>
+            
+            <div class="info-row">
+              <mat-icon>groups</mat-icon>
+              <span>{{ assignment.batch?.name || 'N/A' }}</span>
+            </div>
+
+            <div class="info-row">
+              <mat-icon>event</mat-icon>
+              <span>Due: {{ formatDate(assignment.dueDate) }}</span>
+            </div>
+
+            <div class="info-row">
+              <mat-icon>grading</mat-icon>
+              <span>{{ assignment.numberOfQuestions }} Questions ({{ assignment.maxMarks }} marks)</span>
+            </div>
+
+            <div class="status-badges">
+              <mat-chip 
+                class="type-chip"
+                [style.background-color]="'#667eea'"
+                [style.color]="'white'">
+                {{ assignment.assignmentType }}
+              </mat-chip>
+
+              <mat-chip 
+                class="level-chip"
+                [style.background-color]="'#764ba2'"
+                [style.color]="'white'">
+                {{ assignment.assignmentLevel }}
+              </mat-chip>
+
+              <mat-chip 
+                *ngIf="assignment.isActive"
+                class="active-chip">
+                <mat-icon>check_circle</mat-icon> Active
+              </mat-chip>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button 
+            mat-button 
+            color="primary"
+            (click)="viewAssignmentSubmissions(assignment); $event.stopPropagation()">
+            <mat-icon>assignment_turned_in</mat-icon>
+            View Submissions
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Empty State for Assignments -->
+    <div class="empty-state" *ngIf="!loading && assignments.length === 0">
+      <mat-icon class="empty-icon">assignment</mat-icon>
+      <h2>No Assignments Found</h2>
+      <p>Create assignments to start receiving student submissions.</p>
+      <button mat-raised-button color="primary" routerLink="/admin/manage-assignments">
+        <mat-icon>add</mat-icon>
+        Create Assignment
+      </button>
+    </div>
+  </div>
+
+  <!-- Show Specific Assignment Submissions -->
+  <div class="statistics-section" *ngIf="statistics">
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <mat-icon>assessment</mat-icon>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ statistics.totalSubmissions }}</h3>
+        <p class="stat-label">Total Submissions</p>
+      </div>
+    </div>
+
+    <div class="stat-card evaluated">
+      <div class="stat-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ statistics.evaluated }}</h3>
+        <p class="stat-label">Evaluated</p>
+      </div>
+    </div>
+
+    <div class="stat-card pending">
+      <div class="stat-icon">
+        <mat-icon>pending</mat-icon>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ statistics.pending }}</h3>
+        <p class="stat-label">Pending</p>
+      </div>
+    </div>
+
+    <div class="stat-card average">
+      <div class="stat-icon">
+        <mat-icon>trending_up</mat-icon>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ statistics.avgPercentage?.toFixed(1) || 0 }}%</h3>
+        <p class="stat-label">Average Score</p>
+      </div>
+    </div>
+
+    <div class="stat-card beginner">
+      <div class="stat-icon">
+        <mat-icon>school</mat-icon>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ statistics.beginners }}</h3>
+        <p class="stat-label">Beginner (0-40%)</p>
+      </div>
+    </div>
+
+    <div class="stat-card intermediate">
+      <div class="stat-icon">
+        <mat-icon>psychology</mat-icon>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ statistics.intermediates }}</h3>
+        <p class="stat-label">Intermediate (41-70%)</p>
+      </div>
+    </div>
+
+    <div class="stat-card advanced">
+      <div class="stat-icon">
+        <mat-icon>emoji_events</mat-icon>
+      </div>
+      <div class="stat-info">
+        <h3 class="stat-value">{{ statistics.advanced }}</h3>
+        <p class="stat-label">Advanced (71-100%)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section - Only show for specific assignment -->
+  <mat-card class="filters-card" *ngIf="assignmentId && assignmentId !== 'all'">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filters-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Search Student</mat-label>
+          <input matInput formControlName="search" placeholder="Name, Email, or ID">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Evaluation Status</mat-label>
+          <mat-select formControlName="evaluationStatus">
+            <mat-option value="">All</mat-option>
+            <mat-option value="pending">Pending</mat-option>
+            <mat-option value="evaluating">Evaluating</mat-option>
+            <mat-option value="completed">Completed</mat-option>
+            <mat-option value="failed">Failed</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Student Level</mat-label>
+          <mat-select formControlName="level">
+            <mat-option value="">All</mat-option>
+            <mat-option value="beginner">Beginner</mat-option>
+            <mat-option value="intermediate">Intermediate</mat-option>
+            <mat-option value="advanced">Advanced</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Min %</mat-label>
+          <input matInput type="number" formControlName="minPercentage" min="0" max="100">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Max %</mat-label>
+          <input matInput type="number" formControlName="maxPercentage" min="0" max="100">
+        </mat-form-field>
+
+        <button mat-raised-button type="button" (click)="clearFilters()" class="clear-button">
+          <mat-icon>clear</mat-icon>
+          Clear
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Submissions Grid - Only show for specific assignment -->
+  <div class="submissions-grid" *ngIf="!loading && submissions.length > 0 && assignmentId && assignmentId !== 'all'">
+    <mat-card *ngFor="let submission of submissions" class="submission-card" (click)="viewSubmissionDetails(submission)">
+      <mat-card-header>
+        <div class="student-avatar">
+          <mat-icon>person</mat-icon>
+        </div>
+        <mat-card-title>{{ getStudentName(submission.studentId) }}</mat-card-title>
+        <mat-card-subtitle>{{ submission.studentId?.studentId || submission.studentId?.email }}</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="submission-info">
+          <div class="info-row">
+            <mat-icon>email</mat-icon>
+            <span>{{ submission.studentId?.email }}</span>
+          </div>
+          
+          <div class="info-row">
+            <mat-icon>event</mat-icon>
+            <span>{{ formatDate(submission.submittedAt) }}</span>
+          </div>
+
+          <div class="info-row">
+            <mat-icon>timer</mat-icon>
+            <span>{{ (submission.timeTaken / 60).toFixed(1) }} minutes</span>
+          </div>
+
+          <div class="status-badges">
+            <mat-chip 
+              class="status-chip"
+              [style.background-color]="getStatusColor(submission.evaluationStatus)"
+              [style.color]="'white'">
+              {{ submission.evaluationStatus }}
+            </mat-chip>
+
+            <mat-chip 
+              *ngIf="submission.level"
+              class="level-chip"
+              [style.background-color]="getLevelColor(submission.level)"
+              [style.color]="'white'">
+              {{ submission.level }}
+            </mat-chip>
+          </div>
+
+          <div class="score-section" *ngIf="submission.marks !== null && submission.marks !== undefined">
+            <div class="score-circle" [style.border-color]="getPercentageColor(submission.percentage || 0)">
+              <div class="score-value">{{ submission.percentage?.toFixed(1) || 0 }}%</div>
+              <div class="score-marks">{{ submission.marks }} / {{ assignment.maxMarks }}</div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button 
+          mat-button 
+          color="primary"
+          (click)="viewSubmissionDetails(submission); $event.stopPropagation()">
+          <mat-icon>visibility</mat-icon>
+          View Details
+        </button>
+        
+        <button 
+          mat-button 
+          color="accent"
+          *ngIf="submission.evaluationStatus === 'pending'"
+          (click)="evaluateSubmission(submission._id); $event.stopPropagation()"
+          [disabled]="evaluatingSubmission">
+          <mat-icon>psychology</mat-icon>
+          Evaluate
+        </button>
+
+        <button 
+          mat-button 
+          color="primary"
+          *ngIf="submission.evaluationStatus === 'completed' && submission.status !== 'graded'"
+          (click)="publishEvaluation(submission._id); $event.stopPropagation()">
+          <mat-icon>publish</mat-icon>
+          Publish
+        </button>
+
+        <mat-chip 
+          *ngIf="submission.status === 'graded'"
+          class="published-chip">
+          <mat-icon>check</mat-icon> Published
+        </mat-chip>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Pagination - Only show for specific assignment -->
+  <mat-paginator
+    *ngIf="!loading && submissions.length > 0 && assignmentId && assignmentId !== 'all'"
+    [length]="totalSubmissions"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5, 10, 25, 50]"
+    (page)="onPageChange($event)"
+    showFirstLastButtons>
+  </mat-paginator>
+
+  <!-- Empty State - Only show for specific assignment -->
+  <div class="empty-state" *ngIf="!loading && submissions.length === 0 && assignmentId && assignmentId !== 'all'">
+    <mat-icon class="empty-icon">assignment</mat-icon>
+    <h2>No Submissions Found</h2>
+    <p>There are no submissions matching your criteria.</p>
+  </div>
+
+  <!-- Loading State - Only for specific assignment -->
+  <div class="loading-state" *ngIf="loading && assignmentId && assignmentId !== 'all'">
+    <mat-spinner></mat-spinner>
+    <p>Loading submissions...</p>
+  </div>
+
+  <!-- Loading State for All View -->
+  <div class="loading-state" *ngIf="loading && (!assignmentId || assignmentId === 'all')">
+    <mat-spinner></mat-spinner>
+    <p>Loading assignments...</p>
+  </div>
+  </div>
+  <!-- End Content Body -->
+</div>
+</app-admin-layout>
+
+<!-- Submission Details Modal -->
+<div class="modal-overlay" *ngIf="showSubmissionDetails" (click)="closeSubmissionDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()" *ngIf="selectedSubmission">
+    <div class="modal-header">
+      <h2>
+        <mat-icon>assignment_ind</mat-icon>
+        Submission Details
+      </h2>
+      <button mat-icon-button (click)="closeSubmissionDetails()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Student Info -->
+      <mat-card class="detail-card student-info-card">
+        <mat-card-header>
+          <div mat-card-avatar class="student-avatar-large">
+            <mat-icon>person</mat-icon>
+          </div>
+          <mat-card-title>{{ getStudentName(selectedSubmission.studentId) }}</mat-card-title>
+          <mat-card-subtitle>{{ selectedSubmission.studentId?.studentId || selectedSubmission.studentId?.email || 'N/A' }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <mat-icon>email</mat-icon>
+              <div>
+                <strong>Email</strong>
+                <span>{{ selectedSubmission.studentId?.email || 'N/A' }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <mat-icon>school</mat-icon>
+              <div>
+                <strong>Course</strong>
+                <span>{{ selectedSubmission.studentId?.course || 'N/A' }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <mat-icon>event</mat-icon>
+              <div>
+                <strong>Submitted At</strong>
+                <span>{{ formatDate(selectedSubmission.submittedAt) }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <mat-icon>timer</mat-icon>
+              <div>
+                <strong>Time Taken</strong>
+                <span>{{ (selectedSubmission.timeTaken / 60).toFixed(1) }} minutes</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Evaluation Results -->
+      <mat-card class="detail-card" *ngIf="selectedSubmission.evaluationStatus === 'completed'">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>grade</mat-icon>
+          <mat-card-title>Evaluation Results</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="evaluation-summary">
+            <div class="eval-stat">
+              <div class="eval-label">Score</div>
+              <div class="eval-value">{{ selectedSubmission.marks }} / {{ assignment.maxMarks }}</div>
+            </div>
+            <div class="eval-stat">
+              <div class="eval-label">Percentage</div>
+              <div class="eval-value" [style.color]="getPercentageColor(selectedSubmission.percentage)">
+                {{ selectedSubmission.percentage?.toFixed(1) }}%
+              </div>
+            </div>
+            <div class="eval-stat">
+              <div class="eval-label">Level</div>
+              <mat-chip 
+                class="eval-level-chip"
+                [style.background-color]="getLevelColor(selectedSubmission.level)"
+                [style.color]="'white'">
+                {{ selectedSubmission.level }}
+              </mat-chip>
+            </div>
+          </div>
+
+          <div class="feedback-section" *ngIf="selectedSubmission.feedback">
+            <h4><mat-icon>feedback</mat-icon> Feedback</h4>
+            <p>{{ selectedSubmission.feedback }}</p>
+          </div>
+
+          <div class="grading-info" *ngIf="selectedSubmission.gradedAt">
+            <mat-icon>access_time</mat-icon>
+            <span>Graded on {{ formatDate(selectedSubmission.gradedAt) }}</span>
+            <mat-icon *ngIf="selectedSubmission.isAutoEvaluated">smart_toy</mat-icon>
+            <span *ngIf="selectedSubmission.isAutoEvaluated">(AI Evaluated)</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Question-Answer Details -->
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>quiz</mat-icon>
+          <mat-card-title>Questions & Answers</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="answers-list">
+            <div 
+              *ngFor="let answer of selectedSubmission.submittedAnswers; let i = index" 
+              class="answer-item"
+              [class.correct-answer]="answer.isCorrect"
+              [class.incorrect-answer]="answer.isCorrect === false">
+              <div class="answer-header">
+                <div class="question-number">
+                  <mat-icon>help_outline</mat-icon>
+                  <span>Question {{ i + 1 }}</span>
+                </div>
+                <div class="answer-badges">
+                  <mat-chip 
+                    *ngIf="answer.isCorrect !== undefined && answer.isCorrect !== null"
+                    [style.background-color]="answer.isCorrect ? '#48bb78' : '#f56565'"
+                    [style.color]="'white'">
+                    <mat-icon>{{ answer.isCorrect ? 'check_circle' : 'cancel' }}</mat-icon>
+                    {{ answer.isCorrect ? 'Correct' : 'Incorrect' }}
+                  </mat-chip>
+                  <mat-chip 
+                    *ngIf="answer.marksAwarded !== undefined && answer.marksAwarded !== null" 
+                    class="marks-chip"
+                    [style.background-color]="'#667eea'"
+                    [style.color]="'white'">
+                    <mat-icon>grade</mat-icon>
+                    {{ answer.marksAwarded }} / {{ getQuestionMarks(answer.questionId) }} marks
+                  </mat-chip>
+                </div>
+              </div>
+              <div class="answer-content">
+                <div class="question-section">
+                  <div class="section-header">
+                    <mat-icon>question_answer</mat-icon>
+                    <strong>Question {{ i + 1 }}</strong>
+                  </div>
+                  
+                  <!-- Debug info (remove after fixing) -->
+                  <div style="background: #fff3cd; padding: 8px; margin: 8px 0; font-size: 11px; border-radius: 4px;" *ngIf="!assignment || !assignment.questions">
+                    <strong>⚠️ Debug:</strong> Assignment questions not loaded
+                  </div>
+                  
+                  <!-- Question Text with Fallback -->
+                  <p class="question-text" *ngIf="answer.questionText && answer.questionText.length > 10">
+                    {{ answer.questionText }}
+                  </p>
+                  <p class="question-text" *ngIf="!answer.questionText || answer.questionText.length <= 10">
+                    {{ getQuestionText(answer.questionId) }}
+                  </p>
+                  
+                  <!-- Type Badge -->
+                  <mat-chip class="type-chip" *ngIf="answer.type || getQuestionType(answer.questionId)">
+                    <mat-icon>category</mat-icon>
+                    {{ answer.type || getQuestionType(answer.questionId) }}
+                  </mat-chip>
+                  
+                  <!-- MCQ Options -->
+                  <div *ngIf="(answer.type === 'MCQ' || getQuestionType(answer.questionId) === 'MCQ') && getQuestionOptions(answer.questionId).length > 0" class="mcq-options">
+                    <div *ngFor="let option of getQuestionOptions(answer.questionId); let idx = index" 
+                         class="option-item"
+                         [class.correct-option]="option.isCorrect"
+                         [class.selected-option]="isSelectedOption(answer, option.option)">
+                      <span class="option-label">{{ String.fromCharCode(65 + idx) }}.</span>
+                      <span class="option-text">{{ option.option }}</span>
+                      <mat-icon *ngIf="option.isCorrect" class="correct-icon">check_circle</mat-icon>
+                      <mat-icon *ngIf="!option.isCorrect && isSelectedOption(answer, option.option)" class="wrong-icon">cancel</mat-icon>
+                    </div>
+                  </div>
+                </div>
+                <div class="student-answer-section">
+                  <div class="section-header">
+                    <mat-icon>create</mat-icon>
+                    <strong>Student's Answer</strong>
+                  </div>
+                  <p class="student-answer">{{ answer.answer || answer.selectedOption || 'No answer provided' }}</p>
+                </div>
+                <div *ngIf="answer.feedback" class="question-feedback">
+                  <div class="section-header">
+                    <mat-icon>feedback</mat-icon>
+                    <strong>Feedback</strong>
+                  </div>
+                  <p>{{ answer.feedback }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        mat-raised-button 
+        color="accent"
+        *ngIf="selectedSubmission.evaluationStatus === 'pending'"
+        (click)="evaluateSubmission(selectedSubmission._id)"
+        [disabled]="evaluatingSubmission">
+        <mat-icon>psychology</mat-icon>
+        <span *ngIf="!evaluatingSubmission">Evaluate with AI</span>
+        <span *ngIf="evaluatingSubmission">Evaluating...</span>
+      </button>
+
+      <button 
+        mat-raised-button 
+        color="primary"
+        *ngIf="selectedSubmission.evaluationStatus === 'completed' && selectedSubmission.status !== 'graded'"
+        (click)="publishEvaluation(selectedSubmission._id)">
+        <mat-icon>publish</mat-icon>
+        Publish Results
+      </button>
+
+      <button mat-button (click)="closeSubmissionDetails()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

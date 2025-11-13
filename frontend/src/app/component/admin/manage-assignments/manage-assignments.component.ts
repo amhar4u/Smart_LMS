@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
@@ -126,6 +127,7 @@ export class ManageAssignmentsComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+    private router: Router,
     private assignmentService: AssignmentService,
     private departmentService: DepartmentService,
     private courseService: CourseService,
@@ -596,6 +598,10 @@ export class ManageAssignmentsComponent implements OnInit {
       maxHeight: '90vh',
       data: { assignment }
     });
+  }
+
+  viewSubmissions(assignment: Assignment) {
+    this.router.navigate(['/admin/assignments', assignment._id, 'submissions']);
   }
 
   async toggleAssignmentStatus(assignment: Assignment) {

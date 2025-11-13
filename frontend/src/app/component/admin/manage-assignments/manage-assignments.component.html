@@ -539,6 +539,14 @@
               <button 
                 mat-icon-button 
                 color="accent"
+                (click)="viewSubmissions(assignment)"
+                matTooltip="View Submissions">
+                <mat-icon>assignment_turned_in</mat-icon>
+              </button>
+              
+              <button 
+                mat-icon-button 
+                color="accent"
                 (click)="viewAssignment(assignment)"
                 matTooltip="View Questions">
                 <mat-icon>visibility</mat-icon>
