@@ -395,4 +395,280 @@ router.get('/subject/:subjectId/details', async (req, res) => {
   }
 });
 
+// @route   GET /api/lecturer/:lecturerId/assignments
+// @desc    Get all assignments for lecturer's subjects
+// @access  Private (Lecturer)
+router.get('/:lecturerId/assignments', async (req, res) => {
+  try {
+    const { lecturerId } = req.params;
+    const {
+      page = 1,
+      limit = 10,
+      subject,
+      assignmentLevel,
+      assignmentType,
+      isActive
+    } = req.query;
+
+    console.log(`📝 [LECTURER] Fetching assignments for lecturer: ${lecturerId}`);
+
+    // Get all subjects taught by this lecturer
+    const subjects = await Subject.find({ 
+      lecturerId: lecturerId, 
+      isActive: true 
+    });
+
+    const subjectIds = subjects.map(s => s._id);
+
+    if (subjectIds.length === 0) {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          total: 0,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: 0
+        }
+      });
+    }
+
+    // Build filter object
+    const filter = {
+      subject: { $in: subjectIds }
+    };
+
+    if (subject) filter.subject = subject;
+    if (assignmentLevel) filter.assignmentLevel = assignmentLevel;
+    if (assignmentType) filter.assignmentType = assignmentType;
+    if (isActive !== undefined) filter.isActive = isActive === 'true';
+
+    const skip = (page - 1) * limit;
+
+    const assignments = await Assignment.find(filter)
+      .populate('department', 'name')
+      .populate('course', 'name')
+      .populate('batch', 'name')
+      .populate('semester', 'name')
+      .populate('subject', 'name code')
+      .populate('modules', 'title')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Assignment.countDocuments(filter);
+
+    console.log(`✅ [LECTURER] Found ${total} assignments`);
+
+    res.json({
+      success: true,
+      data: assignments,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [LECTURER] Error fetching assignments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching lecturer assignments',
+      error: error.message
+    });
+  }
+});
+
+// @route   GET /api/lecturer/:lecturerId/submissions
+// @desc    Get all submissions for lecturer's assignments
+// @access  Private (Lecturer)
+router.get('/:lecturerId/submissions', async (req, res) => {
+  try {
+    const { lecturerId } = req.params;
+    const {
+      page = 1,
+      limit = 10,
+      subject,
+      assignment,
+      evaluationStatus,
+      level,
+      minPercentage,
+      maxPercentage,
+      search
+    } = req.query;
+
+    console.log(`📤 [LECTURER] Fetching submissions for lecturer: ${lecturerId}`);
+
+    // Get all subjects taught by this lecturer
+    const subjects = await Subject.find({ 
+      lecturerId: lecturerId, 
+      isActive: true 
+    });
+
+    const subjectIds = subjects.map(s => s._id);
+
+    if (subjectIds.length === 0) {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          total: 0,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: 0
+        },
+        statistics: {
+          totalSubmissions: 0,
+          evaluated: 0,
+          pending: 0,
+          avgPercentage: 0,
+          beginners: 0,
+          intermediates: 0,
+          advanced: 0
+        }
+      });
+    }
+
+    // Get all assignments for these subjects
+    let assignmentFilter = { subject: { $in: subjectIds }, isActive: true };
+    if (subject) assignmentFilter.subject = subject;
+    if (assignment) assignmentFilter._id = assignment;
+
+    const assignments = await Assignment.find(assignmentFilter);
+    const assignmentIds = assignments.map(a => a._id);
+
+    if (assignmentIds.length === 0) {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          total: 0,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: 0
+        },
+        statistics: {
+          totalSubmissions: 0,
+          evaluated: 0,
+          pending: 0,
+          avgPercentage: 0,
+          beginners: 0,
+          intermediates: 0,
+          advanced: 0
+        }
+      });
+    }
+
+    // Build submission filter
+    const submissionFilter = { assignmentId: { $in: assignmentIds } };
+    if (evaluationStatus) submissionFilter.evaluationStatus = evaluationStatus;
+    if (level) submissionFilter.level = level;
+    if (minPercentage) submissionFilter.percentage = { $gte: parseFloat(minPercentage) };
+    if (maxPercentage) {
+      submissionFilter.percentage = { ...submissionFilter.percentage, $lte: parseFloat(maxPercentage) };
+    }
+
+    const skip = (page - 1) * limit;
+
+    let submissions = await AssignmentSubmission.find(submissionFilter)
+      .populate({
+        path: 'studentId',
+        select: 'firstName lastName email studentId course batch',
+        populate: [
+          {
+            path: 'course',
+            select: 'name code'
+          },
+          {
+            path: 'batch',
+            select: 'name batchNumber'
+          }
+        ]
+      })
+      .populate({
+        path: 'assignmentId',
+        select: 'title maxMarks dueDate assignmentType assignmentLevel',
+        populate: {
+          path: 'subject',
+          select: 'name code'
+        }
+      })
+      .sort({ submittedAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Apply search filter if provided
+    if (search) {
+      submissions = submissions.filter(sub => 
+        sub.studentId?.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+        sub.studentId?.lastName?.toLowerCase().includes(search.toLowerCase()) ||
+        sub.studentId?.email?.toLowerCase().includes(search.toLowerCase()) ||
+        sub.studentId?.studentId?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    const total = await AssignmentSubmission.countDocuments(submissionFilter);
+
+    // Calculate statistics
+    const stats = await AssignmentSubmission.aggregate([
+      { $match: { assignmentId: { $in: assignmentIds } } },
+      {
+        $group: {
+          _id: null,
+          totalSubmissions: { $sum: 1 },
+          evaluated: {
+            $sum: { $cond: [{ $eq: ['$evaluationStatus', 'completed'] }, 1, 0] }
+          },
+          pending: {
+            $sum: { $cond: [{ $eq: ['$evaluationStatus', 'pending'] }, 1, 0] }
+          },
+          avgPercentage: { $avg: '$percentage' },
+          beginners: {
+            $sum: { $cond: [{ $eq: ['$level', 'beginner'] }, 1, 0] }
+          },
+          intermediates: {
+            $sum: { $cond: [{ $eq: ['$level', 'intermediate'] }, 1, 0] }
+          },
+          advanced: {
+            $sum: { $cond: [{ $eq: ['$level', 'advanced'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    console.log(`✅ [LECTURER] Found ${total} submissions`);
+
+    res.json({
+      success: true,
+      data: submissions,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      },
+      statistics: stats[0] || {
+        totalSubmissions: 0,
+        evaluated: 0,
+        pending: 0,
+        avgPercentage: 0,
+        beginners: 0,
+        intermediates: 0,
+        advanced: 0
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [LECTURER] Error fetching submissions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching lecturer submissions',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

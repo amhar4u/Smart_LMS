@@ -32,11 +32,46 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
       });
     }
 
+    console.log('📊 [STUDENT DASHBOARD] Student data:', {
+      department: student.department,
+      course: student.course,
+      batch: student.batch,
+      semester: student.semester
+    });
+
+    // Extract IDs safely (handle both ObjectId and populated objects)
+    const departmentId = student.department?._id || student.department;
+    const courseId = student.course?._id || student.course;
+    const batchId = student.batch?._id || student.batch;
+    const semesterId = student.semester?._id || student.semester;
+
+    // Check if student has required fields
+    if (!batchId || !semesterId) {
+      console.log('⚠️ [STUDENT DASHBOARD] Student missing batch or semester');
+      return res.json({
+        success: true,
+        data: {
+          student: {
+            name: `${student.firstName} ${student.lastName}`,
+            email: student.email,
+            department: student.department?.name || 'Not assigned',
+            course: student.course?.name || 'Not assigned',
+            batch: student.batch?.name || 'Not assigned',
+            semester: student.semester?.name || 'Not assigned'
+          },
+          subjects: { total: 0, active: 0 },
+          assignments: { total: 0, pending: 0, completed: 0, submissionRate: 0 },
+          meetings: { total: 0, scheduled: 0, upcoming: 0, completed: 0 },
+          upcomingAssignments: [],
+          upcomingMeetings: []
+        }
+      });
+    }
+
     // Get subjects for the student's batch and semester
     const subjects = await Subject.find({
-      department: student.department._id,
-      course: student.course._id,
-      semester: student.semester._id,
+      batchId: batchId,
+      semesterId: semesterId,
       isActive: true
     }).lean();
 
@@ -73,23 +108,23 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
       completedMeetings
     ] = await Promise.all([
       Meeting.countDocuments({
-        batchId: student.batch._id,
-        semesterId: student.semester._id
+        batchId: batchId,
+        semesterId: semesterId
       }),
       Meeting.countDocuments({
-        batchId: student.batch._id,
-        semesterId: student.semester._id,
+        batchId: batchId,
+        semesterId: semesterId,
         status: 'scheduled'
       }),
       Meeting.countDocuments({
-        batchId: student.batch._id,
-        semesterId: student.semester._id,
+        batchId: batchId,
+        semesterId: semesterId,
         status: 'scheduled',
         meetingDate: { $gte: new Date() }
       }),
       Meeting.countDocuments({
-        batchId: student.batch._id,
-        semesterId: student.semester._id,
+        batchId: batchId,
+        semesterId: semesterId,
         status: 'completed'
       })
     ]);
@@ -109,8 +144,8 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
 
     // Get next 3 upcoming meetings
     const upcomingMeetingsList = await Meeting.find({
-      batchId: student.batch._id,
-      semesterId: student.semester._id,
+      batchId: batchId,
+      semesterId: semesterId,
       meetingDate: { $gte: new Date() }
     })
       .populate('subjectId', 'name code')
