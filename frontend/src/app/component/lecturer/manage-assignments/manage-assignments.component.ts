@@ -167,12 +167,24 @@ export class LecturerManageAssignmentsComponent implements OnInit {
   }
 
   initializeForms() {
+    // Calculate default dates
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const weekFromNow = new Date();
+    weekFromNow.setDate(weekFromNow.getDate() + 7);
+    weekFromNow.setHours(23, 59, 59, 999);
+
     this.assignmentForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
       description: ['', [Validators.required, Validators.maxLength(2000)]],
       subject: ['', Validators.required],
       modules: [[], Validators.required],
-      dueDate: ['', Validators.required],
+      startDate: [tomorrow, Validators.required], // When students can start
+      dueDate: [weekFromNow, Validators.required], // Due date
+      endDate: [weekFromNow, Validators.required], // When assignment closes
+      passingMarks: [40, [Validators.required, Validators.min(0)]], // Passing marks (default 40%)
       assignmentLevel: ['', Validators.required],
       assignmentType: ['', Validators.required],
       numberOfQuestions: [10, [Validators.required, Validators.min(1), Validators.max(100)]],
@@ -371,6 +383,11 @@ export class LecturerManageAssignmentsComponent implements OnInit {
     this.isLoading = true;
     
     const formValue = this.assignmentForm.value;
+    console.log('Form Value:', formValue);
+    console.log('Start Date:', formValue.startDate);
+    console.log('Due Date:', formValue.dueDate);
+    console.log('End Date:', formValue.endDate);
+    console.log('Passing Marks:', formValue.passingMarks);
     
     // Get the selected subject to extract department, course, batch, semester
     const selectedSubject = this.lecturerSubjects.find(s => s._id === formValue.subject);
@@ -383,12 +400,23 @@ export class LecturerManageAssignmentsComponent implements OnInit {
     const assignmentData: Assignment = {
       ...formValue,
       questions: this.previewQuestions,
-      dueDate: new Date(formValue.dueDate),
+      startDate: formValue.startDate ? new Date(formValue.startDate) : new Date(),
+      dueDate: formValue.dueDate ? new Date(formValue.dueDate) : new Date(),
+      endDate: formValue.endDate ? new Date(formValue.endDate) : (formValue.dueDate ? new Date(formValue.dueDate) : new Date()),
+      passingMarks: formValue.passingMarks ? Number(formValue.passingMarks) : Math.ceil(formValue.maxMarks * 0.4),
       department: selectedSubject.departmentId?._id || selectedSubject.departmentId,
       course: selectedSubject.courseId?._id || selectedSubject.courseId,
       batch: selectedSubject.batchId?._id || selectedSubject.batchId,
       semester: selectedSubject.semesterId?._id || selectedSubject.semesterId
     };
+
+    console.log('Assignment Data to send:', assignmentData);
+    console.log('Dates:', {
+      startDate: assignmentData.startDate,
+      dueDate: assignmentData.dueDate,
+      endDate: assignmentData.endDate,
+      passingMarks: assignmentData.passingMarks
+    });
 
     try {
       if (this.editingAssignment) {

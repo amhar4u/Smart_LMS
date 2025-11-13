@@ -81,16 +81,6 @@
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
-                      <mat-label>Due Date</mat-label>
-                      <input matInput [matDatepicker]="picker" formControlName="dueDate">
-                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                      <mat-datepicker #picker></mat-datepicker>
-                      <mat-error>{{ getFormError('dueDate') }}</mat-error>
-                    </mat-form-field>
-                  </div>
-
-                  <div class="form-row">
-                    <mat-form-field appearance="outline" class="full-width">
                       <mat-label>Modules</mat-label>
                       <mat-select formControlName="modules" multiple>
                         <mat-option *ngFor="let module of filteredModules" [value]="module._id">
@@ -101,6 +91,48 @@
                       <mat-hint *ngIf="filteredModules.length === 0 && assignmentForm.get('subject')?.value">
                         No modules available for the selected subject
                       </mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Schedule & Grading -->
+                <div class="form-section">
+                  <h3>Schedule & Grading</h3>
+                  <div class="form-row three-columns">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Start Date</mat-label>
+                      <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                      <mat-datepicker #startPicker></mat-datepicker>
+                      <mat-hint>When students can start</mat-hint>
+                      <mat-error>{{ getFormError('startDate') }}</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Due Date</mat-label>
+                      <input matInput [matDatepicker]="picker" formControlName="dueDate">
+                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                      <mat-datepicker #picker></mat-datepicker>
+                      <mat-hint>Submission deadline</mat-hint>
+                      <mat-error>{{ getFormError('dueDate') }}</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>End Date</mat-label>
+                      <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+                      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                      <mat-datepicker #endPicker></mat-datepicker>
+                      <mat-hint>When assignment closes</mat-hint>
+                      <mat-error>{{ getFormError('endDate') }}</mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Passing Marks</mat-label>
+                      <input matInput type="number" formControlName="passingMarks" min="0">
+                      <mat-hint>Minimum marks required to pass (default: 40% of max marks)</mat-hint>
+                      <mat-error>{{ getFormError('passingMarks') }}</mat-error>
                     </mat-form-field>
                   </div>
                 </div>
@@ -278,16 +310,47 @@
                           <span class="option-text">{{ option.option }}</span>
                           <mat-icon *ngIf="option.isCorrect" class="correct-icon">check_circle</mat-icon>
                         </div>
+                        <div *ngIf="question.explanation" class="explanation">
+                          <mat-icon>info</mat-icon>
+                          <strong>Explanation:</strong> {{ question.explanation }}
+                        </div>
                       </div>
 
                       <!-- Short Answer -->
-                      <div *ngIf="question.type === 'short_answer' && question.correctAnswer" class="short-answer">
-                        <strong>Expected Answer:</strong> {{ question.correctAnswer }}
+                      <div *ngIf="question.type === 'short_answer'" class="answer-section">
+                        <div *ngIf="question.correctAnswer" class="correct-answer">
+                          <mat-icon>check_circle</mat-icon>
+                          <div>
+                            <strong>Model Answer:</strong>
+                            <p>{{ question.correctAnswer }}</p>
+                          </div>
+                        </div>
+                        <div *ngIf="!question.correctAnswer" class="no-answer">
+                          <mat-icon>warning</mat-icon>
+                          <span>No model answer provided</span>
+                        </div>
                       </div>
 
                       <!-- Essay -->
-                      <div *ngIf="question.type === 'essay' && question.maxWords" class="essay-info">
-                        <strong>Maximum Words:</strong> {{ question.maxWords }}
+                      <div *ngIf="question.type === 'essay'" class="answer-section">
+                        <div *ngIf="question.correctAnswer" class="correct-answer">
+                          <mat-icon>check_circle</mat-icon>
+                          <div>
+                            <strong>Guidelines / Key Points:</strong>
+                            <p>{{ question.correctAnswer }}</p>
+                          </div>
+                        </div>
+                        <div *ngIf="!question.correctAnswer" class="no-answer">
+                          <mat-icon>warning</mat-icon>
+                          <span>No guidelines provided</span>
+                        </div>
+                        <div *ngIf="question.maxWords || question.minLength || question.maxLength" class="essay-info">
+                          <mat-icon>text_fields</mat-icon>
+                          <span *ngIf="question.minLength">Min: {{ question.minLength }} words</span>
+                          <span *ngIf="question.minLength && question.maxLength"> | </span>
+                          <span *ngIf="question.maxLength">Max: {{ question.maxLength }} words</span>
+                          <span *ngIf="!question.minLength && !question.maxLength && question.maxWords">Max: {{ question.maxWords }} words</span>
+                        </div>
                       </div>
                     </div>
                   </mat-expansion-panel>
