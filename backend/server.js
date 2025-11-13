@@ -44,6 +44,8 @@ app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/statistics', require('./routes/statistics'));
 app.use('/api/meetings', require('./routes/meetings'));
 app.use('/api/lecturer', require('./routes/lecturer'));
+app.use('/api/students', require('./routes/students'));
+app.use('/api/student-subject-levels', require('./routes/studentSubjectLevels'));
 
 // Test route for auth
 app.get('/api/test', (req, res) => {
@@ -73,8 +75,15 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI)
+// Database connection with TLS configuration
+const mongoOptions = {
+  tls: true,
+  tlsAllowInvalidCertificates: true, // Temporary fix for development
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+};
+
+mongoose.connect(process.env.MONGODB_URI, mongoOptions)
   .then(() => {
     console.log('✅ Connected to MongoDB');
     console.log('📦 Database:', mongoose.connection.db.databaseName);
