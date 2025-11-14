@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api',
+  apiUrl: 'http://192.168.8.168:3000/api',
   firebase: {
     apiKey: "AIzaSyD_B3ZDSsycZyJKeAesmcqAKzC_BK8zNLI",
     authDomain: "smart-lms-d5ce5.firebaseapp.com",

@@ -97,6 +97,39 @@ const meetingSchema = new mongoose.Schema({
   endedAt: {
     type: Date
   },
+  // Emotion Tracking
+  emotionTrackingEnabled: {
+    type: Boolean,
+    default: true,
+    comment: 'Enable/disable emotion tracking for this meeting'
+  },
+  emotionSummary: {
+    avgHappiness: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    avgEngagement: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    alertsCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    participantsTracked: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    lastUpdated: {
+      type: Date
+    }
+  },
   isActive: {
     type: Boolean,
     default: true
