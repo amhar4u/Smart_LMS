@@ -6,6 +6,14 @@
 
 .header-card {
   margin-bottom: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.header-card mat-card-header {
+  padding: 24px !important;
 }
 
 .header-content {
@@ -13,35 +21,49 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  gap: 16px;
 }
 
 .title-section {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex: 1;
+  min-width: 0;
 }
 
 .header-icon {
   font-size: 32px;
   width: 32px;
   height: 32px;
-  color: var(--primary-color);
+  color: white;
+  flex-shrink: 0;
 }
 
 .title-section h1 {
   margin: 0;
-  color: var(--text-primary);
-  font-weight: 500;
+  color: white;
+  font-weight: 600;
+  font-size: 1.8em;
+  line-height: 1.2;
 }
 
 .title-section p {
   margin: 4px 0 0 0;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
+  line-height: 1.3;
+}
+
+.action-section {
+  flex-shrink: 0;
 }
 
 .add-button {
   min-width: 140px;
+  background: white !important;
+  color: #667eea !important;
+  font-weight: 600 !important;
 }
 
 /* Form Styles */
@@ -101,6 +123,9 @@
 /* Filter Styles */
 .filter-card {
   margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e3f2fd;
 }
 
 .filter-section {
@@ -121,7 +146,7 @@
 }
 
 .clear-button {
-  min-width: 120px;
+  min-width: 100px;
   height: 56px;
 }
 
@@ -243,6 +268,20 @@
   .clear-button {
     width: 100%;
   }
+
+  .header-content {
+    flex-wrap: wrap;
+  }
+
+  .title-section {
+    flex: 1 1 100%;
+    margin-bottom: 12px;
+  }
+
+  .add-button {
+    flex: 1 1 100%;
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -264,6 +303,8 @@
   .title-section {
     align-items: flex-start;
     gap: 12px;
+    flex: 1 1 100%;
+    margin-bottom: 0;
   }
 
   .header-icon {
@@ -273,16 +314,19 @@
   }
 
   .title-section h1 {
-    font-size: 20px;
+    font-size: 18px;
+    line-height: 1.3;
   }
 
   .title-section p {
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 1.4;
   }
 
   .add-button {
     width: 100%;
     min-width: unset;
+    height: 44px;
   }
 
   .form-card {

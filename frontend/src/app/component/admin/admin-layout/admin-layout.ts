@@ -49,6 +49,12 @@ export class AdminLayout implements OnInit {
       return;
     }
 
+    // Auto-collapse sidebar on mobile screens
+    this.breakpointObserver.observe(['(max-width: 768px)'])
+      .subscribe(result => {
+        this.sidebarCollapsed = result.matches;
+      });
+
     // Subscribe to router events to keep user management expanded on relevant pages
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -84,9 +90,8 @@ export class AdminLayout implements OnInit {
 
   toggleUserManagement() {
     if (this.sidebarCollapsed) {
-      // If sidebar is collapsed and user clicks User Management, expand sidebar first
-      this.sidebarCollapsed = false;
-      this.userManagementExpanded = true;
+      // If sidebar is collapsed, navigate to first child route
+      this.router.navigate(['/admin/manage-students']);
     } else {
       this.userManagementExpanded = !this.userManagementExpanded;
     }

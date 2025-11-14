@@ -13,6 +13,12 @@
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
 }
 
+.header-card mat-card-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
 .header-card mat-card-title {
   display: flex;
   align-items: center;
@@ -24,6 +30,7 @@
 
 .header-card mat-card-subtitle {
   margin-top: 8px;
+  margin-left: 0 !important;
   opacity: 0.9;
   font-size: 1.1em;
   color: white !important;
@@ -56,17 +63,20 @@
   gap: 16px;
   flex: 1;
   align-items: center;
+  min-width: 0;
 }
 
 .search-field {
-  min-width: 300px;
+  min-width: 250px;
   flex: 1;
+  max-width: 500px;
 }
 
 .action-buttons {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .add-btn {

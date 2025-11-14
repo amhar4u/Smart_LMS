@@ -98,8 +98,8 @@
         </div>
 
         <!-- Assignment Submissions -->
-        <div class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}" [attr.data-tooltip]="sidebarCollapsed ? 'Assignment Submissions' : null">
-          <div class="nav-content" (click)="navigateToSubmissions()">
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/assignment-submissions" [routerLinkActiveOptions]="{exact: false}" [attr.data-tooltip]="sidebarCollapsed ? 'Assignment Submissions' : null">
+          <div class="nav-content">
             <mat-icon class="nav-icon">assignment_turned_in</mat-icon>
             <span *ngIf="!sidebarCollapsed" class="nav-text">Assignment Submissions</span>
           </div>

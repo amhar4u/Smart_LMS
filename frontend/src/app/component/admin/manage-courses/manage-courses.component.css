@@ -13,6 +13,13 @@
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
 }
 
+.header-card mat-card-header {
+  padding: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
 .header-card mat-card-title {
   display: flex;
   align-items: center;
@@ -20,18 +27,22 @@
   font-size: 28px;
   font-weight: 600;
   margin: 0;
+  flex-wrap: wrap;
 }
 
 .header-card mat-card-title mat-icon {
   font-size: 32px;
   width: 32px;
   height: 32px;
+  flex-shrink: 0;
 }
 
 .header-card mat-card-subtitle {
   color: rgba(255, 255, 255, 0.9);
   margin-top: 8px;
+  margin-left: 0 !important;
   font-size: 16px;
+  line-height: 1.3;
 }
 
 .filters-card {
