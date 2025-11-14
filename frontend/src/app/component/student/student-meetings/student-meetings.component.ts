@@ -1,13 +1,23 @@
 import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MeetingService, Meeting } from '../../../services/meeting.service';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { StudentLayout } from '../student-layout/student-layout';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../services/auth.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -15,250 +25,42 @@ import { interval, Subscription } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatProgressBarModule,
+    MatExpansionModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDividerModule,
+    StudentLayout
   ],
-  template: `
-    <div class="student-meetings-container">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Available Meetings</mat-card-title>
-        </mat-card-header>
-
-        <mat-card-content>
-          <div *ngIf="loading" class="loading-container">
-            <mat-spinner></mat-spinner>
-          </div>
-
-          <div *ngIf="!loading && meetings.length === 0" class="no-meetings">
-            <mat-icon>event_busy</mat-icon>
-            <p>No meetings available at this time</p>
-          </div>
-
-          <div *ngIf="!loading && meetings.length > 0" class="meetings-grid">
-            <div *ngFor="let meeting of meetings" class="meeting-card">
-              <div class="meeting-header">
-                <h3>{{ meeting.topic }}</h3>
-                <mat-chip [class]="'status-' + meeting.status">
-                  {{ meeting.status }}
-                </mat-chip>
-              </div>
-
-              <div class="meeting-details">
-                <div class="detail-row">
-                  <mat-icon>subject</mat-icon>
-                  <span>{{ getSubjectName(meeting) }}</span>
-                </div>
-                
-                <div class="detail-row">
-                  <mat-icon>person</mat-icon>
-                  <span>{{ getLecturerName(meeting) }}</span>
-                </div>
-
-                <div class="detail-row">
-                  <mat-icon>schedule</mat-icon>
-                  <span>{{ meeting.startTime | date:'medium' }}</span>
-                </div>
-
-                <div class="detail-row">
-                  <mat-icon>description</mat-icon>
-                  <span>{{ meeting.description }}</span>
-                </div>
-
-                <div class="detail-row">
-                  <mat-icon>book</mat-icon>
-                  <span>Modules: {{ getModuleNames(meeting) }}</span>
-                </div>
-              </div>
-
-              <div class="meeting-actions">
-                <button mat-raised-button color="primary"
-                        *ngIf="meeting.status === 'ongoing'"
-                        (click)="joinMeeting(meeting)">
-                  <mat-icon>meeting_room</mat-icon> Join Meeting
-                </button>
-
-                <button mat-raised-button 
-                        *ngIf="meeting.status === 'scheduled'"
-                        disabled>
-                  <mat-icon>schedule</mat-icon> Scheduled
-                </button>
-
-                <div class="time-info" *ngIf="meeting.status === 'scheduled'">
-                  <small>{{ getTimeUntilMeeting(meeting) }}</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .student-meetings-container {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    mat-card-header {
-      margin-bottom: 20px;
-    }
-
-    mat-card-title {
-      font-size: 24px;
-      color: #333;
-    }
-
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      padding: 40px;
-    }
-
-    .no-meetings {
-      text-align: center;
-      padding: 60px 20px;
-      color: #666;
-    }
-
-    .no-meetings mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: #999;
-    }
-
-    .no-meetings p {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-
-    .meetings-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-      gap: 20px;
-    }
-
-    .meeting-card {
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 24px;
-      background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-    }
-
-    .meeting-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      transform: translateY(-2px);
-    }
-
-    .meeting-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #e0e0e0;
-    }
-
-    .meeting-header h3 {
-      margin: 0;
-      font-size: 20px;
-      color: #1a1a1a;
-      font-weight: 600;
-    }
-
-    .meeting-details {
-      margin-bottom: 20px;
-    }
-
-    .detail-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 12px;
-      color: #555;
-    }
-
-    .detail-row mat-icon {
-      color: #666;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      margin-top: 2px;
-    }
-
-    .detail-row span {
-      flex: 1;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .meeting-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .meeting-actions button {
-      width: 100%;
-    }
-
-    .time-info {
-      text-align: center;
-      padding: 8px;
-      background-color: #f0f0f0;
-      border-radius: 4px;
-      color: #666;
-      font-size: 13px;
-    }
-
-    mat-chip.status-scheduled {
-      background-color: #2196F3;
-      color: white;
-    }
-
-    mat-chip.status-ongoing {
-      background-color: #4CAF50;
-      color: white;
-      animation: pulse 2s infinite;
-    }
-
-    mat-chip.status-completed {
-      background-color: #9E9E9E;
-      color: white;
-    }
-
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.7;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .meetings-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  `]
+  templateUrl: './student-meetings.component.html',
+  styleUrls: ['./student-meetings.component.css']
 })
 export class StudentMeetingsComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
-  private meetingService = inject(MeetingService);
+  private authService = inject(AuthService);
+  private apiUrl = `${environment.apiUrl}/students`;
 
-  meetings: Meeting[] = [];
+  meetings: any[] = [];
+  filteredMeetings: any[] = [];
+  uniqueSubjects: any[] = [];
   loading = false;
+  
+  // Filters
+  searchTerm = '';
+  filterStatus = 'all';
+  filterSubject = 'all';
+  filterDate = 'all';
+  
   private refreshSubscription?: Subscription;
 
   ngOnInit() {
@@ -278,9 +80,49 @@ export class StudentMeetingsComponent implements OnInit, OnDestroy {
 
   loadMeetings() {
     this.loading = true;
-    this.meetingService.getMeetings({ status: 'scheduled,ongoing' }).subscribe({
+    const user = this.authService.getCurrentUser();
+    if (!user?._id) {
+      this.loading = false;
+      return;
+    }
+
+    // Get all authorized subjects with their meetings
+    this.http.get<any>(`${this.apiUrl}/${user._id}/subjects`).subscribe({
       next: (response) => {
-        this.meetings = response.meetings || [];
+        console.log('API Response:', response); // Debug log
+        const subjects = response.data || response.subjects || [];
+        
+        // Extract all meetings from all subjects
+        const allMeetings: any[] = [];
+        const subjectsMap = new Map();
+        
+        subjects.forEach((subject: any) => {
+          subjectsMap.set(subject._id, subject);
+          if (subject.allMeetings && subject.allMeetings.length > 0) {
+            subject.allMeetings.forEach((meeting: any) => {
+              allMeetings.push({
+                ...meeting,
+                subjectInfo: {
+                  _id: subject._id,
+                  name: subject.name,
+                  code: subject.code
+                }
+              });
+            });
+          }
+        });
+
+        console.log('All Meetings:', allMeetings); // Debug log
+
+        // Sort meetings by date (upcoming first)
+        this.meetings = allMeetings.sort((a, b) => {
+          return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+        });
+
+        // Extract unique subjects for filter
+        this.uniqueSubjects = Array.from(subjectsMap.values());
+        
+        this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
@@ -290,71 +132,246 @@ export class StudentMeetingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  joinMeeting(meeting: Meeting) {
-    if (!meeting._id) return;
+  applyFilters() {
+    let filtered = [...this.meetings];
 
-    this.meetingService.joinMeeting(meeting._id).subscribe({
-      next: (response) => {
-        this.router.navigate(['/student/meetings/room', meeting._id], {
-          state: { 
-            token: response.token, 
-            roomUrl: response.roomUrl,
-            meetingInfo: response.meeting
-          }
-        });
-      },
-      error: (error) => {
-        this.snackBar.open(
-          error.error?.message || 'Failed to join meeting', 
-          'Close', 
-          { duration: 3000 }
-        );
-      }
+    // Search filter
+    if (this.searchTerm) {
+      const search = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(meeting => 
+        meeting.topic?.toLowerCase().includes(search) ||
+        meeting.description?.toLowerCase().includes(search) ||
+        this.getSubjectName(meeting).toLowerCase().includes(search) ||
+        this.getLecturerName(meeting).toLowerCase().includes(search)
+      );
+    }
+
+    // Status filter
+    if (this.filterStatus !== 'all') {
+      filtered = filtered.filter(meeting => 
+        this.getMeetingStatus(meeting) === this.filterStatus
+      );
+    }
+
+    // Subject filter
+    if (this.filterSubject !== 'all') {
+      filtered = filtered.filter(meeting => 
+        meeting.subjectInfo?._id === this.filterSubject ||
+        meeting.subjectId === this.filterSubject ||
+        meeting.subjectId?._id === this.filterSubject
+      );
+    }
+
+    // Date filter
+    if (this.filterDate !== 'all') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      filtered = filtered.filter(meeting => {
+        const meetingDate = new Date(meeting.meetingDate);
+        const meetingDay = new Date(meetingDate.getFullYear(), meetingDate.getMonth(), meetingDate.getDate());
+        
+        switch (this.filterDate) {
+          case 'today':
+            return meetingDay.getTime() === today.getTime();
+          
+          case 'this_week':
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            return meetingDay >= weekStart && meetingDay <= weekEnd;
+          
+          case 'this_month':
+            return meetingDate.getMonth() === now.getMonth() && 
+                   meetingDate.getFullYear() === now.getFullYear();
+          
+          case 'past':
+            return meetingDay < today;
+          
+          case 'future':
+            return meetingDay > today;
+          
+          default:
+            return true;
+        }
+      });
+    }
+
+    this.filteredMeetings = filtered;
+  }
+
+  resetFilters() {
+    this.searchTerm = '';
+    this.filterStatus = 'all';
+    this.filterSubject = 'all';
+    this.filterDate = 'all';
+    this.applyFilters();
+  }
+
+  getMeetingStatus(meeting: any): string {
+    if (!meeting) return 'unknown';
+    
+    if (meeting.status === 'cancelled') return 'cancelled';
+    if (meeting.status === 'completed') return 'completed';
+    if (meeting.status === 'ongoing') return 'ongoing';
+    
+    // Check if expired
+    if (this.isMeetingExpired(meeting)) return 'expired';
+    
+    // Otherwise it's upcoming
+    return 'upcoming';
+  }
+
+  isMeetingExpired(meeting: any): boolean {
+    if (!meeting.startTime) return false;
+    const now = new Date();
+    const startTime = new Date(meeting.startTime);
+    
+    if (meeting.endTime) {
+      const endTime = new Date(meeting.endTime);
+      return now > endTime && meeting.status !== 'completed' && meeting.status !== 'cancelled';
+    }
+    
+    return now > startTime && meeting.status === 'scheduled';
+  }
+
+  canJoinMeeting(meeting: any): boolean {
+    const status = this.getMeetingStatus(meeting);
+    return (status === 'upcoming' || status === 'ongoing') && meeting.dailyRoomUrl;
+  }
+
+  getMeetingIcon(meeting: any): string {
+    const status = this.getMeetingStatus(meeting);
+    switch (status) {
+      case 'upcoming': return 'event';
+      case 'ongoing': return 'video_call';
+      case 'completed': return 'check_circle';
+      case 'cancelled': return 'cancel';
+      case 'expired': return 'event_busy';
+      default: return 'event';
+    }
+  }
+
+  getStatusIcon(meeting: any): string {
+    const status = this.getMeetingStatus(meeting);
+    switch (status) {
+      case 'upcoming': return 'event';
+      case 'ongoing': return 'live_tv';
+      case 'completed': return 'check_circle';
+      case 'cancelled': return 'cancel';
+      case 'expired': return 'event_busy';
+      default: return 'event';
+    }
+  }
+
+  getStatusLabel(meeting: any): string {
+    const status = this.getMeetingStatus(meeting);
+    switch (status) {
+      case 'upcoming': return 'Upcoming';
+      case 'ongoing': return 'Live Now';
+      case 'completed': return 'Completed';
+      case 'cancelled': return 'Cancelled';
+      case 'expired': return 'Expired';
+      default: return 'Unknown';
+    }
+  }
+
+  getSubjectName(meeting: any): string {
+    if (meeting.subjectInfo) {
+      return meeting.subjectInfo.name || 'N/A';
+    }
+    if (typeof meeting.subjectId === 'object' && meeting.subjectId) {
+      return meeting.subjectId.name || 'N/A';
+    }
+    return 'N/A';
+  }
+
+  getLecturerName(meeting: any): string {
+    if (typeof meeting.lecturerId === 'object' && meeting.lecturerId) {
+      const lecturer = meeting.lecturerId;
+      return lecturer.firstName && lecturer.lastName 
+        ? `${lecturer.firstName} ${lecturer.lastName}` 
+        : lecturer.name || 'N/A';
+    }
+    return 'N/A';
+  }
+
+  formatMeetingDate(date: any): string {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
     });
   }
 
-  getSubjectName(meeting: Meeting): string {
-    if (typeof meeting.subjectId === 'string') {
-      return meeting.subjectId;
-    }
-    return (meeting.subjectId as any)?.name || 'N/A';
+  formatMeetingTime(time: any): string {
+    if (!time) return 'N/A';
+    const t = new Date(time);
+    return t.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
   }
 
-  getLecturerName(meeting: Meeting): string {
-    if (typeof meeting.lecturerId === 'string') {
-      return meeting.lecturerId;
-    }
-    const lecturer = meeting.lecturerId as any;
-    return lecturer ? `${lecturer.firstName} ${lecturer.lastName}` : 'N/A';
+  formatDateTime(datetime: any): string {
+    if (!datetime) return 'N/A';
+    const d = new Date(datetime);
+    return d.toLocaleString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   }
 
-  getModuleNames(meeting: Meeting): string {
-    if (!meeting.moduleIds || meeting.moduleIds.length === 0) {
-      return 'N/A';
+  getMeetingDuration(meeting: any): string {
+    if (meeting.duration) {
+      return `${meeting.duration} minutes`;
     }
-    
-    return meeting.moduleIds.map((module: any) => module.name || module).join(', ');
+    if (meeting.startTime && meeting.endTime) {
+      const start = new Date(meeting.startTime);
+      const end = new Date(meeting.endTime);
+      const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+      return `${durationMinutes} minutes`;
+    }
+    return 'N/A';
   }
 
-  getTimeUntilMeeting(meeting: Meeting): string {
+  getTimeUntilMeeting(meeting: any): string {
+    if (!meeting.startTime) return '';
     const now = new Date();
     const startTime = new Date(meeting.startTime);
-    const diff = startTime.getTime() - now.getTime();
+    const diffMs = startTime.getTime() - now.getTime();
+    
+    if (diffMs < 0) return 'Meeting time has passed';
 
-    if (diff < 0) {
-      return 'Meeting time has passed';
-    }
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `Starts in ${days} day${days > 1 ? 's' : ''}`;
-    } else if (hours > 0) {
-      return `Starts in ${hours} hour${hours > 1 ? 's' : ''} ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    if (diffMinutes < 60) {
+      return `Starts in ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+    } else if (diffHours < 24) {
+      return `Starts in ${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
     } else {
-      return `Starts in ${minutes} minute${minutes > 1 ? 's' : ''}`;
+      return `Starts in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
     }
+  }
+
+  getTotalMeetings(): number {
+    return this.meetings.length;
+  }
+
+  getUpcomingMeetings(): number {
+    return this.meetings.filter(m => this.getMeetingStatus(m) === 'upcoming').length;
+  }
+
+  getOngoingMeetings(): number {
+    return this.meetings.filter(m => this.getMeetingStatus(m) === 'ongoing').length;
   }
 }

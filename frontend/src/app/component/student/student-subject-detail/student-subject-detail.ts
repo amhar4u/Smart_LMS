@@ -240,4 +240,99 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
       panelClass: 'video-player-dialog'
     });
   }
+
+  // Meeting Helper Methods
+  isMeetingExpired(meeting: any): boolean {
+    if (!meeting.startTime) return false;
+    const now = new Date();
+    const startTime = new Date(meeting.startTime);
+    
+    // If meeting has an end time, check against that
+    if (meeting.endTime) {
+      const endTime = new Date(meeting.endTime);
+      return now > endTime && meeting.status !== 'completed' && meeting.status !== 'cancelled';
+    }
+    
+    // Otherwise, consider it expired if current time is past start time
+    // and status is still 'scheduled' (not updated to ongoing/completed)
+    return now > startTime && meeting.status === 'scheduled';
+  }
+
+  getMeetingStatusIcon(status: string, isExpired: boolean = false): string {
+    if (isExpired) return 'event_busy';
+    switch (status) {
+      case 'scheduled': return 'event';
+      case 'ongoing': return 'video_call';
+      case 'completed': return 'check_circle';
+      case 'cancelled': return 'cancel';
+      default: return 'event';
+    }
+  }
+
+  formatMeetingDate(date: any): string {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  }
+
+  formatMeetingTime(time: any): string {
+    if (!time) return 'N/A';
+    const t = new Date(time);
+    return t.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  }
+
+  getMeetingDuration(meeting: any): string {
+    if (meeting.duration) {
+      return `${meeting.duration} minutes`;
+    }
+    if (meeting.startTime && meeting.endTime) {
+      const start = new Date(meeting.startTime);
+      const end = new Date(meeting.endTime);
+      const durationMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+      return `${durationMinutes} minutes`;
+    }
+    return 'N/A';
+  }
+
+  getMeetingTimeStatus(meeting: any): string {
+    if (!meeting.startTime) return 'unknown';
+    const now = new Date();
+    const startTime = new Date(meeting.startTime);
+    const endTime = meeting.endTime ? new Date(meeting.endTime) : null;
+
+    if (now < startTime) return 'upcoming';
+    if (endTime && now > endTime) return 'past';
+    if (now >= startTime && (!endTime || now <= endTime)) return 'ongoing';
+    return 'unknown';
+  }
+
+  getTimeUntilMeeting(meeting: any): string {
+    if (!meeting.startTime) return '';
+    const now = new Date();
+    const startTime = new Date(meeting.startTime);
+    const diffMs = startTime.getTime() - now.getTime();
+    
+    if (diffMs < 0) return 'Meeting time has passed';
+
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 60) {
+      return `Starts in ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+    } else if (diffHours < 24) {
+      return `Starts in ${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+    } else {
+      return `Starts in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+    }
+  }
 }

@@ -297,44 +297,161 @@
             <span class="tab-count">{{ subject.allMeetings?.length || 0 }}</span>
           </ng-template>
           <div class="tab-content">
-            <div *ngIf="subject.allMeetings && subject.allMeetings.length > 0" class="meeting-list">
-              <mat-card *ngFor="let meeting of subject.allMeetings" class="meeting-card">
-                <div class="meeting-header">
-                  <h3>{{ meeting.topic }}</h3>
-                  <span class="meeting-status" [ngClass]="'status-' + (meeting.status || 'scheduled')">
-                    {{ meeting.status || 'Scheduled' }}
-                  </span>
-                </div>
-                <p class="meeting-description">{{ meeting.description }}</p>
-                <div class="meeting-meta">
-                  <div class="meta-item">
-                    <mat-icon>event</mat-icon>
-                    <span>{{ formatDateTime(meeting.meetingDate) }}</span>
+            <mat-accordion *ngIf="subject.allMeetings && subject.allMeetings.length > 0" class="meeting-list">
+              <mat-expansion-panel *ngFor="let meeting of subject.allMeetings" 
+                [expanded]="true"
+                class="meeting-accordion" 
+                [ngClass]="{
+                  'meeting-scheduled': meeting.status === 'scheduled' && !isMeetingExpired(meeting),
+                  'meeting-ongoing': meeting.status === 'ongoing',
+                  'meeting-completed': meeting.status === 'completed',
+                  'meeting-cancelled': meeting.status === 'cancelled',
+                  'meeting-expired': isMeetingExpired(meeting)
+                }">
+                
+                <!-- Accordion Header -->
+                <mat-expansion-panel-header class="meeting-accordion-header">
+                  <mat-panel-title class="meeting-panel-title">
+                    <div class="meeting-title-compact">
+                      <mat-icon class="meeting-icon">{{getMeetingStatusIcon(meeting.status, isMeetingExpired(meeting))}}</mat-icon>
+                      <div class="meeting-title-content">
+                        <h3 class="meeting-title-text">{{ meeting.topic }}</h3>
+                        <p class="meeting-subtitle">{{ meeting.description }}</p>
+                      </div>
+                    </div>
+                  </mat-panel-title>
+                  
+                  <mat-panel-description class="meeting-panel-description">
+                    <div class="meeting-quick-info">
+                      <!-- Status Badge -->
+                      <span class="quick-badge meeting-status-badge" 
+                        [ngClass]="isMeetingExpired(meeting) ? 'status-expired' : ('status-' + (meeting.status || 'scheduled'))">
+                        <mat-icon>{{isMeetingExpired(meeting) ? 'event_busy' : 
+                                     (meeting.status === 'ongoing' ? 'live_tv' : 
+                                      meeting.status === 'completed' ? 'check_circle' : 
+                                      meeting.status === 'cancelled' ? 'cancel' : 'event')}}</mat-icon>
+                        {{ isMeetingExpired(meeting) ? 'Expired' : capitalizeFirstLetter(meeting.status || 'Scheduled') }}
+                      </span>
+                      
+                      <!-- Date Badge -->
+                      <span class="quick-info-text">
+                        <mat-icon>event</mat-icon>
+                        {{ formatMeetingDate(meeting.meetingDate) }}
+                      </span>
+                      
+                      <!-- Time Badge -->
+                      <span class="quick-info-text">
+                        <mat-icon>schedule</mat-icon>
+                        {{ formatMeetingTime(meeting.startTime) }}
+                      </span>
+                    </div>
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <!-- Accordion Body -->
+                <div class="meeting-accordion-body">
+                  <!-- Meeting Details Grid -->
+                  <div class="meeting-details-grid">
+                    <div class="meeting-detail-item">
+                      <mat-icon>event</mat-icon>
+                      <div class="detail-content">
+                        <span class="detail-label">Date</span>
+                        <span class="detail-value">{{ formatMeetingDate(meeting.meetingDate) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="meeting-detail-item">
+                      <mat-icon>schedule</mat-icon>
+                      <div class="detail-content">
+                        <span class="detail-label">Start Time</span>
+                        <span class="detail-value">{{ formatMeetingTime(meeting.startTime) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="meeting-detail-item" *ngIf="meeting.endTime">
+                      <mat-icon>schedule</mat-icon>
+                      <div class="detail-content">
+                        <span class="detail-label">End Time</span>
+                        <span class="detail-value">{{ formatMeetingTime(meeting.endTime) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="meeting-detail-item" *ngIf="meeting.duration">
+                      <mat-icon>timer</mat-icon>
+                      <div class="detail-content">
+                        <span class="detail-label">Duration</span>
+                        <span class="detail-value">{{ getMeetingDuration(meeting) }}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="meta-item">
-                    <mat-icon>timer</mat-icon>
-                    <span>{{ meeting.duration }} minutes</span>
+
+                  <!-- Related Modules -->
+                  <div class="meeting-modules-section" *ngIf="meeting.modules && meeting.modules.length">
+                    <div class="modules-header">
+                      <mat-icon>book</mat-icon>
+                      <span class="modules-label">Related Modules</span>
+                    </div>
+                    <mat-chip-set class="modules-chips">
+                      <mat-chip *ngFor="let mod of meeting.modules" class="module-chip">
+                        <mat-icon>library_books</mat-icon>
+                        Week {{ mod.moduleNumber }}: {{ mod.name }}
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+
+                  <!-- Meeting Actions -->
+                  <div class="meeting-actions">
+                    <!-- Join Button - Show for scheduled and ongoing meetings, hide if expired -->
+                    <a *ngIf="meeting.dailyRoomUrl && !isMeetingExpired(meeting) && (meeting.status === 'scheduled' || meeting.status === 'ongoing')" 
+                       [href]="meeting.dailyRoomUrl" 
+                       target="_blank"
+                       mat-raised-button 
+                       class="join-meeting-btn"
+                       [ngClass]="{
+                         'btn-join-now': meeting.status === 'ongoing',
+                         'btn-join-scheduled': meeting.status === 'scheduled'
+                       }">
+                      <mat-icon>video_call</mat-icon>
+                      <span>{{ meeting.status === 'ongoing' ? 'Join Now' : 'Join Meeting' }}</span>
+                    </a>
+
+                    <!-- Meeting Expired Message -->
+                    <div *ngIf="isMeetingExpired(meeting) && meeting.status !== 'completed' && meeting.status !== 'cancelled'" 
+                         class="meeting-expired-msg">
+                      <mat-icon>event_busy</mat-icon>
+                      <span>This meeting has expired</span>
+                      <span class="expired-time">
+                        Scheduled: {{ formatDateTime(meeting.startTime) }}
+                      </span>
+                    </div>
+
+                    <!-- Meeting Completed Message -->
+                    <div *ngIf="meeting.status === 'completed'" class="meeting-completed-msg">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>This meeting has ended</span>
+                      <span class="completed-time" *ngIf="meeting.endedAt">
+                        Ended: {{ formatDateTime(meeting.endedAt) }}
+                      </span>
+                    </div>
+
+                    <!-- Meeting Cancelled Message -->
+                    <div *ngIf="meeting.status === 'cancelled'" class="meeting-cancelled-msg">
+                      <mat-icon>cancel</mat-icon>
+                      <span>This meeting has been cancelled</span>
+                    </div>
+
+                    <!-- Upcoming Meeting Info -->
+                    <div *ngIf="!isMeetingExpired(meeting) && meeting.status === 'scheduled' && getMeetingTimeStatus(meeting) === 'upcoming'" 
+                         class="meeting-upcoming-msg">
+                      <mat-icon>info</mat-icon>
+                      <span>{{ getTimeUntilMeeting(meeting) }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="meeting-modules" *ngIf="meeting.modules && meeting.modules.length">
-                  <span class="modules-label">Modules:</span>
-                  <mat-chip-set>
-                    <mat-chip *ngFor="let mod of meeting.modules">
-                      Week {{ mod.moduleNumber }}: {{ mod.name }}
-                    </mat-chip>
-                  </mat-chip-set>
-                </div>
-                <button *ngIf="meeting.roomUrl && meeting.status === 'scheduled'" 
-                        mat-raised-button color="primary" 
-                        class="join-button"
-                        (click)="$event.stopPropagation()"
-                        [attr.href]="meeting.roomUrl"
-                        target="_blank">
-                  <mat-icon>video_call</mat-icon>
-                  Join Meeting
-                </button>
-              </mat-card>
-            </div>
+              </mat-expansion-panel>
+            </mat-accordion>
+
+            <!-- Empty State -->
             <div *ngIf="!subject.allMeetings || subject.allMeetings.length === 0" class="empty-state">
               <mat-icon>video_call</mat-icon>
               <h3>No Meetings Yet</h3>

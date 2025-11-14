@@ -759,7 +759,10 @@ router.get('/:studentId/subjects/:subjectId', auth, async (req, res) => {
     const allMeetings = await Meeting.find({
       subjectId: subject._id,
       batchId: student.batch._id
-    }).sort({ meetingDate: -1, startTime: -1 });
+    })
+      .populate('lecturerId', 'firstName lastName email')
+      .populate('moduleIds', 'name moduleNumber code title')
+      .sort({ meetingDate: -1, startTime: -1 });
 
     // Check submission status for each assignment
     const assignmentsWithStatus = await Promise.all(
@@ -862,10 +865,20 @@ router.get('/:studentId/subjects/:subjectId', auth, async (req, res) => {
       allMeetings: allMeetings.map(m => ({
         _id: m._id,
         topic: m.topic,
+        description: m.description,
         meetingDate: m.meetingDate,
         startTime: m.startTime,
+        endTime: m.endTime,
         duration: m.duration,
         status: m.status,
+        dailyRoomUrl: m.dailyRoomUrl,
+        dailyRoomName: m.dailyRoomName,
+        lecturerId: m.lecturerId,
+        moduleIds: m.moduleIds,
+        modules: m.moduleIds,
+        studentCount: m.studentCount,
+        startedAt: m.startedAt,
+        endedAt: m.endedAt,
         meetingLink: m.meetingLink
       }))
     };
@@ -953,7 +966,10 @@ router.get('/:studentId/subjects', auth, async (req, res) => {
         const allMeetings = await Meeting.find({
           subjectId: subject._id,
           batchId: student.batch._id
-        }).sort({ meetingDate: -1, startTime: -1 });
+        })
+          .populate('lecturerId', 'firstName lastName email')
+          .populate('moduleIds', 'name moduleNumber code title')
+          .sort({ meetingDate: -1, startTime: -1 });
 
         // Check submission status for each assignment
         const assignmentsWithStatus = await Promise.all(
@@ -1052,10 +1068,21 @@ router.get('/:studentId/subjects', auth, async (req, res) => {
           allMeetings: allMeetings.map(m => ({
             _id: m._id,
             topic: m.topic,
+            description: m.description,
             meetingDate: m.meetingDate,
             startTime: m.startTime,
+            endTime: m.endTime,
             duration: m.duration,
-            status: m.status
+            status: m.status,
+            dailyRoomUrl: m.dailyRoomUrl,
+            dailyRoomName: m.dailyRoomName,
+            subjectId: subject._id,
+            lecturerId: m.lecturerId,
+            moduleIds: m.moduleIds,
+            modules: m.moduleIds, // For compatibility
+            studentCount: m.studentCount,
+            startedAt: m.startedAt,
+            endedAt: m.endedAt
           }))
         };
       })
