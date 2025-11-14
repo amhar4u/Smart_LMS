@@ -271,17 +271,59 @@ Consider standard curriculum topics, key concepts, and learning outcomes typical
     prompt += `Assignment Type: ${assignment.assignmentType}\n`;
     prompt += `Total Questions: ${assignment.questions.length}\n\n`;
     
-    prompt += `EVALUATION INSTRUCTIONS:\n`;
-    prompt += `1. For MCQ questions: Award full marks ONLY if the selected option matches the correct answer exactly. Award 0 marks for incorrect answers.\n`;
-    prompt += `2. For short answer questions: Compare student answer with the expected answer. Award marks based on:\n`;
-    prompt += `   - Correctness of key concepts (50%)\n`;
-    prompt += `   - Completeness of answer (30%)\n`;
-    prompt += `   - Clarity and coherence (20%)\n`;
-    prompt += `3. For essay questions: Evaluate based on:\n`;
-    prompt += `   - Understanding of topic (40%)\n`;
-    prompt += `   - Quality of arguments/examples (30%)\n`;
-    prompt += `   - Structure and organization (15%)\n`;
-    prompt += `   - Language and clarity (15%)\n\n`;
+    prompt += `EVALUATION INSTRUCTIONS:\n\n`;
+    
+    prompt += `1. MCQ QUESTIONS - BINARY GRADING (0 or Full Marks):\n`;
+    prompt += `   - Award FULL marks ONLY if the selected option matches the correct answer exactly\n`;
+    prompt += `   - Award 0 marks for ANY incorrect or missing answer\n`;
+    prompt += `   - NO partial marks for MCQ questions\n\n`;
+    
+    prompt += `2. SHORT ANSWER QUESTIONS - KEYWORD/POINT-BASED GRADING:\n`;
+    prompt += `   Identify KEY POINTS/KEYWORDS from the expected answer, then award marks proportionally:\n`;
+    prompt += `   \n`;
+    prompt += `   STEP 1: Extract key concepts/points from the expected answer (usually 3-5 key points)\n`;
+    prompt += `   STEP 2: Check how many key points the student's answer covers\n`;
+    prompt += `   STEP 3: Award marks proportionally based on coverage:\n`;
+    prompt += `   \n`;
+    prompt += `   Example: If question is worth 5 marks and has 5 key points:\n`;
+    prompt += `   - Covers 5/5 key points correctly = 5 marks (100%)\n`;
+    prompt += `   - Covers 4/5 key points correctly = 4 marks (80%)\n`;
+    prompt += `   - Covers 3/5 key points correctly = 3 marks (60%)\n`;
+    prompt += `   - Covers 2/5 key points correctly = 2 marks (40%)\n`;
+    prompt += `   - Covers 1/5 key points correctly = 1 mark (20%)\n`;
+    prompt += `   - Covers 0/5 key points or wrong answer = 0 marks\n`;
+    prompt += `   \n`;
+    prompt += `   Additional considerations:\n`;
+    prompt += `   - Deduct 10-20% for poor clarity/grammar (if content is correct)\n`;
+    prompt += `   - Award bonus 10% for exceptional clarity/examples (up to max marks)\n`;
+    prompt += `   - Keywords must be used in correct context\n`;
+    prompt += `   - Similar terminology is acceptable (e.g., "function" = "method")\n\n`;
+    
+    prompt += `3. ESSAY QUESTIONS - RUBRIC-BASED GRADING:\n`;
+    prompt += `   Break down evaluation into these components:\n`;
+    prompt += `   \n`;
+    prompt += `   A. CONTENT & KEY POINTS (50% of marks):\n`;
+    prompt += `      - Identify main points/arguments expected in the answer\n`;
+    prompt += `      - Award marks proportionally based on how many key points covered\n`;
+    prompt += `      - Each key point should be explained with examples/details\n`;
+    prompt += `   \n`;
+    prompt += `   B. DEPTH & UNDERSTANDING (25% of marks):\n`;
+    prompt += `      - Shows deep understanding: 80-100% of this component\n`;
+    prompt += `      - Shows moderate understanding: 50-79% of this component\n`;
+    prompt += `      - Shows basic understanding: 30-49% of this component\n`;
+    prompt += `      - Shows little/no understanding: 0-29% of this component\n`;
+    prompt += `   \n`;
+    prompt += `   C. STRUCTURE & ORGANIZATION (15% of marks):\n`;
+    prompt += `      - Clear introduction, body, conclusion: Full marks\n`;
+    prompt += `      - Some structure but disorganized: 50-70%\n`;
+    prompt += `      - No clear structure: 0-40%\n`;
+    prompt += `   \n`;
+    prompt += `   D. EXAMPLES & EVIDENCE (10% of marks):\n`;
+    prompt += `      - Provides relevant examples: 80-100%\n`;
+    prompt += `      - Some examples but weak: 40-70%\n`;
+    prompt += `      - No examples: 0-30%\n`;
+    prompt += `   \n`;
+    prompt += `   Calculate total: (A × 0.5) + (B × 0.25) + (C × 0.15) + (D × 0.10)\n\n`;
     
     prompt += `Questions and Student Answers:\n\n`;
     
@@ -307,19 +349,48 @@ Consider standard curriculum topics, key concepts, and learning outcomes typical
           }
           prompt += `Student Selected: ${answer.selectedOption || answer.answer || 'NO ANSWER PROVIDED'}\n`;
           prompt += `Correct Answer: ${correctOption?.option || 'Not specified'}\n`;
-          prompt += `INSTRUCTION: If student answer does NOT match the correct answer EXACTLY, award 0 marks. Otherwise, award full marks (${question.marks}).\n`;
+          prompt += `\n⚠️ GRADING: Award ${question.marks} marks if correct, 0 marks if wrong. NO PARTIAL MARKS.\n`;
+          
         } else if (questionType === 'short_answer') {
           prompt += `Expected Answer/Key Points: ${question.correctAnswer || 'Evaluate based on understanding'}\n`;
           prompt += `Student Answer: ${answer.answer || 'NO ANSWER PROVIDED'}\n`;
           if (question.explanation) {
             prompt += `Additional Context: ${question.explanation}\n`;
           }
-          prompt += `INSTRUCTION: Compare the student's answer with the expected answer. If the answer is completely wrong or empty, award 0 marks. Award partial marks based on correctness and completeness.\n`;
+          prompt += `\n⚠️ GRADING STEPS FOR THIS QUESTION (${question.marks} marks):\n`;
+          prompt += `STEP 1: Identify ${Math.min(5, question.marks)} key points/concepts from the expected answer\n`;
+          prompt += `STEP 2: Check which key points are present in student's answer\n`;
+          prompt += `STEP 3: Award marks proportionally (e.g., if 3 out of 5 key points covered = 3/${question.marks} marks)\n`;
+          prompt += `STEP 4: Deduct 0.5-1 mark for poor clarity (if applicable)\n`;
+          prompt += `STEP 5: Provide breakdown in feedback showing which points were covered/missed\n\n`;
+          prompt += `EXAMPLE BREAKDOWN:\n`;
+          prompt += `"Student covered 3 key points: [point 1], [point 2], [point 3]. Missing: [point 4], [point 5]. Award 3/${question.marks} marks."\n`;
+          
         } else if (questionType === 'essay') {
           prompt += `Expected Coverage: ${question.maxWords || 500} words on topic\n`;
           prompt += `Key Points to Cover: ${question.correctAnswer || 'Evaluate depth of understanding'}\n`;
           prompt += `Student Answer (${answer.answer?.length || 0} characters): ${answer.answer || 'NO ANSWER PROVIDED'}\n`;
-          prompt += `INSTRUCTION: If no answer is provided or answer is completely off-topic, award 0 marks. Otherwise evaluate based on depth, examples, and understanding.\n`;
+          prompt += `\n⚠️ GRADING RUBRIC FOR THIS QUESTION (${question.marks} marks):\n`;
+          prompt += `\nCOMPONENT BREAKDOWN:\n`;
+          prompt += `A. Content & Key Points (${Math.round(question.marks * 0.5)} marks = 50%):\n`;
+          prompt += `   - Identify main points expected in answer\n`;
+          prompt += `   - Award marks based on coverage of these points\n`;
+          prompt += `   - List which points were covered/missed in feedback\n\n`;
+          prompt += `B. Depth & Understanding (${Math.round(question.marks * 0.25)} marks = 25%):\n`;
+          prompt += `   - Deep explanation with examples: 80-100% of this component\n`;
+          prompt += `   - Moderate explanation: 50-79%\n`;
+          prompt += `   - Superficial explanation: 30-49%\n`;
+          prompt += `   - No real understanding: 0-29%\n\n`;
+          prompt += `C. Structure (${Math.round(question.marks * 0.15)} marks = 15%):\n`;
+          prompt += `   - Well organized with clear flow: 80-100%\n`;
+          prompt += `   - Some organization: 50-70%\n`;
+          prompt += `   - Poorly organized: 0-40%\n\n`;
+          prompt += `D. Examples (${Math.round(question.marks * 0.10)} marks = 10%):\n`;
+          prompt += `   - Strong relevant examples: 80-100%\n`;
+          prompt += `   - Weak examples: 40-70%\n`;
+          prompt += `   - No examples: 0-30%\n\n`;
+          prompt += `CALCULATE FINAL MARK: Sum all components (round to 1 decimal if needed)\n`;
+          prompt += `PROVIDE COMPONENT-WISE BREAKDOWN in feedback\n`;
         }
         
         prompt += `\n`;
@@ -338,9 +409,12 @@ Consider standard curriculum topics, key concepts, and learning outcomes typical
   "questionEvaluations": [
     {
       "questionIndex": <question number starting from 1>,
-      "marksAwarded": <marks given for this question>,
-      "feedback": "<specific feedback explaining why marks were awarded or deducted>",
-      "isCorrect": <true|false>
+      "marksAwarded": <marks given - can be decimal like 2.5, 3.5, etc.>,
+      "maxMarks": <maximum marks for this question>,
+      "feedback": "<DETAILED feedback including: 1) For short answer: list key points covered/missed, 2) For essay: breakdown by rubric components with marks for each>",
+      "isCorrect": <true if got full marks, false otherwise>,
+      "keyPointsCovered": <number of key points covered (for short answer/essay)>,
+      "totalKeyPoints": <total key points expected (for short answer/essay)>
     }
   ],
   "strengths": ["<specific strength 1>", "<specific strength 2>", "<specific strength 3>"],
@@ -353,23 +427,67 @@ Consider standard curriculum topics, key concepts, and learning outcomes typical
     prompt += `- 41-70%: Set level as "intermediate"\n`;
     prompt += `- 71-100%: Set level as "advanced"\n\n`;
     
-    prompt += `CRITICAL GRADING RULES:\n`;
-    prompt += `1. For MCQ: If the student selected the WRONG option, award 0 marks for that question. No partial credit.\n`;
-    prompt += `2. For MCQ: If the student selected the CORRECT option, award full marks for that question.\n`;
-    prompt += `3. For MCQ: If NO answer is provided, award 0 marks.\n`;
-    prompt += `4. For short answer/essay: If answer is completely wrong, off-topic, or empty, award 0 marks.\n`;
-    prompt += `5. For short answer/essay: If answer shows some understanding but is incomplete, award partial marks (30-70% of total).\n`;
-    prompt += `6. For short answer/essay: If answer is accurate and complete, award 80-100% of marks.\n`;
-    prompt += `7. BE STRICT: Wrong answers should receive 0 or very low marks. Don't be generous with incorrect responses.\n\n`;
+    prompt += `CRITICAL GRADING RULES:\n\n`;
     
-    prompt += `IMPORTANT:\n`;
-    prompt += `- Be strict but fair in grading\n`;
-    prompt += `- WRONG ANSWERS MUST GET 0 OR VERY LOW MARKS\n`;
-    prompt += `- Provide specific examples in feedback\n`;
-    prompt += `- Explain reasoning for marks awarded\n`;
-    prompt += `- Give constructive suggestions for improvement\n`;
-    prompt += `- Ensure totalMarks does not exceed ${assignment.maxMarks}\n`;
-    prompt += `- Calculate percentage accurately: (totalMarks / ${assignment.maxMarks}) * 100\n`;
+    prompt += `MCQ QUESTIONS:\n`;
+    prompt += `1. ONLY 0 or full marks - NO partial marks for MCQ\n`;
+    prompt += `2. If student selected WRONG option → 0 marks\n`;
+    prompt += `3. If student selected CORRECT option → full marks\n`;
+    prompt += `4. If NO answer provided → 0 marks\n\n`;
+    
+    prompt += `SHORT ANSWER QUESTIONS:\n`;
+    prompt += `1. MUST identify specific key points/keywords from expected answer\n`;
+    prompt += `2. MUST count how many key points student covered\n`;
+    prompt += `3. Award marks proportionally: (points covered / total points) × max marks\n`;
+    prompt += `4. Example: Question worth 5 marks with 5 key points\n`;
+    prompt += `   - Student covers 4 points → 4 marks\n`;
+    prompt += `   - Student covers 3 points → 3 marks\n`;
+    prompt += `   - Student covers 2 points → 2 marks\n`;
+    prompt += `   - Student covers 1 point → 1 mark\n`;
+    prompt += `   - Student covers 0 points or completely wrong → 0 marks\n`;
+    prompt += `5. Can deduct 0.5-1 mark for very poor clarity (if points are covered)\n`;
+    prompt += `6. List the specific key points covered/missed in feedback\n\n`;
+    
+    prompt += `ESSAY QUESTIONS:\n`;
+    prompt += `1. MUST break down into components: Content (50%), Depth (25%), Structure (15%), Examples (10%)\n`;
+    prompt += `2. Award marks for EACH component separately\n`;
+    prompt += `3. For Content: Identify key arguments/points, award proportionally\n`;
+    prompt += `4. For Depth: Judge understanding level (deep/moderate/basic/none)\n`;
+    prompt += `5. For Structure: Judge organization (well/some/poor)\n`;
+    prompt += `6. For Examples: Judge quality of examples (strong/weak/none)\n`;
+    prompt += `7. Calculate: (Content × 0.5) + (Depth × 0.25) + (Structure × 0.15) + (Examples × 0.10)\n`;
+    prompt += `8. Provide component-wise breakdown in feedback\n`;
+    prompt += `9. Can award decimal marks (e.g., 7.5, 8.3) for precise grading\n\n`;
+    
+    prompt += `GENERAL RULES:\n`;
+    prompt += `1. BE FAIR: Award marks based on what student actually wrote\n`;
+    prompt += `2. BE SPECIFIC: In feedback, mention exactly which points were covered/missed\n`;
+    prompt += `3. BE CONSISTENT: Apply same standards to all questions\n`;
+    prompt += `4. ZERO FOR EMPTY/WRONG: If answer is empty, wrong, or off-topic → 0 marks\n`;
+    prompt += `5. PARTIAL FOR INCOMPLETE: If answer shows some understanding → partial marks\n`;
+    prompt += `6. FULL FOR COMPLETE: If answer covers all points correctly → full marks\n`;
+    prompt += `7. Ensure totalMarks does not exceed ${assignment.maxMarks}\n`;
+    prompt += `8. Calculate percentage accurately: (totalMarks / ${assignment.maxMarks}) × 100\n\n`;
+    
+    prompt += `FEEDBACK REQUIREMENTS:\n`;
+    prompt += `1. For each question, provide DETAILED feedback explaining:\n`;
+    prompt += `   - Which key points were covered (for short answer/essay)\n`;
+    prompt += `   - Which key points were missed (for short answer/essay)\n`;
+    prompt += `   - Why marks were awarded or deducted\n`;
+    prompt += `   - Specific improvements needed\n\n`;
+    
+    prompt += `2. Example good feedback for short answer (5 marks, 5 key points):\n`;
+    prompt += `   "Marks: 3/5. You correctly explained [point 1], [point 2], and [point 3]. However, you missed [point 4: explanation] and [point 5: explanation]. To improve, make sure to cover all key aspects of the topic."\n\n`;
+    
+    prompt += `3. Example good feedback for essay (10 marks):\n`;
+    prompt += `   "Marks: 7.5/10. Content (4/5): Covered main arguments A, B, C well, but missed argument D. Depth (2/2.5): Good understanding shown with examples. Structure (1/1.5): Well organized with clear flow. Examples (0.5/1): Examples present but could be more specific. To improve: Add more detailed real-world examples and ensure all key points are addressed."\n\n`;
+    
+    prompt += `REMEMBER:\n`;
+    prompt += `- MCQ: Binary grading only (0 or full marks)\n`;
+    prompt += `- Short Answer: Point-based partial marking (count key points covered)\n`;
+    prompt += `- Essay: Rubric-based partial marking (breakdown by components)\n`;
+    prompt += `- Always show your work in feedback - explain the breakdown\n`;
+    prompt += `- Decimal marks are allowed for precise grading (e.g., 3.5, 7.2, 8.8)\n`;
     
     return prompt;
   }
@@ -382,22 +500,50 @@ Consider standard curriculum topics, key concepts, and learning outcomes typical
           {
             role: "system",
             content: `You are an expert educator and examiner with years of experience in evaluating student work. Your evaluations should be:
-1. ACCURATE: Grade strictly based on correctness and understanding demonstrated
-2. FAIR: Apply consistent standards across all students
-3. STRICT: Wrong answers should receive 0 marks or very low marks. Do not be generous with incorrect responses.
-4. DETAILED: Provide specific feedback on what was done well and what needs improvement
-5. CONSTRUCTIVE: Offer actionable suggestions for improvement
-6. OBJECTIVE: Base grades on factual correctness and conceptual understanding
 
-CRITICAL GRADING RULES:
-- For MCQ questions: Award full marks ONLY if the answer is 100% correct and matches the correct option exactly, 0 marks otherwise. NO PARTIAL CREDIT.
-- For MCQ questions: If student selects wrong option, award 0 marks. Be strict.
-- For short answer questions: Award marks based on accuracy (50%), completeness (30%), and clarity (20%). Partial marks allowed ONLY if answer shows understanding.
-- For short answer questions: If answer is completely wrong or empty, award 0 marks.
-- For essay questions: Evaluate based on understanding (40%), structure (30%), examples (20%), and depth (10%). Partial marks allowed.
-- For essay questions: If answer is off-topic, empty, or shows no understanding, award 0 marks.
+1. ACCURATE: Grade based on specific criteria and key points
+2. FAIR: Award partial marks proportionally for short answer and essay questions
+3. DETAILED: Provide specific feedback mentioning which points were covered/missed
+4. CONSTRUCTIVE: Offer actionable suggestions for improvement
+5. OBJECTIVE: Base grades on factual correctness and demonstrated understanding
 
-BE STRICT: Students who answer incorrectly should receive low scores (0-30%). Only well-answered questions should get 70%+ marks.
+GRADING METHODOLOGY:
+
+MCQ QUESTIONS - Binary Grading:
+- Award full marks ONLY if the answer matches the correct option exactly
+- Award 0 marks for any incorrect or missing answer
+- NO PARTIAL MARKS for MCQ
+
+SHORT ANSWER QUESTIONS - Point-Based Grading:
+- Identify 3-5 key points/concepts from the expected answer
+- Count how many key points the student covered
+- Award marks proportionally: (points covered / total points) × max marks
+- Example: 5-mark question with 5 key points
+  * Covers 5 points = 5 marks
+  * Covers 4 points = 4 marks
+  * Covers 3 points = 3 marks
+  * Covers 2 points = 2 marks
+  * Covers 1 point = 1 mark
+  * Covers 0 points = 0 marks
+- Can deduct 0.5-1 mark for very poor clarity
+- MUST list specific points covered/missed in feedback
+
+ESSAY QUESTIONS - Rubric-Based Grading:
+Break down into components:
+- Content & Key Points (50%): How many main arguments/points covered
+- Depth & Understanding (25%): Level of explanation and analysis
+- Structure & Organization (15%): Logical flow and coherence
+- Examples & Evidence (10%): Quality and relevance of examples
+
+Calculate: (Content × 0.5) + (Depth × 0.25) + (Structure × 0.15) + (Examples × 0.10)
+
+MUST provide component-wise breakdown in feedback showing marks for each component.
+
+FEEDBACK REQUIREMENTS:
+- For short answer: List which key points were covered and which were missed
+- For essay: Provide breakdown by rubric components with marks for each
+- Be specific about what was done well and what needs improvement
+- Decimal marks are allowed (e.g., 3.5, 7.2, 8.8) for precise grading
 
 Always respond with valid JSON only, without any markdown formatting or additional text.`
           },

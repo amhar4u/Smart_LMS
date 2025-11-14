@@ -58,6 +58,9 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
   extraModules: any[] = []; // Extra modules based on student level
   loadingExtraModules = false;
 
+  // Make Math available in template
+  Math = Math;
+
   constructor(
     private route: ActivatedRoute, 
     private http: HttpClient,

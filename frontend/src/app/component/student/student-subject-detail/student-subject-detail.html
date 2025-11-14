@@ -123,37 +123,163 @@
           </ng-template>
           <div class="tab-content">
             <div *ngIf="subject.allAssignments && subject.allAssignments.length > 0" class="assignment-list">
-              <mat-card *ngFor="let assignment of subject.allAssignments" class="assignment-card">
-                <div class="assignment-header">
-                  <h3>{{ assignment.title }}</h3>
-                  <span class="assignment-level" [ngClass]="'level-' + (assignment.level || 'medium')">
-                    {{ assignment.level || 'Medium' }}
-                  </span>
-                </div>
-                <p class="assignment-description">{{ assignment.description }}</p>
-                <div class="assignment-meta">
-                  <div class="meta-item">
-                    <mat-icon>grade</mat-icon>
-                    <span>{{ assignment.totalMarks }} marks</span>
+              <mat-accordion multi>
+                <mat-expansion-panel *ngFor="let assignment of subject.allAssignments" 
+                                     class="assignment-accordion"
+                                     [class.submitted]="assignment.hasSubmitted"
+                                     [class.overdue]="getDaysRemaining(assignment.dueDate) < 0 && !assignment.hasSubmitted"
+                                     [expanded]="true">
+                  
+                  <!-- Accordion Header -->
+                  <mat-expansion-panel-header class="assignment-accordion-header">
+                    <mat-panel-title class="assignment-panel-title">
+                      <div class="assignment-title-compact">
+                        <mat-icon class="title-icon">assignment</mat-icon>
+                        <div class="title-content">
+                          <h3 class="assignment-title-text">{{ assignment.title }}</h3>
+                          <p class="assignment-subtitle">{{ assignment.description }}</p>
+                        </div>
+                      </div>
+                    </mat-panel-title>
+                    
+                    <mat-panel-description class="assignment-panel-description">
+                      <div class="assignment-quick-info">
+                        <span class="quick-badge badge-level" [ngClass]="'level-' + (assignment.level || 'medium')">
+                          <mat-icon>trending_up</mat-icon>
+                          {{ assignment.level || 'Medium' }}
+                        </span>
+                        <span class="quick-badge badge-type" [ngClass]="'type-' + (assignment.type || 'MCQ')">
+                          <mat-icon>quiz</mat-icon>
+                          {{ assignment.type || 'MCQ' }}
+                        </span>
+                        <span class="quick-badge badge-status" 
+                              [ngClass]="assignment.hasSubmitted ? 'status-submitted' : 
+                                        (getDaysRemaining(assignment.dueDate) < 0 ? 'status-overdue' : 'status-pending')">
+                          <mat-icon>{{ assignment.hasSubmitted ? 'check_circle' : (getDaysRemaining(assignment.dueDate) < 0 ? 'error' : 'schedule') }}</mat-icon>
+                          {{ assignment.hasSubmitted ? 'Submitted' : (getDaysRemaining(assignment.dueDate) < 0 ? 'Overdue' : 'Pending') }}
+                        </span>
+                        <span class="quick-info-text due-date-quick" 
+                              [ngClass]="getDaysRemainingClass(getDaysRemaining(assignment.dueDate))">
+                          <mat-icon>schedule</mat-icon>
+                          Due: {{ formatDate(assignment.dueDate) }}
+                        </span>
+                      </div>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <!-- Accordion Body -->
+                  <div class="assignment-accordion-body">
+                    <!-- Assignment Details Grid -->
+                    <div class="assignment-details-grid">
+                      <div class="detail-item">
+                        <mat-icon>grade</mat-icon>
+                        <div class="detail-content">
+                          <span class="detail-label">Total Marks</span>
+                          <span class="detail-value">{{ assignment.totalMarks || 0 }}</span>
+                        </div>
+                      </div>
+
+                      <div class="detail-item">
+                        <mat-icon>event</mat-icon>
+                        <div class="detail-content">
+                          <span class="detail-label">Start Date</span>
+                          <span class="detail-value">{{ formatDate(assignment.startDate) }}</span>
+                        </div>
+                      </div>
+
+                      <div class="detail-item" [ngClass]="getDaysRemainingClass(getDaysRemaining(assignment.dueDate))">
+                        <mat-icon>schedule</mat-icon>
+                        <div class="detail-content">
+                          <span class="detail-label">Due Date</span>
+                          <span class="detail-value">
+                            {{ formatDate(assignment.dueDate) }}
+                            <span class="days-remaining">
+                              ({{ getDaysRemaining(assignment.dueDate) >= 0 ? 
+                                  getDaysRemaining(assignment.dueDate) + ' days left' : 
+                                  Math.abs(getDaysRemaining(assignment.dueDate)) + ' days overdue' }})
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="detail-item">
+                        <mat-icon>help_outline</mat-icon>
+                        <div class="detail-content">
+                          <span class="detail-label">Questions</span>
+                          <span class="detail-value">{{ assignment.numberOfQuestions || 0 }} questions</span>
+                        </div>
+                      </div>
+
+                      <div class="detail-item" *ngIf="assignment.hasSubmitted && assignment.submissionStatus">
+                        <mat-icon>assessment</mat-icon>
+                        <div class="detail-content">
+                          <span class="detail-label">Your Score</span>
+                          <span class="detail-value score-value">
+                            {{ assignment.submissionStatus.marks || 0 }}/{{ assignment.totalMarks }} 
+                            ({{ assignment.submissionStatus.percentage || 0 }}%)
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="detail-item" *ngIf="assignment.hasSubmitted && assignment.submissionStatus">
+                        <mat-icon>emoji_events</mat-icon>
+                        <div class="detail-content">
+                          <span class="detail-label">Performance Level</span>
+                          <span class="detail-value" [ngClass]="'performance-' + (assignment.submissionStatus.level || 'beginner')">
+                            {{ capitalizeFirstLetter(assignment.submissionStatus.level || 'beginner') }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Related Modules -->
+                    <div class="assignment-modules-enhanced" *ngIf="assignment.modules && assignment.modules.length">
+                      <div class="modules-header">
+                        <mat-icon>book</mat-icon>
+                        <span class="modules-label">Related Modules:</span>
+                      </div>
+                      <mat-chip-set class="modules-chips">
+                        <mat-chip *ngFor="let mod of assignment.modules" class="module-chip">
+                          <mat-icon>bookmark</mat-icon>
+                          Week {{ mod.moduleNumber }}: {{ mod.name }}
+                        </mat-chip>
+                      </mat-chip-set>
+                    </div>
+
+                    <!-- Assignment Actions -->
+                    <div class="assignment-actions">
+                      <button mat-raised-button color="primary" 
+                              *ngIf="!assignment.hasSubmitted && getDaysRemaining(assignment.dueDate) >= 0"
+                              [routerLink]="['/student/assignments', assignment._id, 'take']"
+                              class="action-button start-button">
+                        <mat-icon>play_arrow</mat-icon>
+                        Start Assignment
+                      </button>
+                      
+                      <button mat-raised-button color="accent"
+                              *ngIf="assignment.hasSubmitted"
+                              [routerLink]="['/student/assignments', assignment._id, 'result']"
+                              class="action-button result-button">
+                        <mat-icon>visibility</mat-icon>
+                        View Results
+                      </button>
+
+                      <button mat-stroked-button 
+                              *ngIf="!assignment.hasSubmitted && getDaysRemaining(assignment.dueDate) < 0"
+                              disabled
+                              class="action-button overdue-button">
+                        <mat-icon>block</mat-icon>
+                        Submission Closed
+                      </button>
+
+                      <div class="submission-info" *ngIf="assignment.hasSubmitted && assignment.submissionStatus">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>Submitted on {{ formatDate(assignment.submissionStatus.submittedAt) }}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="meta-item" [ngClass]="getDaysRemainingClass(getDaysRemaining(assignment.dueDate))">
-                    <mat-icon>schedule</mat-icon>
-                    <span>Due: {{ formatDate(assignment.dueDate) }}</span>
-                  </div>
-                  <div class="meta-item">
-                    <mat-icon>quiz</mat-icon>
-                    <span>{{ assignment.type }}</span>
-                  </div>
-                </div>
-                <div class="assignment-modules" *ngIf="assignment.modules && assignment.modules.length">
-                  <span class="modules-label">Modules:</span>
-                  <mat-chip-set>
-                    <mat-chip *ngFor="let mod of assignment.modules">
-                      Week {{ mod.moduleNumber }}: {{ mod.name }}
-                    </mat-chip>
-                  </mat-chip-set>
-                </div>
-              </mat-card>
+                </mat-expansion-panel>
+              </mat-accordion>
             </div>
             <div *ngIf="!subject.allAssignments || subject.allAssignments.length === 0" class="empty-state">
               <mat-icon>assignment</mat-icon>
