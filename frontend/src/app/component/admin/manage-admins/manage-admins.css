@@ -363,7 +363,59 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .filters-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-section {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .search-field {
+    min-width: unset;
+    width: 100%;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .action-buttons button {
+    flex: 1;
+  }
+}
+
 @media (max-width: 768px) {
+  .manage-admins-container {
+    padding: 12px;
+  }
+  
+  .header-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .header-card mat-card-title {
+    font-size: 20px;
+  }
+  
+  .filters-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .filters-card mat-card-content {
+    padding: 12px !important;
+  }
+  
+  .filters-container {
+    gap: 12px;
+  }
+  
   .action-bar {
     flex-direction: column;
     align-items: stretch;
@@ -375,43 +427,86 @@
   }
   
   .action-buttons {
-    justify-content: center;
-  }
-  
-  .page-header h1 {
-    font-size: 2em;
-  }
-  
-  .admins-table {
-    font-size: 0.9em;
-  }
-  
-  .admins-table th,
-  .admins-table td {
-    padding: 12px 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-header h1 {
-    font-size: 1.8em;
-  }
-  
-  .action-buttons {
     flex-direction: column;
+    gap: 8px;
   }
   
   .action-buttons button {
     width: 100%;
+    height: 44px;
+  }
+  
+  .table-card {
+    border-radius: 12px;
+  }
+  
+  .table-card mat-card-content {
+    padding: 0 !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .admins-table {
-    font-size: 0.8em;
+    font-size: 13px;
+    min-width: 800px;
   }
   
   .admins-table th,
   .admins-table td {
-    padding: 8px 4px;
+    padding: 10px 8px;
+  }
+
+  .approval-actions, .regular-actions {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .approval-actions button,
+  .regular-actions button {
+    min-width: 32px;
+    height: 32px;
+  }
+}@media (max-width: 480px) {
+  .manage-admins-container {
+    padding: 8px;
+  }
+  
+  .header-card mat-card-title {
+    font-size: 18px;
+  }
+  
+  .filters-card mat-card-content {
+    padding: 8px !important;
+  }
+  
+  .action-buttons button {
+    font-size: 14px;
+    height: 40px;
+  }
+  
+  .admins-table {
+    font-size: 12px;
+  }
+  
+  .admins-table th,
+  .admins-table td {
+    padding: 8px 6px;
+  }
+  
+  .status-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .approval-actions button,
+  .regular-actions button {
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .approval-actions button mat-icon,
+  .regular-actions button mat-icon {
+    font-size: 16px;
   }
 }
 

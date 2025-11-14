@@ -299,46 +299,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .manage-semesters-container {
-    padding: 16px;
-  }
-  
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  
-  .search-section {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-  
-  .search-field {
-    min-width: 100%;
-    max-width: 100%;
-  }
-  
-  .search-button, .clear-button, .add-button {
-    width: 100%;
-    min-width: auto;
-    height: 48px;
-  }
-  
-  .filter-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .pagination-container {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
-}
-
-@media (max-width: 1024px) and (min-width: 769px) {
+@media (max-width: 1024px) {
   .search-section {
     flex-wrap: wrap;
     gap: 12px;
@@ -351,26 +312,28 @@
   }
   
   .search-button, .clear-button, .add-button {
-    height: 52px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .search-section {
-    gap: 20px;
-    align-items: center;
+    flex: 1;
   }
   
-  .search-field {
-    flex: 2;
-    min-width: 300px;
+  .filter-row {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .manage-semesters-container {
-    padding: 16px;
+    padding: 12px;
+  }
+  
+  .header-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
   }
   
   .stats-container {
@@ -378,21 +341,112 @@
     gap: 16px;
   }
   
+  .search-filter-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .search-filter-card mat-card-content {
+    padding: 12px !important;
+  }
+  
+  .search-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .search-field {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .search-button, .clear-button, .add-button {
+    width: 100%;
+    min-width: auto;
+    height: 44px;
+  }
+  
   .form-row {
     grid-template-columns: 1fr;
     gap: 12px;
   }
   
-  .filter-row {
-    grid-template-columns: 1fr;
-  }
-  
   .form-actions {
     flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-actions button {
+    width: 100%;
+    height: 44px;
+  }
+  
+  .table-card {
+    border-radius: 12px;
+  }
+  
+  .table-card mat-card-content {
+    padding: 0 !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .semesters-table {
+    min-width: 800px;
+  }
+  
+  .semesters-table th,
+  .semesters-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  .pagination-container {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 16px;
+  }
+}@media (max-width: 480px) {
+  .manage-semesters-container {
+    padding: 8px;
+  }
+  
+  .header-card mat-card-content {
+    padding: 12px !important;
+  }
+  
+  .search-filter-card mat-card-content {
+    padding: 8px !important;
+  }
+  
+  .search-button, .clear-button, .add-button {
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  .semesters-table th,
+  .semesters-table td {
+    padding: 8px 6px;
+    font-size: 12px;
   }
   
   .stat-number {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+  }
+  
+  .form-actions button {
+    height: 40px;
+    font-size: 14px;
   }
 }
 

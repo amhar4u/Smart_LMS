@@ -481,6 +481,198 @@ import { AuthService } from '../../../services/auth.service';
       background: transparent;
       margin-top: 16px;
     }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .filters-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .manage-meetings-page {
+        padding: 12px;
+      }
+
+      .page-header {
+        padding: 24px;
+        border-radius: 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .header-left {
+        gap: 12px;
+      }
+
+      .page-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+
+      .header-text h1 {
+        font-size: 24px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+      }
+
+      .create-btn {
+        width: 100%;
+        height: 44px;
+      }
+
+      .filters-section {
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+
+      .filters-title {
+        font-size: 16px;
+      }
+
+      .filters-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .clear-btn {
+        width: 100%;
+        height: 44px;
+      }
+
+      .content-section {
+        padding: 16px;
+        border-radius: 12px;
+      }
+
+      .section-header h3 {
+        font-size: 18px;
+      }
+
+      /* Make table fully scrollable without sticky columns */
+      .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .data-table {
+        min-width: 900px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+      }
+
+      .topic-cell strong {
+        font-size: 14px;
+      }
+
+      .topic-cell small {
+        font-size: 12px;
+      }
+
+      .action-buttons {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .action-buttons button {
+        min-width: 32px;
+        height: 32px;
+      }
+
+      .host-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .manage-meetings-page {
+        padding: 8px;
+      }
+
+      .page-header {
+        padding: 16px;
+      }
+
+      .page-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .header-text h1 {
+        font-size: 20px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+      }
+
+      .create-btn {
+        height: 40px;
+        font-size: 14px;
+        padding: 0 20px;
+      }
+
+      .filters-section {
+        padding: 12px;
+      }
+
+      .content-section {
+        padding: 12px;
+      }
+
+      .data-table {
+        min-width: 800px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+      }
+
+      .action-buttons button {
+        min-width: 28px;
+        height: 28px;
+      }
+
+      .host-btn {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+      }
+
+      .action-buttons button mat-icon {
+        font-size: 18px;
+      }
+
+      .status-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+
+      .no-data mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+      }
+
+      .no-data p {
+        font-size: 14px;
+      }
+    }
   `]
 })
 export class ManageMeetingsComponent implements OnInit {

@@ -189,28 +189,138 @@
   width: 18px;
 }
 
+/* Loading Container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+.loading-container p {
+  color: #6c757d;
+  font-size: 1em;
+}
+
+/* No Data Container */
+.no-data-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.no-data-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  opacity: 0.3;
+  margin-bottom: 16px;
+}
+
+.no-data-container h3 {
+  margin: 0 0 8px;
+  font-size: 1.2em;
+  color: #495057;
+}
+
+.no-data-container p {
+  margin: 0;
+  font-size: 0.95em;
+}
+
 /* Responsive Design */
-@media (max-width: 768px) {
-  .action-bar {
+@media (max-width: 1024px) {
+  .filters-container {
     flex-direction: column;
     align-items: stretch;
   }
   
+  .search-section {
+    flex-direction: column;
+    width: 100%;
+  }
+  
   .search-field {
-    max-width: none;
+    min-width: unset;
     width: 100%;
   }
   
   .action-buttons {
-    justify-content: center;
+    width: 100%;
+    justify-content: stretch;
   }
   
-  .page-header h1 {
-    font-size: 2em;
+  .action-buttons button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .manage-students-container {
+    padding: 0;
+  }
+  
+  .header-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .header-card mat-card-title {
+    font-size: 1.4em;
+  }
+  
+  .header-card mat-card-subtitle {
+    font-size: 0.95em;
+  }
+  
+  .filters-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .filters-container {
+    gap: 12px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+    height: 44px;
+  }
+  
+  .table-card {
+    border-radius: 12px;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .table-card mat-card-header {
+    padding: 16px;
+  }
+  
+  /* Make table scrollable horizontally on mobile */
+  .table-card mat-card-content {
+    padding: 0 !important;
+    overflow-x: auto;
   }
   
   .students-table {
-    font-size: 0.9em;
+    font-size: 0.85em;
+    min-width: 800px; /* Ensure table doesn't collapse */
   }
   
   .students-table th,
@@ -220,16 +330,29 @@
 }
 
 @media (max-width: 480px) {
-  .page-header h1 {
-    font-size: 1.8em;
+  .header-card mat-card-title {
+    font-size: 1.2em;
+    gap: 8px;
   }
   
-  .action-buttons {
-    flex-direction: column;
+  .header-card mat-icon {
+    font-size: 1.5em;
+  }
+  
+  .header-card mat-card-subtitle {
+    font-size: 0.9em;
+  }
+  
+  .filters-card mat-card-content {
+    padding: 12px !important;
+  }
+  
+  .search-section {
+    gap: 12px;
   }
   
   .action-buttons button {
-    width: 100%;
+    font-size: 0.9em;
   }
   
   .students-table {
@@ -238,7 +361,23 @@
   
   .students-table th,
   .students-table td {
-    padding: 8px 4px;
+    padding: 8px 6px;
+  }
+  
+  .status-badge {
+    font-size: 0.7em;
+    padding: 4px 8px;
+  }
+  
+  .students-table button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .students-table button mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
   }
 }
 

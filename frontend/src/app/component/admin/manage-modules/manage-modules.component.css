@@ -332,9 +332,7 @@
     align-items: flex-start;
     gap: 16px;
   }
-}
-
-@media (max-width: 768px) {
+  
   .filters-form {
     flex-direction: column;
     align-items: stretch;
@@ -345,12 +343,63 @@
     min-width: 0;
     flex: 1;
   }
-  
-  .clear-filters-btn {
-    align-self: flex-start;
-    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .manage-modules-container {
+    padding: 12px;
   }
   
+  .header-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .title-section h1 {
+    font-size: 20px;
+  }
+  
+  .filters-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .filters-card mat-card-content {
+    padding: 12px !important;
+  }
+  
+  .filters-form {
+    gap: 12px;
+  }
+  
+  .clear-filters-btn {
+    align-self: stretch;
+    margin-bottom: 0;
+    width: 100%;
+    height: 44px;
+  }
+  
+  .table-card {
+    border-radius: 12px;
+  }
+  
+  .table-card mat-card-content {
+    padding: 0 !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Make table scrollable */
+  .modules-table {
+    min-width: 900px;
+  }
+  
+  .modules-table th,
+  .modules-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
   /* Hide less important columns on mobile */
   .order-column,
   .order-cell,
@@ -367,21 +416,52 @@
     -webkit-line-clamp: 1;
     line-clamp: 1;
   }
-}
-
-@media (max-width: 480px) {
+  
+  .header-section button {
+    width: 100%;
+    height: 44px;
+  }
+}@media (max-width: 480px) {
   .manage-modules-container {
-    padding: 12px;
+    padding: 8px;
   }
   
   .title-section h1 {
-    font-size: 1.5rem;
+    font-size: 18px;
+  }
+  
+  .filters-card mat-card-content {
+    padding: 8px !important;
+  }
+  
+  .clear-filters-btn {
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  .modules-table th,
+  .modules-table td {
+    padding: 8px 6px;
+    font-size: 12px;
   }
   
   /* Hide even more columns on very small screens */
   .video-column,
   .video-cell {
     display: none;
+  }
+  
+  .module-description {
+    font-size: 11px;
+  }
+  
+  .actions-cell button {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .actions-cell button mat-icon {
+    font-size: 16px;
   }
 }
 

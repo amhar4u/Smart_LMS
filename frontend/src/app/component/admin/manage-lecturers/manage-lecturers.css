@@ -375,46 +375,143 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .action-bar {
+@media (max-width: 1024px) {
+  .filters-container {
     flex-direction: column;
     align-items: stretch;
   }
   
+  .search-section {
+    flex-direction: column;
+    width: 100%;
+  }
+  
   .search-field {
-    max-width: none;
+    min-width: unset;
     width: 100%;
   }
   
   .action-buttons {
-    justify-content: center;
+    width: 100%;
+    justify-content: stretch;
   }
   
-  .page-header h1 {
-    font-size: 2em;
+  .action-buttons button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .manage-lecturers-container {
+    padding: 0;
+  }
+  
+  .header-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .header-card mat-card-title {
+    font-size: 1.4em;
+  }
+  
+  .header-card mat-icon {
+    font-size: 1.5em;
+  }
+  
+  .header-card mat-card-subtitle {
+    font-size: 0.95em;
+  }
+  
+  .filters-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .filters-container {
+    gap: 12px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+    height: 44px;
+  }
+  
+  .table-card {
+    border-radius: 12px;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .table-card mat-card-header {
+    padding: 16px;
+  }
+  
+  /* Make table scrollable horizontally on mobile */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table-card mat-card-content {
+    padding: 0 !important;
   }
   
   .lecturers-table {
-    font-size: 0.9em;
+    font-size: 0.85em;
+    min-width: 900px; /* Ensure table doesn't collapse */
   }
   
   .lecturers-table th,
   .lecturers-table td {
     padding: 12px 8px;
   }
+  
+  .approval-actions, .regular-actions {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .approval-actions button,
+  .regular-actions button {
+    min-width: 32px;
+    height: 32px;
+  }
 }
 
 @media (max-width: 480px) {
-  .page-header h1 {
-    font-size: 1.8em;
+  .header-card mat-card-title {
+    font-size: 1.2em;
+    gap: 8px;
   }
   
-  .action-buttons {
-    flex-direction: column;
+  .header-card mat-icon {
+    font-size: 1.3em;
+  }
+  
+  .header-card mat-card-subtitle {
+    font-size: 0.9em;
+  }
+  
+  .filters-card mat-card-content {
+    padding: 12px !important;
+  }
+  
+  .search-section {
+    gap: 12px;
   }
   
   .action-buttons button {
-    width: 100%;
+    font-size: 0.9em;
   }
   
   .lecturers-table {
@@ -423,7 +520,37 @@
   
   .lecturers-table th,
   .lecturers-table td {
-    padding: 8px 4px;
+    padding: 8px 6px;
+  }
+  
+  .status-badge {
+    font-size: 0.7em;
+    padding: 4px 8px;
+  }
+  
+  .course-count {
+    font-size: 0.75em;
+    padding: 3px 8px;
+  }
+  
+  .profile-image,
+  .avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .approval-actions button,
+  .regular-actions button {
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .approval-actions button mat-icon,
+  .regular-actions button mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
   }
 }
 

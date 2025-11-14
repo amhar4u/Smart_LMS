@@ -369,11 +369,35 @@
 
 @media (max-width: 768px) {
   .manage-subjects-container {
-    padding: 16px;
+    padding: 12px;
+  }
+
+  .header-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .header-card mat-card-title {
+    font-size: 20px;
+  }
+
+  .header-card mat-card-title mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
   }
 
   .filters-container {
-    gap: 16px;
+    gap: 12px;
+  }
+  
+  .filters-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .filters-card mat-card-content {
+    padding: 12px !important;
   }
 
   .action-buttons {
@@ -381,50 +405,84 @@
     gap: 8px;
   }
 
+  .action-buttons button {
+    width: 100%;
+    height: 44px;
+  }
+
+  .table-card {
+    border-radius: 12px;
+  }
+
+  .table-card mat-card-content {
+    padding: 0 !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .subjects-table {
-    font-size: 12px;
+    font-size: 13px;
     min-width: 800px;
+  }
+
+  .subjects-table th,
+  .subjects-table td {
+    padding: 10px 8px;
   }
 
   .subject-description {
     max-width: 120px;
   }
-
-  .header-card mat-card-title {
-    font-size: 24px;
-  }
-
-  .header-card mat-card-title mat-icon {
-    font-size: 28px;
-    width: 28px;
-    height: 28px;
-  }
 }
 
 @media (max-width: 480px) {
   .manage-subjects-container {
-    padding: 12px;
+    padding: 8px;
   }
 
   .header-card mat-card-title {
-    font-size: 20px;
-    flex-direction: column;
+    font-size: 18px;
     gap: 8px;
-    text-align: center;
+  }
+
+  .header-card mat-card-title mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .filters-card mat-card-content {
+    padding: 8px !important;
+  }
+
+  .action-buttons button {
+    font-size: 14px;
+    height: 40px;
   }
 
   .subjects-table {
     min-width: 700px;
+    font-size: 12px;
+  }
+
+  .subjects-table th,
+  .subjects-table td {
+    padding: 8px 6px;
+  }
+
+  .subject-description {
+    max-width: 100px;
+    font-size: 11px;
   }
 
   .no-data-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
   }
 
   .no-data-title {
-    font-size: 18px;
+    font-size: 16px;
   }
 }
 

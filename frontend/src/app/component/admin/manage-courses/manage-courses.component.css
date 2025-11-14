@@ -320,11 +320,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .manage-courses-container {
-    padding: 16px;
-  }
-
+@media (max-width: 1024px) {
   .filters-container {
     flex-direction: column;
     align-items: stretch;
@@ -332,12 +328,76 @@
 
   .search-section {
     flex-direction: column;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .search-field,
+  .filter-field {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .action-buttons button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .manage-courses-container {
+    padding: 12px;
+  }
+
+  .header-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .header-card mat-card-title {
+    font-size: 20px;
+  }
+
+  .header-card mat-card-title mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .header-card mat-card-subtitle {
+    font-size: 14px;
+  }
+
+  .filters-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .filters-card mat-card-content {
+    padding: 12px !important;
+  }
+
+  .filters-container {
+    gap: 12px;
+  }
+
+  .search-section {
     gap: 12px;
   }
 
   .action-buttons {
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8px;
+    height: auto;
+  }
+
+  .action-buttons button {
+    width: 100%;
+    height: 44px;
   }
 
   .form-row {
@@ -347,37 +407,105 @@
 
   .form-actions {
     flex-direction: column-reverse;
+    gap: 8px;
   }
 
   .form-actions button {
     width: 100%;
+    height: 44px;
+  }
+
+  /* Table responsive */
+  .table-card {
+    border-radius: 12px;
+  }
+
+  .table-card mat-card-content {
+    padding: 0 !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .courses-table {
-    font-size: 14px;
+    font-size: 13px;
+    min-width: 800px;
+  }
+
+  .courses-table th,
+  .courses-table td {
+    padding: 10px 8px;
   }
 
   .description-cell {
-    max-width: 150px;
+    max-width: 120px;
   }
 }
 
 @media (max-width: 480px) {
+  .manage-courses-container {
+    padding: 8px;
+  }
+
   .header-card mat-card-title {
+    font-size: 18px;
+  }
+
+  .header-card mat-card-title mat-icon {
     font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .header-card mat-card-subtitle {
+    font-size: 13px;
+  }
+
+  .filters-card mat-card-content {
+    padding: 8px !important;
+  }
+
+  .action-buttons button {
+    font-size: 14px;
+    height: 40px;
+  }
+
+  .courses-table {
+    font-size: 12px;
+  }
+
+  .courses-table th,
+  .courses-table td {
+    padding: 8px 6px;
   }
 
   .course-code {
-    font-size: 12px;
+    font-size: 11px;
     padding: 2px 6px;
+  }
+
+  .credits-badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .description-cell {
+    max-width: 100px;
+    font-size: 11px;
   }
 
   .actions-cell button {
     margin: 0 1px;
+    width: 28px;
+    height: 28px;
   }
 
   .actions-cell button mat-icon {
-    font-size: 18px;
+    font-size: 16px;
+  }
+
+  .form-actions button {
+    height: 40px;
+    font-size: 14px;
   }
 }
 
