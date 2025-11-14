@@ -42,7 +42,11 @@ export class LecturerLayout implements OnInit {
     );
 
   ngOnInit() {
-    // Initialize any required data
+    // Auto-collapse sidebar on mobile screens
+    this.breakpointObserver.observe(['(max-width: 768px)'])
+      .subscribe(result => {
+        this.sidebarCollapsed = result.matches;
+      });
   }
 
   toggleSidebar() {

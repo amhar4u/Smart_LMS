@@ -38,8 +38,20 @@ export class StudentLayout implements OnInit {
       shareReplay()
     );
 
+  // Sidebar state
+  isSidebarCollapsed = false;
+  isMobileView = false;
+
   ngOnInit() {
-    // Initialize any required data
+    // Auto-collapse sidebar on mobile
+    this.breakpointObserver.observe(['(max-width: 768px)']).subscribe(result => {
+      this.isMobileView = result.matches;
+      this.isSidebarCollapsed = result.matches;
+    });
+  }
+
+  toggleSidebar() {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
   logout() {

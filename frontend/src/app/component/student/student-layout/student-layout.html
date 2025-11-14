@@ -5,6 +5,7 @@
       #drawer
       mode="side" 
       opened="true"
+      [class.collapsed]="isSidebarCollapsed"
       class="sidenav"
       fixedInViewport="true">
       
@@ -15,12 +16,15 @@
             <mat-icon>school</mat-icon>
           </div>
         </div>
+        <button mat-icon-button class="collapse-toggle" (click)="toggleSidebar()" *ngIf="!isMobileView">
+          <mat-icon>{{ isSidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+        </button>
       </div>
 
       <!-- Navigation Menu -->
       <nav class="sidebar-nav">
         <!-- Dashboard -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/student/dashboard">
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/dashboard" data-tooltip="Dashboard">
           <div class="nav-content">
             <mat-icon class="nav-icon">dashboard</mat-icon>
             <span class="nav-text">Dashboard</span>
@@ -28,7 +32,7 @@
         </div>
 
         <!-- My Subjects -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/student/subjects">
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/subjects" data-tooltip="My Subjects">
           <div class="nav-content">
             <mat-icon class="nav-icon">library_books</mat-icon>
             <span class="nav-text">My Subjects</span>
@@ -36,7 +40,7 @@
         </div>
 
         <!-- My Assignments -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/student/assignments">
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/assignments" data-tooltip="My Assignments">
           <div class="nav-content">
             <mat-icon class="nav-icon">assignment</mat-icon>
             <span class="nav-text">My Assignments</span>
@@ -44,7 +48,7 @@
         </div>
 
         <!-- My Meetings -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/student/meetings">
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/meetings" data-tooltip="My Meetings">
           <div class="nav-content">
             <mat-icon class="nav-icon">video_library</mat-icon>
             <span class="nav-text">My Meetings</span>

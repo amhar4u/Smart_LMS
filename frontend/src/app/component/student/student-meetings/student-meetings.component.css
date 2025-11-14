@@ -814,3 +814,346 @@
     height: 1rem;
   }
 }
+
+/* ==================== COMPREHENSIVE RESPONSIVE DESIGN ==================== */
+
+@media (max-width: 1024px) {
+  .my-meetings-container {
+    padding: 1.5rem;
+  }
+  
+  .page-header {
+    padding: 1.5rem;
+  }
+  
+  .header-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .header-text h1 {
+    font-size: 2.2rem;
+  }
+  
+  .header-stats {
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .my-meetings-container {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .header-icon {
+    font-size: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.75rem;
+  }
+  
+  .header-text h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.35rem;
+  }
+  
+  .header-text p {
+    font-size: 1rem;
+  }
+  
+  .header-stats {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  /* Filters */
+  .filters-card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .filters-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .filter-field {
+    width: 100% !important;
+  }
+  
+  /* Meeting Accordion */
+  .meeting-accordion {
+    margin-bottom: 1rem;
+  }
+  
+  .meeting-accordion-header {
+    padding: 1.25rem 1.5rem !important;
+  }
+  
+  .meeting-panel-title {
+    margin-right: 1rem !important;
+  }
+  
+  .meeting-title-compact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .meeting-title-compact .meeting-icon {
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0.4rem;
+  }
+  
+  .meeting-title-text {
+    font-size: 1.15rem;
+    word-wrap: break-word;
+  }
+  
+  .meeting-subtitle {
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
+  
+  .meeting-panel-description {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  
+  .meeting-quick-info {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .quick-badge,
+  .quick-info-text {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.75rem;
+  }
+  
+  .header-join-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  
+  /* Meeting Details */
+  .meeting-details {
+    padding: 1.5rem;
+  }
+  
+  .details-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  .detail-item {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .actions-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .actions-section button {
+    width: 100%;
+    height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .my-meetings-container {
+    padding: 0.75rem;
+  }
+  
+  .page-header {
+    padding: 1.25rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .header-content {
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .header-icon {
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0.6rem;
+  }
+  
+  .header-text h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .header-text p {
+    font-size: 0.9rem;
+  }
+  
+  .stat-card {
+    padding: 0.85rem;
+  }
+  
+  .stat-card mat-icon {
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.35rem;
+  }
+  
+  .stat-label {
+    font-size: 0.8rem;
+  }
+  
+  .filters-card {
+    border-radius: 10px;
+  }
+  
+  .filters-container {
+    gap: 10px;
+  }
+  
+  .meeting-accordion {
+    margin-bottom: 0.85rem;
+    border-radius: 10px;
+  }
+  
+  .meeting-accordion-header {
+    padding: 1rem !important;
+  }
+  
+  .meeting-title-compact .meeting-icon {
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0.35rem;
+  }
+  
+  .meeting-title-text {
+    font-size: 1rem;
+    margin-bottom: 0.35rem;
+  }
+  
+  .meeting-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .meeting-subtitle mat-icon {
+    font-size: 0.9rem;
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+  
+  .quick-badge,
+  .quick-info-text {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.65rem;
+  }
+  
+  .quick-badge mat-icon,
+  .quick-info-text mat-icon {
+    font-size: 0.85rem;
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  
+  .header-join-btn {
+    font-size: 0.75rem !important;
+    padding: 0.5rem 1.25rem !important;
+    height: 44px;
+  }
+  
+  .header-join-btn mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .meeting-details {
+    padding: 1.25rem;
+  }
+  
+  .details-section h3 {
+    font-size: 1.1rem;
+  }
+  
+  .detail-item {
+    padding: 0.65rem;
+    font-size: 0.85rem;
+  }
+  
+  .detail-item mat-icon {
+    font-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+  
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+  
+  .empty-state mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .empty-state h3 {
+    font-size: 1.2rem;
+  }
+  
+  .empty-state p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Touch optimization for mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .meeting-accordion-header,
+  .nav-item {
+    min-height: 44px;
+  }
+  
+  mat-icon-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .filter-field {
+    min-height: 56px;
+  }
+}
+
