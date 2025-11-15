@@ -505,6 +505,7 @@
 
   .page-header {
     padding: 20px;
+    margin-bottom: 20px;
   }
 
   .header-content {
@@ -516,18 +517,172 @@
   .header-text h1 {
     font-size: 24px;
   }
+  
+  .header-text p {
+    font-size: 14px;
+  }
+  
+  .header-content button {
+    width: 100%;
+    height: 44px;
+  }
 
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .stat-content {
+    gap: 12px;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .stat-icon mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .stat-info h2 {
+    font-size: 28px;
+  }
+  
+  .stat-info p {
+    font-size: 13px;
+  }
+  
+  .table-card {
+    margin-bottom: 16px;
+  }
+  
+  .table-header {
+    padding: 16px;
+  }
+  
+  .header-title mat-card-title {
+    font-size: 18px;
+  }
+  
+  .header-with-action {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .header-with-action button {
+    width: 100%;
+    height: 44px;
   }
 
   .table-container {
-    overflow-x: scroll;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .assignments-table,
   .meetings-table {
-    min-width: 800px;
+    min-width: 900px;
+  }
+  
+  .assignments-table th,
+  .assignments-table td,
+  .meetings-table th,
+  .meetings-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-content {
+    padding: 12px;
+  }
+  
+  .page-header {
+    padding: 16px;
+    border-radius: 10px;
+  }
+  
+  .header-text h1 {
+    font-size: 20px;
+  }
+  
+  .header-text p {
+    font-size: 13px;
+  }
+  
+  .stats-grid {
+    gap: 12px;
+  }
+  
+  .stat-card {
+    border-radius: 10px;
+  }
+  
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .stat-icon mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+  
+  .stat-info h2 {
+    font-size: 24px;
+  }
+  
+  .stat-info p {
+    font-size: 12px;
+  }
+  
+  .table-header {
+    padding: 12px;
+  }
+  
+  .header-title mat-card-title {
+    font-size: 16px;
+  }
+  
+  .header-title mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .no-data {
+    padding: 40px 16px;
+  }
+  
+  .no-data mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .no-data p {
+    font-size: 14px;
+  }
+}
+
+/* Touch optimization for mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .assignment-row,
+  .meeting-row,
+  .stat-card {
+    min-height: 44px;
+  }
+  
+  mat-icon-button {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
@@ -549,3 +704,4 @@
   color: #1976d2 !important;
   font-weight: 500;
 }
+

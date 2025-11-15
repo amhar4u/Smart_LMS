@@ -310,3 +310,187 @@
     font-size: 2.5rem;
   }
 }
+
+/* ==================== ENHANCED RESPONSIVE DESIGN ==================== */
+
+@media (max-width: 1024px) {
+  .result-container {
+    max-width: 900px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .result-container {
+    padding: 16px;
+  }
+  
+  .result-header {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .result-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .back-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .status-content {
+    padding: 32px 16px;
+  }
+  
+  .status-content mat-icon {
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
+  }
+  
+  .status-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .status-content p {
+    font-size: 1rem;
+  }
+  
+  .submission-info {
+    padding: 12px;
+    width: 100%;
+  }
+  
+  .submission-info p {
+    font-size: 0.95rem;
+  }
+  
+  .score-display {
+    flex-direction: column;
+    gap: 24px;
+    padding: 16px;
+    text-align: center;
+  }
+  
+  .score-circle {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .percentage {
+    font-size: 2.5rem;
+  }
+  
+  .score-info h2 {
+    font-size: 1.5rem;
+  }
+  
+  .score-info p {
+    font-size: 1rem;
+  }
+  
+  mat-card {
+    margin-bottom: 16px;
+  }
+  
+  mat-card-header mat-card-title {
+    font-size: 1.25rem;
+  }
+  
+  mat-card-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  mat-card-actions button {
+    width: 100%;
+    height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .result-container {
+    padding: 12px;
+  }
+  
+  .result-header {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  
+  .result-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .status-content {
+    padding: 28px 12px;
+  }
+  
+  .status-content mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .status-content h2 {
+    font-size: 1.3rem;
+  }
+  
+  .status-content p {
+    font-size: 0.95rem;
+  }
+  
+  .submission-info {
+    padding: 10px;
+  }
+  
+  .submission-info p {
+    font-size: 0.9rem;
+    margin: 6px 0;
+  }
+  
+  .score-display {
+    padding: 12px;
+    gap: 20px;
+  }
+  
+  .score-circle {
+    width: 130px;
+    height: 130px;
+  }
+  
+  .percentage {
+    font-size: 2.2rem;
+  }
+  
+  .score-info h2 {
+    font-size: 1.3rem;
+  }
+  
+  .score-info p {
+    font-size: 0.95rem;
+  }
+  
+  mat-card-header mat-card-title {
+    font-size: 1.1rem;
+  }
+  
+  .loading-container {
+    padding: 80px 16px;
+  }
+}
+
+/* Touch optimization for mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .back-button {
+    min-height: 44px;
+  }
+  
+  mat-icon-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+

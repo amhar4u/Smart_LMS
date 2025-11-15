@@ -191,6 +191,274 @@
   }
 }
 
+/* ==================== COMPREHENSIVE RESPONSIVE DESIGN ==================== */
+
+@media (max-width: 1024px) {
+  .subjects-container {
+    padding: 0;
+  }
+  
+  .page-header-gradient {
+    margin: 1.5rem;
+  }
+  
+  .header-content-gradient {
+    padding: 2rem;
+  }
+  
+  .subjects-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header-gradient {
+    margin: 1rem;
+    border-radius: 12px;
+  }
+  
+  .header-content-gradient {
+    padding: 1.5rem;
+  }
+  
+  .header-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .header-title-row h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header-meta-row {
+    gap: 1rem;
+  }
+  
+  .header-meta-row .meta-item {
+    font-size: 0.85rem;
+  }
+  
+  .subjects-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .subject-card {
+    border-radius: 10px;
+  }
+  
+  .card-header {
+    height: 90px;
+  }
+  
+  .subject-code {
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .subject-icon {
+    font-size: 1.35rem;
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .subject-name {
+    font-size: 1.05rem;
+  }
+  
+  .info-chip {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+  }
+  
+  .subject-lecturer {
+    font-size: 0.75rem;
+  }
+  
+  .page-header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .header-content h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header-content h1 mat-icon {
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .header-content p {
+    font-size: 0.9rem;
+  }
+  
+  .empty-state-card {
+    padding: 3rem 2rem;
+  }
+  
+  .empty-state-card mat-icon {
+    font-size: 4rem;
+    width: 4rem;
+    height: 4rem;
+  }
+  
+  .empty-state-card h2 {
+    font-size: 1.3rem;
+  }
+  
+  .empty-state-card p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header-gradient {
+    margin: 0.75rem;
+    border-radius: 10px;
+  }
+  
+  .header-content-gradient {
+    padding: 1.25rem;
+  }
+  
+  .header-title-row h1 {
+    font-size: 1.35rem;
+  }
+  
+  .header-meta-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .header-meta-row .meta-item {
+    font-size: 0.8rem;
+  }
+  
+  .subjects-grid {
+    padding: 0.75rem;
+    gap: 0.85rem;
+  }
+  
+  .subject-card {
+    border-radius: 8px;
+  }
+  
+  .card-header {
+    height: 80px;
+  }
+  
+  .subject-code {
+    padding: 0.45rem 0.9rem;
+    font-size: 1rem;
+  }
+  
+  .subject-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  
+  .card-body {
+    padding: 0.85rem;
+    gap: 0.65rem;
+  }
+  
+  .subject-name {
+    font-size: 1rem;
+  }
+  
+  .subject-info-row {
+    gap: 0.4rem;
+  }
+  
+  .info-chip {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.55rem;
+  }
+  
+  .info-chip mat-icon {
+    font-size: 0.85rem;
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  
+  .subject-meta {
+    font-size: 0.8rem;
+  }
+  
+  .subject-lecturer {
+    font-size: 0.7rem;
+    padding-top: 0.55rem;
+  }
+  
+  .subject-lecturer mat-icon {
+    font-size: 0.9rem;
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+  
+  .page-header {
+    padding: 1.25rem 0.85rem;
+  }
+  
+  .header-content h1 {
+    font-size: 1.35rem;
+  }
+  
+  .header-content h1 mat-icon {
+    font-size: 1.35rem;
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+  
+  .header-content p {
+    font-size: 0.85rem;
+  }
+  
+  .empty-state-card {
+    padding: 2.5rem 1.5rem;
+  }
+  
+  .empty-state-card mat-icon {
+    font-size: 3.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  
+  .empty-state-card h2 {
+    font-size: 1.2rem;
+  }
+  
+  .empty-state-card p {
+    font-size: 0.95rem;
+  }
+  
+  .no-subjects {
+    padding: 1.5rem;
+  }
+}
+
+/* Touch optimization for mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  .subject-card,
+  .card-menu button {
+    min-height: 44px;
+  }
+  
+  mat-icon-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 /* Subject Card - Canvas Style */
 .subject-card {
   cursor: pointer;
