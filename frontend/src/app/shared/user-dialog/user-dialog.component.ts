@@ -186,11 +186,20 @@ export interface UserDialogData {
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Status</mat-label>
-              <mat-select formControlName="status" [disabled]="data.mode === 'view'">
+              <mat-select formControlName="status" [disabled]="data.mode === 'view'" (selectionChange)="onStatusChange($event)">
                 <mat-option value="pending">Pending</mat-option>
                 <mat-option value="approved">Approved</mat-option>
                 <mat-option value="rejected">Rejected</mat-option>
               </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Rejection Reason Field (shows only when status is rejected) -->
+          <div class="form-row" *ngIf="userForm.get('status')?.value === 'rejected' && data.mode !== 'view'">
+            <mat-form-field appearance="outline">
+              <mat-label>Rejection Reason</mat-label>
+              <textarea matInput formControlName="reason" rows="3"
+                        placeholder="Please provide a reason for rejection (optional)"></textarea>
             </mat-form-field>
           </div>
         </div>
@@ -368,7 +377,7 @@ export class UserDialogComponent implements OnInit {
     });
     promises.push(batchPromise);
 
-    return Promise.all(promises).catch((error) => {
+    return Promise.all(promises).then(() => {}).catch((error) => {
       console.error('Error loading dropdown data:', error);
     });
   }
@@ -385,6 +394,7 @@ export class UserDialogComponent implements OnInit {
       // Student fields
       studentId: [''],
       status: ['pending'],
+      reason: [''], // Rejection reason field
       department: [''],
       course: [''],
       batch: [''],
@@ -542,6 +552,14 @@ export class UserDialogComponent implements OnInit {
     }
   }
 
+  onStatusChange(event: any): void {
+    const status = event.value;
+    // Clear rejection reason if status is not rejected
+    if (status !== 'rejected') {
+      this.userForm.patchValue({ reason: '' });
+    }
+  }
+
   onCancel(): void {
     this.dialogRef.close();
   }
@@ -559,8 +577,12 @@ export class UserDialogComponent implements OnInit {
         delete formData.permissionsString;
       }
 
-      // Remove empty fields
+      // Remove empty fields (but keep reason if status is rejected)
       Object.keys(formData).forEach(key => {
+        if (key === 'reason' && formData.status === 'rejected') {
+          // Keep reason field even if empty for rejected status
+          return;
+        }
         if (formData[key] === '' || formData[key] === null || formData[key] === undefined) {
           delete formData[key];
         }

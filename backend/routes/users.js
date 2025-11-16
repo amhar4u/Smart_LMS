@@ -411,6 +411,19 @@ router.put('/:id', auth, async (req, res) => {
     delete updates._id;
     delete updates.__v;
 
+    // Get the old user data to check for status changes
+    const oldUser = await User.findById(id);
+    
+    if (!oldUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const oldStatus = oldUser.status;
+    const newStatus = updates.status;
+
     // Find and update user
     const user = await User.findByIdAndUpdate(
       id,
@@ -426,6 +439,22 @@ router.put('/:id', auth, async (req, res) => {
         success: false,
         message: 'User not found'
       });
+    }
+
+    // Send email notification if status changed
+    if (newStatus && oldStatus !== newStatus) {
+      if (newStatus === 'approved') {
+        // Send verification/approval email
+        sendVerificationEmail(user).catch(error => {
+          console.error('Failed to send verification email:', error);
+        });
+      } else if (newStatus === 'rejected') {
+        // Send rejection email
+        const reason = updates.rejectionReason || req.body.reason || '';
+        sendRejectionEmail(user, reason).catch(error => {
+          console.error('Failed to send rejection email:', error);
+        });
+      }
     }
 
     res.status(200).json({
