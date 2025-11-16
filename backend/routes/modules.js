@@ -52,8 +52,6 @@ const validateModule = [
 // Get all modules with population
 router.get('/', auth, async (req, res) => {
   try {
-    console.log('📋 [MODULES] Fetching all modules (no auth for testing)');
-    
     const { subject, page = 1, limit = 50, search } = req.query;
     
     // Build filter - don't filter by isActive if it doesn't exist
@@ -72,8 +70,6 @@ router.get('/', auth, async (req, res) => {
       ];
     }
     
-    console.log('📋 [MODULES] Filter:', filter);
-    
     // Calculate pagination
     const skip = (page - 1) * limit;
     
@@ -88,9 +84,6 @@ router.get('/', auth, async (req, res) => {
     // Get total count for pagination
     const totalItems = await Module.countDocuments(filter);
     const totalPages = Math.ceil(totalItems / limit);
-    
-    console.log(`✅ [MODULES] Found ${modules.length} modules (${totalItems} total)`);
-    console.log('📋 [MODULES] First module:', modules[0] ? modules[0].title : 'None');
     
     res.json({
       success: true,
@@ -118,8 +111,6 @@ router.get('/', auth, async (req, res) => {
 // Get modules by subject
 router.get('/subject/:subjectId', auth, async (req, res) => {
   try {
-    console.log(`📋 [MODULES] Fetching modules for subject: ${req.params.subjectId}`);
-    
     const modules = await Module.find({ 
       subject: req.params.subjectId,
       isActive: true 
@@ -149,8 +140,6 @@ router.get('/subject/:subjectId', auth, async (req, res) => {
       .populate('createdBy', 'firstName lastName email')
       .sort({ createdAt: -1 });
     
-    console.log(`✅ [MODULES] Found ${modules.length} modules for subject`);
-    
     res.json({
       success: true,
       message: 'Modules fetched successfully',
@@ -169,8 +158,6 @@ router.get('/subject/:subjectId', auth, async (req, res) => {
 // Get single module
 router.get('/:id', auth, async (req, res) => {
   try {
-    console.log(`📋 [MODULES] Fetching module: ${req.params.id}`);
-    
     const module = await Module.findById(req.params.id)
       .populate({
         path: 'subject',
@@ -197,14 +184,11 @@ router.get('/:id', auth, async (req, res) => {
       .populate('createdBy', 'firstName lastName email');
     
     if (!module) {
-      console.log(`❌ [MODULES] Module not found: ${req.params.id}`);
-      return res.status(404).json({ 
+      return res.status(404).json( 
         success: false,
         message: 'Module not found' 
       });
     }
-    
-    console.log(`✅ [MODULES] Module found: ${module.title}`);
     
     res.json({
       success: true,

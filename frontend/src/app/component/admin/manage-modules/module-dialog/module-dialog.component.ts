@@ -121,13 +121,10 @@ export class ModuleDialogComponent implements OnInit {
   }
 
   private loadDepartments(): void {
-    console.log('🔍 [MODULE DIALOG] Loading departments...');
     this.departmentService.getDepartments().subscribe({
       next: (response: any) => {
-        console.log('📋 [MODULE DIALOG] Departments response:', response);
         if (response.success && response.data) {
           this.departments = response.data;
-          console.log(`✅ [MODULE DIALOG] Loaded ${this.departments.length} departments`);
         } else {
           console.warn('⚠️ [MODULE DIALOG] Invalid departments response:', response);
         }
@@ -200,13 +197,10 @@ export class ModuleDialogComponent implements OnInit {
   }
 
   private loadCoursesByDepartment(departmentId: string): void {
-    console.log('🔍 [MODULE DIALOG] Loading courses for department:', departmentId);
     this.courseService.getCoursesByDepartment(departmentId).subscribe({
       next: (response: any) => {
-        console.log('📋 [MODULE DIALOG] Courses response:', response);
         if (response.success && response.data) {
           this.courses = response.data;
-          console.log(`✅ [MODULE DIALOG] Loaded ${this.courses.length} courses`);
         } else {
           console.warn('⚠️ [MODULE DIALOG] Invalid courses response:', response);
         }
@@ -264,8 +258,6 @@ export class ModuleDialogComponent implements OnInit {
   }
 
   private populateForm(module: any): void {
-    console.log('🔍 [MODULE DIALOG] Populating form with module:', module);
-    
     this.moduleForm.patchValue({
       title: module.title || module.name,
       name: module.name,
@@ -279,12 +271,10 @@ export class ModuleDialogComponent implements OnInit {
     // If we have subject data with the reference IDs, load the hierarchical data
     if (module.subject) {
       const subject = module.subject;
-      console.log('📋 [MODULE DIALOG] Subject data:', subject);
       
       // Load department and set it
       if (subject.departmentId) {
         const departmentId = subject.departmentId._id || subject.departmentId;
-        console.log('🏢 [MODULE DIALOG] Setting department:', departmentId);
         this.moduleForm.patchValue({ department: departmentId });
         this.loadCoursesByDepartment(departmentId);
         
@@ -292,7 +282,6 @@ export class ModuleDialogComponent implements OnInit {
         setTimeout(() => {
           if (subject.courseId) {
             const courseId = subject.courseId._id || subject.courseId;
-            console.log('📚 [MODULE DIALOG] Setting course:', courseId);
             this.moduleForm.patchValue({ course: courseId });
             this.loadBatchesByCourse(courseId);
             
@@ -300,7 +289,6 @@ export class ModuleDialogComponent implements OnInit {
             setTimeout(() => {
               if (subject.batchId) {
                 const batchId = subject.batchId._id || subject.batchId;
-                console.log('🎓 [MODULE DIALOG] Setting batch:', batchId);
                 this.moduleForm.patchValue({ batch: batchId });
                 this.loadSemestersByBatch(batchId);
                 
@@ -308,13 +296,11 @@ export class ModuleDialogComponent implements OnInit {
                 setTimeout(() => {
                   if (subject.semesterId) {
                     const semesterId = subject.semesterId._id || subject.semesterId;
-                    console.log('📅 [MODULE DIALOG] Setting semester:', semesterId);
                     this.moduleForm.patchValue({ semester: semesterId });
                     this.loadSubjectsBySemester(semesterId);
                     
                     // Finally set the subject
                     setTimeout(() => {
-                      console.log('📖 [MODULE DIALOG] Setting subject:', subject._id);
                       this.moduleForm.patchValue({ subjectId: subject._id });
                     }, 500);
                   }

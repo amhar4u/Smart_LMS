@@ -89,7 +89,6 @@ export class StudentMeetingsComponent implements OnInit, OnDestroy {
     // Get all authorized subjects with their meetings
     this.http.get<any>(`${this.apiUrl}/${user._id}/subjects`).subscribe({
       next: (response) => {
-        console.log('API Response:', response); // Debug log
         const subjects = response.data || response.subjects || [];
         
         // Extract all meetings from all subjects
@@ -109,10 +108,8 @@ export class StudentMeetingsComponent implements OnInit, OnDestroy {
                 }
               });
             });
-          }
+          });
         });
-
-        console.log('All Meetings:', allMeetings); // Debug log
 
         // Sort meetings by date (upcoming first)
         this.meetings = allMeetings.sort((a, b) => {

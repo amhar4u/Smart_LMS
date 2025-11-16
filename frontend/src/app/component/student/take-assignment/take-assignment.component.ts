@@ -164,10 +164,6 @@ export class TakeAssignmentComponent implements OnInit, OnDestroy {
     this.assignmentForm = this.fb.group({
       answers: this.fb.array(answersArray)
     });
-    
-    console.log('=== FORM INITIALIZED ===');
-    console.log('Number of questions:', this.assignment.questions.length);
-    console.log('Form structure:', this.assignmentForm.value);
   }
 
   get answersArray(): FormArray {
@@ -225,13 +221,11 @@ export class TakeAssignmentComponent implements OnInit, OnDestroy {
 
     // Prevent double submission
     if (this.isSubmitting) {
-      console.log('⚠️ Submission already in progress, ignoring duplicate request');
       return;
     }
 
     // Prevent submission if already submitted
     if (this.hasSubmitted) {
-      console.log('⚠️ Assignment already submitted, ignoring request');
       this.snackBar.open('This assignment has already been submitted.', 'Close', { duration: 3000 });
       return;
     }
@@ -244,13 +238,6 @@ export class TakeAssignmentComponent implements OnInit, OnDestroy {
     this.stopTimer();
 
     const answers = this.assignmentForm.value.answers;
-    
-    console.log('=== FRONTEND SUBMISSION DEBUG ===');
-    console.log('Assignment Form Value:', this.assignmentForm.value);
-    console.log('Answers to submit:', answers);
-    console.log('Number of answers:', answers ? answers.length : 0);
-    console.log('First answer sample:', answers && answers.length > 0 ? answers[0] : 'No answers');
-    console.log('Answers detailed:', JSON.stringify(answers, null, 2));
 
     if (!answers || answers.length === 0) {
       this.snackBar.open('No answers to submit. Please answer at least one question.', 'Close', { 
@@ -280,7 +267,6 @@ export class TakeAssignmentComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('✅ Validation passed. Submitting to backend...');
 
     this.studentAssignmentService.submitAssignment(this.assignmentId, answers).subscribe({
       next: (response) => {

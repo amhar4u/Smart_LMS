@@ -48,9 +48,8 @@ export class EmotionTrackingService {
       ]);
 
       this.modelsLoaded = true;
-      console.log('✅ Face-API models loaded successfully');
     } catch (error) {
-      console.error('❌ Error loading Face-API models:', error);
+      console.error('Error loading Face-API models:', error);
       throw new Error('Failed to load emotion detection models');
     }
   }
@@ -77,16 +76,15 @@ export class EmotionTrackingService {
       return new Promise((resolve, reject) => {
         this.videoElement!.onloadedmetadata = () => {
           this.videoElement!.play();
-          console.log('✅ Webcam started successfully');
           resolve(this.videoElement!);
         };
         this.videoElement!.onerror = (error) => {
-          console.error('❌ Error starting webcam:', error);
+          console.error('Error starting webcam:', error);
           reject(new Error('Failed to start webcam'));
         };
       });
     } catch (error) {
-      console.error('❌ Error accessing webcam:', error);
+      console.error('Error accessing webcam:', error);
       throw new Error('Failed to access webcam. Please grant camera permissions.');
     }
   }
@@ -193,8 +191,6 @@ export class EmotionTrackingService {
         callback(result);
       }
     }, trackingInterval);
-
-    console.log(`✅ Emotion tracking started (interval: ${trackingInterval}ms = ${trackingInterval / 60000} minutes)`);
   }
 
   /**
@@ -207,7 +203,6 @@ export class EmotionTrackingService {
     }
 
     this.isTracking = false;
-    console.log('⏹️ Emotion tracking stopped');
   }
 
   /**
@@ -224,8 +219,6 @@ export class EmotionTrackingService {
       this.videoElement.srcObject = null;
       this.videoElement = null;
     }
-
-    console.log('📷 Webcam stopped');
   }
 
   /**

@@ -80,11 +80,6 @@ export class AuthService {
       batch: registration.batch
     };
 
-    console.log('🔑 [AUTH] Sending student registration:', {
-      ...payload,
-      password: '***HIDDEN***'
-    });
-
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/register/student`, payload).pipe(
       map(response => {
         if (response.success && response.data) {
@@ -163,18 +158,6 @@ export class AuthService {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
     this.currentUserSubject.next(null);
-  }
-
-  // Debug method to check auth state
-  debugAuthState(): void {
-    console.log('=== Auth Debug State ===');
-    console.log('Token:', this.getToken());
-    console.log('Current User:', this.getCurrentUser());
-    console.log('Is Logged In:', this.isLoggedIn());
-    console.log('Is Admin:', this.isAdmin());
-    console.log('Is Student:', this.isStudent());
-    console.log('Is Teacher:', this.isTeacher());
-    console.log('======================');
   }
 
   getCurrentUser(): User | null {

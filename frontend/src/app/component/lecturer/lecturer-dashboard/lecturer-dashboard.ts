@@ -63,7 +63,6 @@ export class LecturerDashboard implements OnInit {
       next: (response) => {
         if (response.success) {
           this.dashboardStats = response.data;
-          console.log('Dashboard stats loaded:', this.dashboardStats);
         }
         this.loading = false;
       },
@@ -80,7 +79,6 @@ export class LecturerDashboard implements OnInit {
       next: (response) => {
         if (response.success) {
           this.subjectDetails = response.data;
-          console.log('Subject details loaded:', this.subjectDetails);
         }
         this.loadingSubjects = false;
       },

@@ -33,11 +33,9 @@ export class ConfigService {
       .subscribe({
         next: (config) => {
           this.emotionConfigSubject.next(config);
-          console.log('✅ Emotion tracking config loaded:', config);
-          console.log(`📊 Tracking interval: ${config.interval}ms (${config.interval / 60000} minutes)`);
         },
         error: (error) => {
-          console.error('❌ Error loading emotion config:', error);
+          console.error('Error loading emotion config:', error);
           // Keep default values
         }
       });

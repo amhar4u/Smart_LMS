@@ -122,7 +122,6 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError(err => {
-          console.log('No student level found yet, defaulting to beginner');
           this.studentLevel = 'beginner';
           this.loadExtraModules();
           return of({ success: false, data: null });
@@ -131,7 +130,6 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
       .subscribe(res => {
         if (res.success && res.data) {
           this.studentLevel = res.data.level || 'beginner';
-          console.log('Student level for this subject:', this.studentLevel);
         } else {
           this.studentLevel = 'beginner';
         }
@@ -170,7 +168,6 @@ export class StudentSubjectDetail implements OnInit, OnDestroy {
       .subscribe(res => {
         if (res.success && res.data) {
           this.extraModules = Array.isArray(res.data) ? res.data : (res.data.extraModules || []);
-          console.log(`Found ${this.extraModules.length} extra modules for level: ${this.studentLevel}`);
         } else {
           this.extraModules = [];
         }

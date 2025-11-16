@@ -29,8 +29,6 @@ router.get('/assignments/active', auth, isStudent, async (req, res) => {
   try {
     const studentId = req.user.userId;
     
-    console.log('📝 [ASSIGNMENTS] Fetching active assignments for student:', studentId);
-    
     // Get student's enrolled subjects with batch
     const student = await User.findById(studentId)
       .populate('batch')
@@ -44,11 +42,8 @@ router.get('/assignments/active', auth, isStudent, async (req, res) => {
       });
     }
 
-    console.log('📝 [ASSIGNMENTS] Student batch:', student.batch?._id || student.batch);
-
     // Check if student has batch assigned
     if (!student.batch) {
-      console.log('⚠️ [ASSIGNMENTS] Student missing batch');
       return res.json({
         success: true,
         count: 0,
@@ -72,8 +67,6 @@ router.get('/assignments/active', auth, isStudent, async (req, res) => {
     .populate('modules', 'name title')
     .sort({ dueDate: 1 })
     .lean();
-
-    console.log('📝 [ASSIGNMENTS] Found assignments:', assignments.length);
 
     // Check submission status for each assignment
     const assignmentsWithStatus = await Promise.all(
@@ -120,8 +113,6 @@ router.get('/assignments/active', auth, isStudent, async (req, res) => {
         };
       })
     );
-
-    console.log('✅ [ASSIGNMENTS] Returning assignments with status:', assignmentsWithStatus.length);
 
     res.json({
       success: true,
@@ -273,12 +264,6 @@ router.post('/assignments/:id/start', auth, isStudent, async (req, res) => {
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + assignment.timeLimit * 60000); // Add time limit in ms
 
-    console.log('📝 Creating new submission record (START only, no submission yet)');
-    console.log('   - startedAt:', startTime.toISOString());
-    console.log('   - submittedAt: null (not submitted yet)');
-    console.log('   - status: Will be "submitted" (default)');
-    console.log('   - evaluationStatus: pending');
-
     const submission = new AssignmentSubmission({
       assignmentId: assignment._id,
       studentId: studentId,
@@ -291,10 +276,6 @@ router.post('/assignments/:id/start', auth, isStudent, async (req, res) => {
     });
 
     await submission.save();
-    
-    console.log('✅ Submission record created (START phase)');
-    console.log('   - Submission ID:', submission._id);
-    console.log('   - submittedAt after save:', submission.submittedAt);
 
     res.json({
       success: true,
@@ -321,42 +302,21 @@ router.post('/assignments/:id/start', auth, isStudent, async (req, res) => {
 // Submit assignment answers
 router.post('/assignments/:id/submit', auth, isStudent, async (req, res) => {
   try {
-    console.log('\n\n🚀🚀🚀 SUBMIT ROUTE HIT - VERSION 5.0 🚀🚀🚀\n');
-    console.log('⏰ Current Server Time:', new Date().toISOString());
-    
     const studentId = req.user.userId;
     const assignmentId = req.params.id;
     const { answers } = req.body;
 
-    console.log('=== ASSIGNMENT SUBMISSION DEBUG ===');
-    console.log('Assignment ID:', assignmentId);
-    console.log('Student ID:', studentId);
-    console.log('Request Body Keys:', Object.keys(req.body));
-    console.log('Received answers count:', answers ? answers.length : 0);
-    console.log('Answers type:', typeof answers);
-    console.log('Is Array:', Array.isArray(answers));
-    console.log('First answer sample:', answers && answers[0] ? JSON.stringify(answers[0], null, 2) : 'No answers');
-    console.log('All answers:', JSON.stringify(answers, null, 2));
-
     if (!answers || !Array.isArray(answers) || answers.length === 0) {
-      console.error('❌ VALIDATION FAILED: No answers provided');
-      console.error('   - answers exists:', !!answers);
-      console.error('   - is array:', Array.isArray(answers));
-      console.error('   - length:', answers ? answers.length : 'N/A');
       return res.status(400).json({
         success: false,
         message: 'Please provide answers before submitting'
       });
     }
 
-    console.log('✅ Validation passed - answers array has', answers.length, 'items');
-
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
       return res.status(404).json({ success: false, message: 'Assignment not found' });
     }
-
-    console.log('✅ Assignment found:', assignment.title);
 
     // Find existing submission
     let submission = await AssignmentSubmission.findOne({
@@ -364,59 +324,25 @@ router.post('/assignments/:id/submit', auth, isStudent, async (req, res) => {
       studentId: studentId
     });
 
-    console.log('📋 Submission check:', {
-      exists: !!submission,
-      submissionId: submission ? submission._id : null,
-      submittedAt: submission ? submission.submittedAt : null,
-      startedAt: submission ? submission.startedAt : null,
-      hasAnswers: submission && submission.submittedAnswers ? submission.submittedAnswers.length : 0,
-      status: submission ? submission.status : null,
-      evaluationStatus: submission ? submission.evaluationStatus : null
-    });
-
     // Check if already submitted (with submittedAt date)
     if (submission && submission.submittedAt) {
-      console.log('⚠️ Found existing submission with submittedAt:', submission.submittedAt);
-      console.log('   - Submission created at:', submission.createdAt);
-      console.log('   - Started at:', submission.startedAt);
-      console.log('   - Answers count:', submission.submittedAnswers ? submission.submittedAnswers.length : 0);
-      
       // Additional check: If submission exists with submittedAt but no answers, allow resubmission
       if (!submission.submittedAnswers || submission.submittedAnswers.length === 0) {
-        console.log('⚠️ Found submission with no answers - allowing resubmission by deleting old record');
-        console.log('   - Deleting submission ID:', submission._id);
         await AssignmentSubmission.findByIdAndDelete(submission._id);
-        console.log('   ✅ Old submission deleted');
         submission = null; // Reset to create new submission
       } else {
         // Valid submission exists with answers
-        console.log('❌ Valid submission exists - rejecting new submission');
         return res.status(400).json({
           success: false,
           message: 'You have already submitted this assignment',
           submittedAt: submission.submittedAt
         });
       }
-    } else if (submission) {
-      console.log('📝 Found started submission (not yet submitted)');
-      console.log('   - Will update this submission with answers');
-    } else {
-      console.log('✅ No existing submission found - will create new one');
     }
 
-    console.log('📝 Processing answers...');
-    
     // Process answers with question details
     const answersWithQuestions = answers.map((answer, idx) => {
       const question = assignment.questions.find(q => q._id.toString() === answer.questionId);
-      
-      // Log each answer processing
-      console.log(`   Answer ${idx + 1}:`, {
-        questionId: answer.questionId,
-        receivedQuestionText: answer.questionText ? answer.questionText.substring(0, 50) + '...' : 'NOT PROVIDED',
-        questionTextFromDB: question ? question.question.substring(0, 50) + '...' : 'NOT FOUND',
-        hasAnswer: !!(answer.answer || answer.selectedOption)
-      });
       
       return {
         questionId: answer.questionId,
@@ -433,9 +359,6 @@ router.post('/assignments/:id/submit', auth, isStudent, async (req, res) => {
       };
     });
 
-    console.log('✅ Processed', answersWithQuestions.length, 'answers');
-    console.log('First processed answer:', JSON.stringify(answersWithQuestions[0], null, 2));
-
     // Prepare submission data
     const currentTime = new Date();
     const startTime = submission ? submission.startedAt : (assignment.startDate ? new Date(assignment.startDate) : currentTime);
@@ -451,7 +374,6 @@ router.post('/assignments/:id/submit', auth, isStudent, async (req, res) => {
 
     if (!submission) {
       // Create new submission with all data at once
-      console.log('📝 Creating new submission with answers...');
       submissionData.assignmentId = assignment._id;
       submissionData.studentId = studentId;
       submissionData.startedAt = startTime;
@@ -459,39 +381,10 @@ router.post('/assignments/:id/submit', auth, isStudent, async (req, res) => {
       submission = new AssignmentSubmission(submissionData);
     } else {
       // Update existing submission
-      console.log('📝 Updating existing submission...');
       Object.assign(submission, submissionData);
     }
 
-    console.log('💾 Saving submission...');
-    console.log('   - Submission ID:', submission._id || 'NEW');
-    console.log('   - Answers to save:', submission.submittedAnswers.length);
-    console.log('   - submittedAt:', submission.submittedAt);
-    console.log('   - startedAt:', submission.startedAt);
-    console.log('   - status:', submission.status);
-    console.log('   - First answer:', submission.submittedAnswers[0] ? {
-      questionId: submission.submittedAnswers[0].questionId,
-      hasAnswer: !!(submission.submittedAnswers[0].answer || submission.submittedAnswers[0].selectedOption),
-      type: submission.submittedAnswers[0].type
-    } : 'No answers');
-
     await submission.save();
-
-    console.log('✅ SUBMISSION SAVED SUCCESSFULLY!');
-    console.log('   - Saved submission ID:', submission._id);
-
-    // Verify immediately
-    const verify = await AssignmentSubmission.findById(submission._id);
-    console.log('🔍 VERIFICATION - Reading back from DB:');
-    console.log('   - Answers in DB:', verify.submittedAnswers.length);
-    console.log('   - submittedAt in DB:', verify.submittedAt);
-    console.log('   - startedAt in DB:', verify.startedAt);
-    console.log('   - status in DB:', verify.status);
-    console.log('   - First answer in DB:', verify.submittedAnswers[0] ? {
-      questionId: verify.submittedAnswers[0].questionId,
-      hasAnswer: !!(verify.submittedAnswers[0].answer || verify.submittedAnswers[0].selectedOption),
-      type: verify.submittedAnswers[0].type
-    } : 'No answers in DB!');
 
     res.json({
       success: true,
@@ -504,13 +397,14 @@ router.post('/assignments/:id/submit', auth, isStudent, async (req, res) => {
 
     // REMOVED: Auto-evaluation
     // Admin/Lecturer will manually trigger evaluation from the submissions page
+    // REMOVED: Auto-evaluation
+    // Admin/Lecturer will manually trigger evaluation from the submissions page
     // evaluateSubmission(submission._id, assignment, answersWithQuestions).catch(err => {
     //   console.error('Error in background evaluation:', err);
     // });
 
   } catch (error) {
-    console.error('❌ ERROR IN SUBMIT ROUTE:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('Error submitting assignment:', error);
     res.status(500).json({
       success: false,
       message: 'Error submitting assignment',

@@ -52,8 +52,6 @@ const validateExtraModule = [
 // Get all extra modules with population
 router.get('/', auth, async (req, res) => {
   try {
-    console.log('📋 [EXTRA MODULES] Fetching all extra modules');
-    
     const { subject, studentLevel, page = 1, limit = 50, search } = req.query;
     
     // Build filter
@@ -76,8 +74,6 @@ router.get('/', auth, async (req, res) => {
       ];
     }
     
-    console.log('📋 [EXTRA MODULES] Filter:', filter);
-    
     // Calculate pagination
     const skip = (page - 1) * limit;
     
@@ -92,8 +88,6 @@ router.get('/', auth, async (req, res) => {
     // Get total count for pagination
     const totalItems = await ExtraModule.countDocuments(filter);
     const totalPages = Math.ceil(totalItems / limit);
-    
-    console.log(`✅ [EXTRA MODULES] Found ${extraModules.length} extra modules (${totalItems} total)`);
     
     res.json({
       success: true,
@@ -121,8 +115,6 @@ router.get('/', auth, async (req, res) => {
 // Get extra modules by subject
 router.get('/subject/:subjectId', auth, async (req, res) => {
   try {
-    console.log(`📋 [EXTRA MODULES] Fetching extra modules for subject: ${req.params.subjectId}`);
-    
     const { studentLevel } = req.query;
     let filter = { 
       subject: req.params.subjectId,
@@ -147,8 +139,6 @@ router.get('/subject/:subjectId', auth, async (req, res) => {
       .populate('createdBy', 'firstName lastName email')
       .sort({ order: 1, createdAt: -1 });
     
-    console.log(`✅ [EXTRA MODULES] Found ${extraModules.length} extra modules for subject`);
-    
     res.json({
       success: true,
       message: 'Extra modules fetched successfully',
@@ -167,11 +157,7 @@ router.get('/subject/:subjectId', auth, async (req, res) => {
 // Get extra modules by student level
 router.get('/level/:studentLevel', auth, async (req, res) => {
   try {
-    console.log(`📋 [EXTRA MODULES] Fetching extra modules for level: ${req.params.studentLevel}`);
-    
     const extraModules = await ExtraModule.findByStudentLevel(req.params.studentLevel);
-    
-    console.log(`✅ [EXTRA MODULES] Found ${extraModules.length} extra modules for level`);
     
     res.json({
       success: true,
@@ -191,8 +177,6 @@ router.get('/level/:studentLevel', auth, async (req, res) => {
 // Get single extra module
 router.get('/:id', auth, async (req, res) => {
   try {
-    console.log(`📋 [EXTRA MODULES] Fetching extra module: ${req.params.id}`);
-    
     const extraModule = await ExtraModule.findById(req.params.id)
       .populate({
         path: 'subject',
@@ -207,14 +191,11 @@ router.get('/:id', auth, async (req, res) => {
       .populate('createdBy', 'firstName lastName email');
     
     if (!extraModule) {
-      console.log(`❌ [EXTRA MODULES] Extra module not found: ${req.params.id}`);
       return res.status(404).json({ 
         success: false,
         message: 'Extra module not found' 
       });
     }
-    
-    console.log(`✅ [EXTRA MODULES] Extra module found: ${extraModule.title}`);
     
     res.json({
       success: true,

@@ -942,12 +942,6 @@ export class AssignmentDetailsDialog {
   private dialogRef = inject(MatDialogRef<AssignmentDetailsDialog>);
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: StudentAssignment) {
-    console.log('Assignment Details Data:', data);
-    console.log('Total Marks:', data.totalMarks, 'Max Marks:', data.maxMarks);
-    console.log('Number of Questions:', data.numberOfQuestions);
-    console.log('Time Limit:', data.timeLimit);
-    console.log('Course:', data.course);
-    console.log('Subject:', data.subject);
   }
 
   onStartAssignment() {

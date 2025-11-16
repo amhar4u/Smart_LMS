@@ -237,12 +237,6 @@ export class StudentRegisterComponent implements OnInit {
         ...this.academicInfoForm.value
       };
 
-      console.log('📤 Submitting registration data:', {
-        ...registrationData,
-        password: '***HIDDEN***',
-        confirmPassword: '***HIDDEN***'
-      });
-
       this.authService.registerStudent(registrationData).subscribe({
         next: (response) => {
           this.loadingService.hide();

@@ -249,20 +249,6 @@ router.post('/', auth, assignmentValidation, async (req, res) => {
     // Calculate total marks based on generated questions
     const calculatedMaxMarks = questions.reduce((total, q) => total + (q.marks || 1), 0);
 
-    console.log('=== ASSIGNMENT CREATION DEBUG ===');
-    console.log('Generated Questions Count:', questions.length);
-    console.log('Assignment Type:', assignmentType);
-    console.log('Questions with Correct Answers:');
-    questions.forEach((q, idx) => {
-      console.log(`Q${idx + 1}:`, {
-        type: q.type,
-        hasCorrectAnswer: !!q.correctAnswer,
-        correctAnswer: q.correctAnswer ? q.correctAnswer.substring(0, 50) + '...' : 'MISSING',
-        hasOptions: q.options ? q.options.length : 0,
-        marks: q.marks
-      });
-    });
-
     // Ensure we have a valid user ID
     const userId = req.user._id || req.user.id;
     if (!userId) {
@@ -766,14 +752,6 @@ router.post('/:assignmentId/submissions/:submissionId/evaluate', auth, async (re
     // Check if submission has answers
     if (!submission.submittedAnswers || submission.submittedAnswers.length === 0) {
       console.error('Evaluation failed: No answers in submission');
-      console.log('Submission details:', {
-        id: submission._id,
-        studentId: submission.studentId,
-        assignmentId: submission.assignmentId,
-        status: submission.status,
-        submittedAt: submission.submittedAt,
-        answersCount: submission.submittedAnswers ? submission.submittedAnswers.length : 0
-      });
       
       return res.status(400).json({
         success: false,
@@ -841,7 +819,6 @@ router.post('/:assignmentId/submissions/:submissionId/evaluate', auth, async (re
           evaluation.percentage,
           evaluation.level
         );
-        console.log('✅ Student subject level updated successfully');
       } catch (levelError) {
         console.error('⚠️ Failed to update student subject level:', levelError);
         // Don't fail the evaluation if level update fails
@@ -1094,8 +1071,6 @@ router.delete('/:assignmentId/submissions/:submissionId', auth, async (req, res)
       });
     }
 
-    console.log('🗑️ Deleting submission:', submissionId, 'for assignment:', assignmentId);
-
     // Find the submission
     const submission = await AssignmentSubmission.findById(submissionId);
     
@@ -1120,8 +1095,6 @@ router.delete('/:assignmentId/submissions/:submissionId', auth, async (req, res)
 
     // Delete the submission
     await AssignmentSubmission.findByIdAndDelete(submissionId);
-
-    console.log('✅ Submission deleted successfully');
 
     res.json({
       success: true,
@@ -1160,15 +1133,11 @@ router.delete('/:assignmentId/submissions', auth, async (req, res) => {
       });
     }
 
-    console.log('🗑️ Deleting all submissions for assignment:', assignmentId);
-
     // Count submissions before deletion
     const count = await AssignmentSubmission.countDocuments({ assignmentId: assignmentId });
 
     // Delete all submissions for this assignment
     const result = await AssignmentSubmission.deleteMany({ assignmentId: assignmentId });
-
-    console.log(`✅ Deleted ${result.deletedCount} submissions`);
 
     res.json({
       success: true,

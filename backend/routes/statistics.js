@@ -15,7 +15,6 @@ const Meeting = require('../models/Meeting');
 router.get('/student-dashboard/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
-    console.log('📊 [STUDENT DASHBOARD] Fetching statistics for student:', studentId);
 
     // Get student details with populated fields
     const student = await User.findById(studentId)
@@ -32,13 +31,6 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
       });
     }
 
-    console.log('📊 [STUDENT DASHBOARD] Student data:', {
-      department: student.department,
-      course: student.course,
-      batch: student.batch,
-      semester: student.semester
-    });
-
     // Extract IDs safely (handle both ObjectId and populated objects)
     const departmentId = student.department?._id || student.department;
     const courseId = student.course?._id || student.course;
@@ -47,7 +39,6 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
 
     // Check if student has required fields
     if (!batchId || !semesterId) {
-      console.log('⚠️ [STUDENT DASHBOARD] Student missing batch or semester');
       return res.json({
         success: true,
         data: {
@@ -209,15 +200,8 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
         duration: meeting.duration,
         status: meeting.status,
         roomUrl: meeting.roomUrl
-      }))
+      }))}
     };
-
-    console.log(`✅ [STUDENT DASHBOARD] Statistics fetched successfully`);
-    console.log(`   📚 Total Subjects: ${subjects.length}`);
-    console.log(`   📝 Total Assignments: ${totalAssignments} (Pending: ${pendingAssignments})`);
-    console.log(`   🎥 Total Meetings: ${totalMeetings} (Upcoming: ${upcomingMeetings})`);
-    console.log(`   📄 Upcoming Assignments: ${upcomingAssignmentsList.length}`);
-    console.log(`   📹 Upcoming Meetings: ${upcomingMeetingsList.length}`);
 
     res.json({
       success: true,
@@ -238,8 +222,6 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
 // @access  Private (Admin only)
 router.get('/admin-dashboard', async (req, res) => {
   try {
-    console.log('📊 [ADMIN DASHBOARD] Fetching comprehensive statistics');
-
     // Get all counts
     const [
       totalSubjects,
@@ -339,15 +321,8 @@ router.get('/admin-dashboard', async (req, res) => {
         duration: meeting.duration,
         status: meeting.status,
         roomUrl: meeting.roomUrl
-      }))
+      }))}
     };
-
-    console.log(`✅ [ADMIN DASHBOARD] Statistics fetched successfully`);
-    console.log(`   📚 Total Subjects: ${totalSubjects} (Active: ${activeSubjects})`);
-    console.log(`   📝 Total Assignments: ${totalAssignments} (Pending: ${pendingAssignments})`);
-    console.log(`   🎥 Total Meetings: ${totalMeetings} (Scheduled: ${scheduledMeetings})`);
-    console.log(`   📄 Recent Assignments: ${recentAssignments.length}`);
-    console.log(`   📹 Recent Meetings: ${recentMeetings.length}`);
 
     res.json({
       success: true,
@@ -368,8 +343,6 @@ router.get('/admin-dashboard', async (req, res) => {
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    console.log('📊 [STATISTICS] Fetching platform statistics');
-
     // Get user counts with proper status filtering
     const totalUsers = await User.countDocuments({ isActive: true, status: 'approved' });
     const activeStudents = await User.countDocuments({ role: 'student', isActive: true, status: 'approved' });
@@ -510,16 +483,6 @@ router.get('/', async (req, res) => {
       departments: departmentStats
     };
 
-    console.log(`✅ [STATISTICS] Statistics fetched successfully`);
-    console.log(`   📊 Active Students: ${activeStudents}`);
-    console.log(`   👨‍🏫 Expert Teachers: ${expertTeachers}`);
-    console.log(`   📚 Courses Available: ${coursesAvailable}`);
-    console.log(`   📈 Success Rate: ${successRate}%`);
-    console.log(`   🏢 Total Departments: ${totalDepartments}`);
-    console.log(`   ✅ Approved Users: ${approvedUsers}`);
-    console.log(`   ⏳ Pending Users: ${pendingUsers}`);
-    console.log(`   ❌ Rejected Users: ${rejectedUsers}`);
-
     res.json({
       success: true,
       data: statistics
@@ -539,8 +502,6 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/departments', async (req, res) => {
   try {
-    console.log('📊 [STATISTICS] Fetching department-wise statistics');
-
     const departmentStats = await Department.aggregate([
       {
         $match: { isActive: true }
@@ -672,8 +633,6 @@ router.get('/departments', async (req, res) => {
         $sort: { name: 1 }
       }
     ]);
-
-    console.log(`✅ [STATISTICS] Department statistics fetched for ${departmentStats.length} departments`);
 
     res.json({
       success: true,

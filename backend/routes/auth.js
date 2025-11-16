@@ -59,11 +59,6 @@ router.post('/register/student', [
     .withMessage('Batch is required')
 ], async (req, res) => {
   try {
-    console.log('📝 [REGISTRATION] Student registration request received:', {
-      ...req.body,
-      password: '***HIDDEN***'
-    });
-
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -101,15 +96,6 @@ router.post('/register/student', [
       .populate('currentSemester')
       .populate('course')
       .populate('department');
-
-    console.log('🎓 [REGISTRATION] Batch details:', {
-      batchId,
-      found: !!batch,
-      hasCurrentSemester: !!batch?.currentSemester,
-      currentSemesterId: batch?.currentSemester?._id,
-      batchName: batch?.name,
-      enrollment: `${batch?.currentEnrollment}/${batch?.maxStudents}`
-    });
 
     if (!batch) {
       return res.status(400).json({

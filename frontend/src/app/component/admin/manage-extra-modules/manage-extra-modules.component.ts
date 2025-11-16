@@ -184,7 +184,6 @@ export class ManageExtraModulesComponent implements OnInit {
   }
 
   openDetailsDialog(extraModule: ExtraModule): void {
-    console.log('View details for extra module:', extraModule);
     this.snackBar.open('Details view coming soon!', 'Close', { duration: 3000 });
   }
 

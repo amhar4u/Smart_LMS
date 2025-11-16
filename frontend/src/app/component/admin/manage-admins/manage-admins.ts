@@ -48,15 +48,12 @@ export class ManageAdmins implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
-    console.log('🚀 [ManageAdmins] Component initializing');
-    
     // Setup live search with better error handling
     this.admins$ = this.searchControl.valueChanges.pipe(
       startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(searchTerm => {
-        console.log(`🔍 [ManageAdmins] Search term: "${searchTerm}"`);
         this.isLoading$.next(true);
         
         if (searchTerm && searchTerm.trim()) {
@@ -66,7 +63,6 @@ export class ManageAdmins implements OnInit, OnDestroy {
         }
       }),
       map(users => {
-        console.log(`✅ [ManageAdmins] Received ${users.length} admins:`, users);
         this.isLoading$.next(false);
         return users;
       }),
@@ -83,7 +79,6 @@ export class ManageAdmins implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🎯 [ManageAdmins] Component initialized');
     // Initial load will be handled by the search control with empty string
     // Force an initial load
     this.refreshAdmins();
@@ -343,7 +338,6 @@ export class ManageAdmins implements OnInit, OnDestroy {
   }
 
   private refreshAdmins(): void {
-    console.log('🔄 [ManageAdmins] Refreshing admins list');
     // Force refresh by triggering the search control
     this.userService.refreshUsersByRole('admin');
     const currentSearchTerm = this.searchControl.value || '';

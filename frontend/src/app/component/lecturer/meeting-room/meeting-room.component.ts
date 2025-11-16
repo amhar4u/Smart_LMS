@@ -209,11 +209,9 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
       // Set up event listeners
       this.callFrame
         .on('joined-meeting', () => {
-          console.log('Joined meeting successfully');
           this.loading = false;
         })
         .on('left-meeting', () => {
-          console.log('Left meeting');
           this.handleLeaveMeeting();
         })
         .on('error', (error: any) => {

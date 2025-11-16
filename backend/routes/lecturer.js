@@ -15,7 +15,6 @@ const User = require('../models/User');
 router.get('/dashboard-stats/:lecturerId', async (req, res) => {
   try {
     const { lecturerId } = req.params;
-    console.log(`📊 [LECTURER] Fetching dashboard stats for lecturer: ${lecturerId}`);
 
     // Get all subjects taught by this lecturer
     const subjects = await Subject.find({ 
@@ -110,13 +109,6 @@ router.get('/dashboard-stats/:lecturerId', async (req, res) => {
       }))
     };
 
-    console.log(`✅ [LECTURER] Dashboard stats fetched successfully`);
-    console.log(`   📚 Subjects: ${dashboardStats.subjectCount}`);
-    console.log(`   👥 Batches: ${dashboardStats.batchCount}`);
-    console.log(`   📖 Courses: ${dashboardStats.courseCount}`);
-    console.log(`   📝 Assignments - Total: ${totalAssignments}, Pending: ${pendingAssignments}, Completed: ${completedAssignments}`);
-    console.log(`   🎥 Meetings - Total: ${totalMeetings}, Scheduled: ${scheduledMeetings}, Completed: ${completedMeetings}`);
-
     res.json({
       success: true,
       data: dashboardStats
@@ -138,7 +130,6 @@ router.get('/dashboard-stats/:lecturerId', async (req, res) => {
 router.get('/subject-details/:lecturerId', async (req, res) => {
   try {
     const { lecturerId } = req.params;
-    console.log(`📊 [LECTURER] Fetching subject details for lecturer: ${lecturerId}`);
 
     // Get all subjects taught by this lecturer
     const subjects = await Subject.find({ 
@@ -176,11 +167,6 @@ router.get('/subject-details/:lecturerId', async (req, res) => {
 
         // Get student count from batch (maxStudents capacity)
         // batchId is already populated, so we can access maxStudents directly
-        console.log(`🔍 [DEBUG] Subject: ${subject.name}, Batch:`, {
-          batchId: subject.batchId?._id,
-          batchName: subject.batchId?.name,
-          maxStudents: subject.batchId?.maxStudents
-        });
         const studentCount = subject.batchId?.maxStudents || 0;
 
         // Get assignment breakdown (pending/completed)
@@ -251,8 +237,6 @@ router.get('/subject-details/:lecturerId', async (req, res) => {
       })
     );
 
-    console.log(`✅ [LECTURER] Subject details fetched for ${subjectDetails.length} subjects`);
-
     res.json({
       success: true,
       data: subjectDetails
@@ -274,7 +258,6 @@ router.get('/subject-details/:lecturerId', async (req, res) => {
 router.get('/subject/:subjectId/details', async (req, res) => {
   try {
     const { subjectId } = req.params;
-    console.log(`📊 [LECTURER] Fetching details for subject: ${subjectId}`);
 
     const subject = await Subject.findById(subjectId)
       .populate(['departmentId', 'courseId', 'batchId', 'semesterId', 'lecturerId']);
@@ -378,8 +361,6 @@ router.get('/subject/:subjectId/details', async (req, res) => {
       }
     };
 
-    console.log(`✅ [LECTURER] Subject details fetched successfully`);
-
     res.json({
       success: true,
       data: subjectDetail
@@ -409,8 +390,6 @@ router.get('/:lecturerId/assignments', async (req, res) => {
       assignmentType,
       isActive
     } = req.query;
-
-    console.log(`📝 [LECTURER] Fetching assignments for lecturer: ${lecturerId}`);
 
     // Get all subjects taught by this lecturer
     const subjects = await Subject.find({ 
@@ -459,8 +438,6 @@ router.get('/:lecturerId/assignments', async (req, res) => {
 
     const total = await Assignment.countDocuments(filter);
 
-    console.log(`✅ [LECTURER] Found ${total} assignments`);
-
     res.json({
       success: true,
       data: assignments,
@@ -499,8 +476,6 @@ router.get('/:lecturerId/submissions', async (req, res) => {
       maxPercentage,
       search
     } = req.query;
-
-    console.log(`📤 [LECTURER] Fetching submissions for lecturer: ${lecturerId}`);
 
     // Get all subjects taught by this lecturer
     const subjects = await Subject.find({ 
@@ -639,8 +614,6 @@ router.get('/:lecturerId/submissions', async (req, res) => {
       }
     ]);
 
-    console.log(`✅ [LECTURER] Found ${total} submissions`);
-
     res.json({
       success: true,
       data: submissions,
@@ -681,8 +654,6 @@ router.get('/extra-modules/:lecturerId', async (req, res) => {
     const { lecturerId } = req.params;
     const { studentLevel, search, page = 1, limit = 50 } = req.query;
     
-    console.log(`��� [LECTURER] Fetching extra modules for lecturer: ${lecturerId}`);
-
     // Get all subjects taught by this lecturer
     const lecturerSubjects = await Subject.find({ 
       lecturerId: lecturerId, 
@@ -726,8 +697,6 @@ router.get('/extra-modules/:lecturerId', async (req, res) => {
       ];
     }
 
-    console.log('��� [LECTURER] Filter:', filter);
-
     // Calculate pagination
     const skip = (page - 1) * limit;
 
@@ -742,8 +711,6 @@ router.get('/extra-modules/:lecturerId', async (req, res) => {
     // Get total count for pagination
     const totalItems = await ExtraModule.countDocuments(filter);
     const totalPages = Math.ceil(totalItems / limit);
-
-    console.log(`✅ [LECTURER] Found ${extraModules.length} extra modules for lecturer (${totalItems} total)`);
 
     res.json({
       success: true,

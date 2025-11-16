@@ -297,15 +297,12 @@ export class UserDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('UserDialogComponent initialized');
-    
     // Initialize filtered arrays
     this.filteredCourses = [];
     this.filteredBatches = [];
     
     this.loadDropdownData().then(() => {
       if (this.data.user && this.data.mode !== 'create') {
-        // console.log('Populating form with user data:', this.data.user);
         this.populateForm(this.data.user);
       }
     });
@@ -320,7 +317,6 @@ export class UserDialogComponent implements OnInit {
         next: (response: any) => {
           if (response.success) {
             this.departments = response.data;
-            console.log('Loaded departments:', this.departments);
             resolve();
           } else {
             reject('Failed to load departments');
@@ -340,7 +336,6 @@ export class UserDialogComponent implements OnInit {
         next: (response: any) => {
           if (response.success) {
             this.courses = response.data;
-            console.log('Loaded courses:', this.courses);
             resolve();
           } else {
             reject('Failed to load courses');
@@ -360,7 +355,6 @@ export class UserDialogComponent implements OnInit {
         next: (response: any) => {
           if (response.success) {
             this.batches = response.data;
-            console.log('Loaded batches:', this.batches);
             resolve();
           } else {
             reject('Failed to load batches');
@@ -374,9 +368,7 @@ export class UserDialogComponent implements OnInit {
     });
     promises.push(batchPromise);
 
-    return Promise.all(promises).then(() => {
-      console.log('All dropdown data loaded successfully');
-    }).catch((error) => {
+    return Promise.all(promises).catch((error) => {
       console.error('Error loading dropdown data:', error);
     });
   }
@@ -413,14 +405,10 @@ export class UserDialogComponent implements OnInit {
   }
 
   private populateForm(user: User): void {
-    console.log('Populating form with user:', user);
-    
     // Extract IDs for department, course, and batch
     const departmentId = typeof user.department === 'object' ? user.department?._id : user.department;
     const courseId = typeof user.course === 'object' ? user.course?._id : user.course;
     const batchId = typeof user.batch === 'object' ? user.batch?._id : user.batch;
-    
-    console.log('Extracted IDs - Department:', departmentId, 'Course:', courseId, 'Batch:', batchId);
 
     // First, set all basic form values
     this.userForm.patchValue({
@@ -444,8 +432,6 @@ export class UserDialogComponent implements OnInit {
 
     // Handle student-specific filtering and value setting
     if (user.role === 'student') {
-      console.log('Setting up student-specific fields');
-      
       // Set department first
       if (departmentId) {
         this.userForm.patchValue({ department: departmentId });
@@ -482,9 +468,6 @@ export class UserDialogComponent implements OnInit {
   }
 
   onDepartmentChange(departmentId: string): void {
-    console.log('Department changed to:', departmentId);
-    console.log('Available courses:', this.courses);
-    
     if (!departmentId) {
       this.filteredCourses = [];
       this.filteredBatches = [];
@@ -500,11 +483,8 @@ export class UserDialogComponent implements OnInit {
       const courseDepId = typeof course.department === 'object' 
         ? course.department._id 
         : course.department;
-      console.log('Comparing course department:', courseDepId, 'with selected:', departmentId);
       return courseDepId === departmentId;
     });
-    
-    console.log('Filtered courses:', this.filteredCourses);
     
     // Reset course and batch only if we're changing department (not initializing)
     const currentCourse = this.userForm.get('course')?.value;
@@ -518,9 +498,6 @@ export class UserDialogComponent implements OnInit {
   }
 
   onCourseChange(courseId: string): void {
-    console.log('Course changed to:', courseId);
-    console.log('Available batches:', this.batches);
-    
     if (!courseId) {
       this.filteredBatches = [];
       this.userForm.patchValue({
@@ -534,11 +511,8 @@ export class UserDialogComponent implements OnInit {
       const batchCourseId = typeof batch.course === 'object' 
         ? batch.course._id 
         : batch.course;
-      console.log('Comparing batch course:', batchCourseId, 'with selected:', courseId);
       return batchCourseId === courseId;
     });
-    
-    console.log('Filtered batches:', this.filteredBatches);
     
     // Reset batch only if current batch is not valid for the new course
     const currentBatch = this.userForm.get('batch')?.value;

@@ -181,7 +181,6 @@ export class ManageModulesComponent implements OnInit {
 
   openDetailsDialog(module: Module): void {
     // TODO: Implement module details dialog
-    console.log('View details for module:', module);
   }
 
   createModule(moduleData: CreateModuleRequest): void {

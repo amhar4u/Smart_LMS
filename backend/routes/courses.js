@@ -36,8 +36,6 @@ router.get('/', async (req, res) => {
 // Get all courses with pagination (admin access)
 router.get('/admin', auth, async (req, res) => {
   try {
-    console.log('Admin courses endpoint called, user:', req.user);
-    
     // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -51,8 +49,6 @@ router.get('/admin', auth, async (req, res) => {
     const offset = (page - 1) * limit;
     const search = req.query.search || '';
     const departmentId = req.query.department || '';
-
-    console.log('Query params:', { page, limit, offset, search, departmentId });
 
     // Build filter for MongoDB
     let filter = {};
@@ -71,8 +67,6 @@ router.get('/admin', auth, async (req, res) => {
       filter.department = departmentId;
     }
 
-    console.log('Filter:', filter);
-
     // Get courses with pagination
     const courses = await Course.find(filter)
       .populate('department', 'name code')
@@ -81,8 +75,6 @@ router.get('/admin', auth, async (req, res) => {
       .skip(offset);
 
     const count = await Course.countDocuments(filter);
-
-    console.log('Found courses:', courses.length, 'Total count:', count);
 
     res.json({
       success: true,
@@ -216,8 +208,6 @@ router.post('/', auth, async (req, res) => {
 // Update course
 router.put('/:id', auth, async (req, res) => {
   try {
-    console.log('Update course request:', req.params.id, req.body);
-    
     // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -236,8 +226,6 @@ router.put('/:id', auth, async (req, res) => {
         message: 'Course not found'
       });
     }
-
-    console.log('Found course to update:', course.name);
 
     // Check if course with same name or code already exists (excluding current course)
     if (name || code) {
@@ -277,8 +265,6 @@ router.put('/:id', auth, async (req, res) => {
 
     // Populate the updated course with department info
     await course.populate('department', 'name code');
-
-    console.log(`Course updated: ${course.name} (${course.code})`);
 
     res.json({
       success: true,
@@ -364,8 +350,6 @@ router.patch('/:id/toggle-status', auth, async (req, res) => {
 
     // Populate the course with department info before sending response
     await course.populate('department', 'name code');
-
-    console.log(`Course ${course.name} status toggled to ${course.isActive ? 'active' : 'inactive'}`);
 
     res.json({
       success: true,

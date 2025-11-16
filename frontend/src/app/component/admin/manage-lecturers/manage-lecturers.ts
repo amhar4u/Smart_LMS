@@ -48,15 +48,12 @@ export class ManageLecturers implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
-    console.log('🚀 [ManageLecturers] Component initializing');
-    
     // Setup live search with better error handling
     this.lecturers$ = this.searchControl.valueChanges.pipe(
       startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(searchTerm => {
-        console.log(`🔍 [ManageLecturers] Search term: "${searchTerm}"`);
         this.isLoading$.next(true);
         
         if (searchTerm && searchTerm.trim()) {
@@ -66,7 +63,6 @@ export class ManageLecturers implements OnInit, OnDestroy {
         }
       }),
       map(users => {
-        console.log(`✅ [ManageLecturers] Received ${users.length} lecturers:`, users);
         this.isLoading$.next(false);
         return users;
       }),
@@ -83,7 +79,6 @@ export class ManageLecturers implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🎯 [ManageLecturers] Component initialized');
     // Initial load will be handled by the search control with empty string
     // Force an initial load
     this.refreshLecturers();
@@ -356,7 +351,6 @@ export class ManageLecturers implements OnInit, OnDestroy {
   }
 
   private refreshLecturers(): void {
-    console.log('🔄 [ManageLecturers] Refreshing lecturers list');
     // Force refresh by triggering the search control
     this.userService.refreshUsersByRole('teacher');
     const currentSearchTerm = this.searchControl.value || '';

@@ -20,8 +20,6 @@ const requireAdmin = (req, res, next) => {
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    console.log('📅 [SEMESTERS] Fetching all active semesters');
-
     const semesters = await Semester.find({ isActive: true })
       .populate({
         path: 'batch',
@@ -39,8 +37,6 @@ router.get('/', async (req, res) => {
       })
       .sort({ year: -1, type: 1 })
       .select('-__v');
-
-    console.log(`✅ [SEMESTERS] Found ${semesters.length} active semesters`);
 
     res.json({
       success: true,
@@ -62,8 +58,6 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/current', async (req, res) => {
   try {
-    console.log('📅 [SEMESTERS] Fetching current semester');
-
     const currentSemester = await Semester.getCurrentSemester();
 
     if (!currentSemester) {
@@ -72,8 +66,6 @@ router.get('/current', async (req, res) => {
         message: 'No current semester found'
       });
     }
-
-    console.log(`✅ [SEMESTERS] Found current semester: ${currentSemester.name}`);
 
     res.json({
       success: true,
@@ -95,11 +87,8 @@ router.get('/current', async (req, res) => {
 router.get('/year/:year', async (req, res) => {
   try {
     const year = parseInt(req.params.year);
-    console.log(`📅 [SEMESTERS] Fetching semesters for year: ${year}`);
 
     const semesters = await Semester.getSemestersByYear(year);
-
-    console.log(`✅ [SEMESTERS] Found ${semesters.length} semesters for year ${year}`);
 
     res.json({
       success: true,
@@ -121,8 +110,6 @@ router.get('/year/:year', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    console.log(`📅 [SEMESTERS] Fetching semester with ID: ${req.params.id}`);
-
     const semester = await Semester.findById(req.params.id)
       .populate('studentCount');
 
@@ -132,8 +119,6 @@ router.get('/:id', async (req, res) => {
         message: 'Semester not found'
       });
     }
-
-    console.log(`✅ [SEMESTERS] Found semester: ${semester.name}`);
 
     res.json({
       success: true,
@@ -154,8 +139,6 @@ router.get('/:id', async (req, res) => {
 // @access  Private (Admin only)
 router.post('/', auth, requireAdmin, async (req, res) => {
   try {
-    console.log('📅 [SEMESTERS] Creating new semester:', req.body);
-
     const {
       name,
       code,
@@ -220,8 +203,6 @@ router.post('/', auth, requireAdmin, async (req, res) => {
     const semester = new Semester(semesterData);
     await semester.save();
 
-    console.log(`✅ [SEMESTERS] Created semester: ${semester.name} (${semester.code})`);
-
     res.status(201).json({
       success: true,
       data: semester,
@@ -251,8 +232,6 @@ router.post('/', auth, requireAdmin, async (req, res) => {
 // @access  Private (Admin only)
 router.put('/:id', auth, requireAdmin, async (req, res) => {
   try {
-    console.log(`📅 [SEMESTERS] Updating semester with ID: ${req.params.id}`);
-
     const {
       name,
       code,
@@ -327,8 +306,6 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
 
     await semester.save();
 
-    console.log(`✅ [SEMESTERS] Semester updated successfully: ${semester.name}`);
-
     res.json({
       success: true,
       message: 'Semester updated successfully',
@@ -357,8 +334,6 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
 // @access  Private (Admin only)
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {
-    console.log(`📅 [SEMESTERS] Deleting semester with ID: ${req.params.id}`);
-
     const semester = await Semester.findById(req.params.id);
 
     if (!semester) {
@@ -386,8 +361,6 @@ router.delete('/:id', auth, requireAdmin, async (req, res) => {
     semester.isActive = false;
     await semester.save();
 
-    console.log(`✅ [SEMESTERS] Semester deleted successfully: ${semester.name}`);
-
     res.json({
       success: true,
       message: 'Semester deleted successfully'
@@ -407,8 +380,6 @@ router.delete('/:id', auth, requireAdmin, async (req, res) => {
 // @access  Private
 router.get('/:id/students', auth, async (req, res) => {
   try {
-    console.log(`📅 [SEMESTERS] Fetching students for semester: ${req.params.id}`);
-
     const students = await User.find({
       semester: req.params.id,
       role: 'student',
@@ -417,8 +388,6 @@ router.get('/:id/students', auth, async (req, res) => {
       .populate('department', 'name code')
       .populate('course', 'name code')
       .populate('semester', 'name order');
-
-    console.log(`✅ [SEMESTERS] Found ${students.length} students`);
 
     res.json({
       success: true,
@@ -440,8 +409,6 @@ router.get('/:id/students', auth, async (req, res) => {
 // @access  Private (Admin only)
 router.put('/:id/current', auth, requireAdmin, async (req, res) => {
   try {
-    console.log(`📅 [SEMESTERS] Setting semester as current: ${req.params.id}`);
-
     const semester = await Semester.findById(req.params.id);
 
     if (!semester) {
@@ -461,8 +428,6 @@ router.put('/:id/current', auth, requireAdmin, async (req, res) => {
     // Set this semester as current (the pre-save middleware will handle unsetting others)
     semester.isCurrent = true;
     await semester.save();
-
-    console.log(`✅ [SEMESTERS] Semester set as current: ${semester.name}`);
 
     res.json({
       success: true,
@@ -485,7 +450,6 @@ router.put('/:id/current', auth, requireAdmin, async (req, res) => {
 router.get('/batch/:batchId', auth, async (req, res) => {
   try {
     const { batchId } = req.params;
-    console.log(`📅 [SEMESTERS] Fetching semesters for batch: ${batchId}`);
 
     const semesters = await Semester.find({ 
       batch: batchId,
@@ -493,8 +457,6 @@ router.get('/batch/:batchId', auth, async (req, res) => {
     })
     .populate('batch', 'name code')
     .sort({ year: 1, type: 1 });
-
-    console.log(`✅ [SEMESTERS] Found ${semesters.length} semesters for batch ${batchId}`);
 
     res.json({
       success: true,

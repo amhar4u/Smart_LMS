@@ -4,6 +4,7 @@ const Department = require('../models/Department');
 const Course = require('../models/Course');
 const Batch = require('../models/Batch');
 const auth = require('../middleware/auth');
+const { sendVerificationEmail, sendRejectionEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -88,12 +89,8 @@ router.get('/by-role/:role', auth, async (req, res) => {
   try {
     const { role } = req.params;
     
-    console.log(`📋 [GET /users/by-role/${role}] Request received`);
-    console.log(`👤 User ID from auth: ${req.user?.userId}`);
-    
     // Validate role
     if (!['admin', 'student', 'teacher'].includes(role)) {
-      console.log(`❌ Invalid role: ${role}`);
       return res.status(400).json({
         success: false,
         message: 'Invalid role. Must be admin, student, or teacher'
@@ -101,16 +98,12 @@ router.get('/by-role/:role', auth, async (req, res) => {
     }
 
     // Fetch users by role
-    console.log(`🔍 Searching for users with role: ${role}`);
     const users = await User.find({ role })
       .select('-password')
       .populate('department', 'name code')
       .populate('course', 'name code')
       .populate('batch', 'name code')
       .sort({ createdAt: -1 });
-
-    console.log(`✅ Found ${users.length} users with role: ${role}`);
-    console.log(`📝 Users found:`, users.map(u => ({ id: u._id, email: u.email, firstName: u.firstName, lastName: u.lastName })));
 
     res.status(200).json({
       success: true,
@@ -209,6 +202,11 @@ router.put('/:id/approve', auth, async (req, res) => {
       });
     }
 
+    // Send verification email (non-blocking)
+    sendVerificationEmail(user).catch(error => {
+      console.error('Failed to send verification email:', error);
+    });
+
     res.status(200).json({
       success: true,
       message: 'User approved successfully',
@@ -251,6 +249,12 @@ router.put('/:id/reject', auth, async (req, res) => {
         message: 'User not found'
       });
     }
+
+    // Send rejection email (non-blocking)
+    const reason = req.body.reason || '';
+    sendRejectionEmail(user, reason).catch(error => {
+      console.error('Failed to send rejection email:', error);
+    });
 
     res.status(200).json({
       success: true,

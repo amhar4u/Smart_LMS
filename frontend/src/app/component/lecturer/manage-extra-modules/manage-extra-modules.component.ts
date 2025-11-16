@@ -115,7 +115,6 @@ export class LecturerManageExtraModulesComponent implements OnInit {
       next: (response) => {
         if (response.success && response.data) {
           this.extraModules = response.data.extraModules || [];
-          console.log(`✅ Loaded ${this.extraModules.length} extra modules for lecturer`);
         }
         this.loading = false;
       },

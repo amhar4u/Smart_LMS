@@ -70,10 +70,6 @@ router.post('/', auth, async (req, res) => {
   try {
     const { name, code, departmentId, courseId, batchId, semesterId, creditHours, lecturerId, description } = req.body;
 
-    console.log(`📝 [DEBUG] Creating subject with data:`, {
-      name, code, departmentId, courseId, batchId, semesterId, creditHours, lecturerId, description
-    });
-
     // Validate required fields
     if (!name || !code || !departmentId || !courseId || !batchId || !semesterId || !creditHours || !lecturerId) {
       return res.status(400).json({ 
@@ -121,19 +117,13 @@ router.post('/', auth, async (req, res) => {
 
     // Check if lecturer exists and has teacher role
     const lecturer = await User.findById(lecturerId);
-    console.log(`🔍 [DEBUG] Lecturer validation for ID: ${lecturerId}`);
-    console.log(`🔍 [DEBUG] Lecturer found:`, lecturer ? `${lecturer.firstName} ${lecturer.lastName}` : 'Not found');
-    console.log(`🔍 [DEBUG] Lecturer role:`, lecturer?.role);
-    console.log(`🔍 [DEBUG] Lecturer status:`, lecturer?.status);
     
     if (!lecturer || lecturer.role !== 'teacher' || lecturer.status !== 'approved') {
-      console.log(`❌ [DEBUG] Lecturer validation failed`);
       return res.status(400).json({ 
         success: false, 
         message: 'Invalid lecturer selected' 
       });
     }
-    console.log(`✅ [DEBUG] Lecturer validation passed`);
 
     // Check if subject code already exists
     const existingSubject = await Subject.findOne({ code: code.toUpperCase() });
@@ -395,7 +385,6 @@ router.get('/lecturers/all', auth, async (req, res) => {
       isActive: true 
     }).select('firstName lastName email').sort({ firstName: 1 });
 
-    console.log('✅ [LECTURERS] Found', lecturers.length, 'approved teachers');
     res.json({ success: true, data: lecturers });
   } catch (error) {
     console.error('Error fetching lecturers:', error);

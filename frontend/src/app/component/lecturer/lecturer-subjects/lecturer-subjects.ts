@@ -467,7 +467,6 @@ export class LecturerSubjects implements OnInit {
           this.subjects = response.data;
           this.filteredSubjects = [...this.subjects];
           this.extractFilterOptions();
-          console.log('Subjects loaded:', this.subjects);
         }
         this.loading = false;
       },

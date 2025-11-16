@@ -105,7 +105,6 @@ export class ManageCoursesComponent implements OnInit {
     ).subscribe({
       next: (response: CoursesAdminResponse) => {
         this.loadingService.hide();
-        console.log('Courses loaded:', response);
         if (response.success && response.data) {
           this.dataSource.data = response.data.courses;
           this.totalItems = response.data.pagination.totalItems;
@@ -206,12 +205,9 @@ export class ManageCoursesComponent implements OnInit {
   updateCourse(id: string, courseData: any): void {
     this.loadingService.show();
     
-    console.log('Updating course with data:', courseData);
-    
     this.courseService.updateCourse(id, courseData).subscribe({
       next: (response) => {
         this.loadingService.hide();
-        console.log('Update response:', response);
         
         if (response.success) {
           this.snackBar.open('Course updated successfully', 'Close', {
@@ -285,12 +281,9 @@ export class ManageCoursesComponent implements OnInit {
       if (confirmed) {
         this.loadingService.show();
         
-        console.log(`Toggling course status for: ${course.name} (${course._id})`);
-        
         this.courseService.toggleCourseStatus(course._id!).subscribe({
           next: (response) => {
             this.loadingService.hide();
-            console.log('Toggle response:', response);
             
             if (response.success) {
               this.snackBar.open(`Course ${action}d successfully`, 'Close', {

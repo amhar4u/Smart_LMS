@@ -171,7 +171,6 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
     this.configService.getEmotionConfig().subscribe({
       next: (config) => {
         this.emotionTrackingInterval = config.interval;
-        console.log(`✅ Emotion tracking interval set to: ${this.emotionTrackingInterval}ms (${this.emotionTrackingInterval / 1000}s)`);
       },
       error: (error) => {
         console.warn('Failed to get emotion tracking config, using default:', error);
@@ -223,7 +222,6 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
       // Set up event listeners
       this.callFrame
         .on('joined-meeting', () => {
-          console.log('Joined meeting successfully');
           this.loading = false;
           this.snackBar.open('You have joined the meeting', 'Close', { duration: 3000 });
           
@@ -238,7 +236,6 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
           this.initializeEmotionTracking();
         })
         .on('left-meeting', () => {
-          console.log('Left meeting');
           this.handleLeaveMeeting();
         })
         .on('error', (error: any) => {
@@ -293,15 +290,11 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
    */
   private async initializeEmotionTracking() {
     try {
-      console.log('🎭 Initializing emotion tracking...');
-      
       // Load Face-API models
       await this.emotionService.loadModels();
-      console.log('✅ Face-API models loaded');
       
       // Start webcam
       await this.emotionService.startWebcam();
-      console.log('✅ Webcam started');
       
       // Start emotion tracking with callback
       this.emotionService.startTracking(
@@ -309,7 +302,6 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
         this.emotionTrackingInterval
       );
       
-      console.log(`✅ Emotion tracking started (interval: ${this.emotionTrackingInterval}ms)`);
       this.snackBar.open('Emotion tracking started', 'Close', { duration: 2000 });
       
     } catch (error: any) {
@@ -326,8 +318,6 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
    * Handle emotion update from tracking service
    */
   private handleEmotionUpdate(emotionResult: EmotionResult) {
-    console.log('🎭 Emotion detected:', emotionResult);
-    
     // Send emotion update to server via Socket.IO
     this.socketService.sendEmotionUpdate(
       this.meetingId,
@@ -338,15 +328,12 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
       emotionResult.confidence,
       this.sessionId
     );
-    
-    console.log(`📡 Emotion update sent to server - Dominant: ${emotionResult.dominantEmotion}, Face: ${emotionResult.faceDetected}`);
   }
 
   /**
    * Cleanup emotion tracking resources
    */
   private cleanupEmotionTracking() {
-    console.log('🧹 Cleaning up emotion tracking...');
     this.emotionService.cleanup();
   }
 }

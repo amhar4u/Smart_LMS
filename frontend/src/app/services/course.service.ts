@@ -149,7 +149,6 @@ export class CourseService {
 
   // Update course
   updateCourse(id: string, courseData: UpdateCourseRequest): Observable<CourseDetailResponse> {
-    console.log('✏️ Update course request:', id, courseData);
     const headers = this.authService.getAuthHeaders();
     return this.http.put<CourseDetailResponse>(`${this.apiUrl}/${id}`, courseData, { headers });
   }
@@ -162,7 +161,6 @@ export class CourseService {
 
   // Toggle course active status
   toggleCourseStatus(id: string): Observable<CourseDetailResponse> {
-    console.log('🔄 Toggle course status request:', id);
     const headers = this.authService.getAuthHeaders();
     return this.http.patch<CourseDetailResponse>(`${this.apiUrl}/${id}/toggle-status`, {}, { headers });
   }

@@ -75,16 +75,14 @@ export class SocketService {
 
     this.socket.on('connect', () => {
       this.connected = true;
-      console.log('✅ Socket.IO connected:', this.socket?.id);
     });
 
     this.socket.on('disconnect', () => {
       this.connected = false;
-      console.log('🔌 Socket.IO disconnected');
     });
 
     this.socket.on('error', (error: any) => {
-      console.error('❌ Socket.IO error:', error);
+      console.error('Socket.IO error:', error);
     });
 
     // Listen for emotion updates
@@ -126,7 +124,6 @@ export class SocketService {
       this.socket.disconnect();
       this.socket = null;
       this.connected = false;
-      console.log('🔌 Socket.IO disconnected manually');
     }
   }
 
@@ -144,8 +141,6 @@ export class SocketService {
       studentId,
       studentName
     });
-
-    console.log(`👤 Joined meeting room: ${meetingId}`);
   }
 
   /**
@@ -161,8 +156,6 @@ export class SocketService {
       studentId,
       studentName
     });
-
-    console.log(`👋 Left meeting room: ${meetingId}`);
   }
 
   /**

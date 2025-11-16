@@ -113,8 +113,6 @@ router.get('/course/:courseId/public', async (req, res) => {
       batch.currentEnrollment < batch.maxStudents && batch.currentSemester
     );
     
-    console.log(`📚 [BATCHES] Found ${availableBatches.length} available batches for course ${courseId}`);
-    
     res.json({
       success: true,
       data: availableBatches

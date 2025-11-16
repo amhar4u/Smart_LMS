@@ -77,25 +77,17 @@ export class UserManagementService {
   private usersCache = new Map<string, BehaviorSubject<User[]>>();
   
   constructor(private http: HttpClient, private authService: AuthService) {
-    console.log('🚀 [UserService] Initializing UserManagementService');
-    
     // Initialize cache for each role
     this.usersCache.set('admin', new BehaviorSubject<User[]>([]));
     this.usersCache.set('student', new BehaviorSubject<User[]>([]));
     this.usersCache.set('teacher', new BehaviorSubject<User[]>([]));
     
-    console.log('💾 [UserService] Cache initialized for all roles');
-    
     // Load initial data for all roles - but only if user is authenticated
-    console.log('📥 [UserService] Loading initial data for all roles');
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        console.log('👤 [UserService] User authenticated, loading data');
         this.loadUsersByRole('admin');
         this.loadUsersByRole('student');
         this.loadUsersByRole('teacher');
-      } else {
-        console.log('❌ [UserService] No authenticated user, skipping data load');
       }
     });
   }
@@ -112,24 +104,19 @@ export class UserManagementService {
 
   // Load users by role from backend
   private loadUsersByRole(role: 'admin' | 'student' | 'teacher'): void {
-    console.log(`📥 [UserService] Loading users for role: ${role}`);
-    
     this.fetchUsersByRole(role).subscribe({
       next: (users) => {
-        console.log(`✅ [UserService] Successfully loaded ${users.length} users for role: ${role}`);
         const cache = this.usersCache.get(role);
         if (cache) {
           cache.next(users);
-          console.log(`💾 [UserService] Cache updated for role: ${role}`);
         }
       },
       error: (error) => {
-        console.error(`❌ [UserService] Failed to load ${role} users:`, error);
+        console.error(`Error loading ${role} users:`, error);
         // Set empty array on error
         const cache = this.usersCache.get(role);
         if (cache) {
           cache.next([]);
-          console.log(`💾 [UserService] Cache cleared for role: ${role} due to error`);
         }
       }
     });
@@ -137,21 +124,15 @@ export class UserManagementService {
 
   // Fetch users by role from backend
   private fetchUsersByRole(role: 'admin' | 'student' | 'teacher'): Observable<User[]> {
-    console.log(`🔍 [UserService] Fetching users for role: ${role}`);
-    
     const headers = this.authService.getAuthHeaders();
-    console.log(`🔐 [UserService] Using auth headers:`, headers.get('Authorization') ? 'Bearer token present' : 'No auth token');
     
     return this.http.get<ApiResponse<UsersResponse>>(`${this.baseUrl}/users/by-role/${role}`, { headers })
       .pipe(
         map(response => {
-          console.log(`📊 [UserService] Response for ${role}:`, response);
           if (response.success && response.data.users) {
             const users = response.data.users.map(user => this.transformUser(user));
-            console.log(`✅ [UserService] Transformed ${users.length} ${role} users:`, users);
             return users;
           }
-          console.log(`⚠️ [UserService] No users found for role: ${role}`);
           return [];
         }),
         catchError(error => {
@@ -225,15 +206,6 @@ export class UserManagementService {
       createdAt: new Date(user.createdAt),
       updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined
     };
-    
-    console.log(`🔄 [UserService] Transformed user:`, {
-      id: transformed.id,
-      fullName: transformed.fullName,
-      role: transformed.role,
-      email: transformed.email,
-      status: transformed.status,
-      isActive: transformed.isActive
-    });
     
     return transformed;
   }

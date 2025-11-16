@@ -48,15 +48,12 @@ export class ManageStudents implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
-    console.log('🚀 [ManageStudents] Component initializing');
-    
     // Setup live search with better error handling
     this.students$ = this.searchControl.valueChanges.pipe(
       startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(searchTerm => {
-        console.log(`🔍 [ManageStudents] Search term: "${searchTerm}"`);
         this.isLoading$.next(true);
         
         if (searchTerm && searchTerm.trim()) {
@@ -66,7 +63,6 @@ export class ManageStudents implements OnInit, OnDestroy {
         }
       }),
       map(users => {
-        console.log(`✅ [ManageStudents] Received ${users.length} students:`, users);
         this.isLoading$.next(false);
         return users;
       }),
@@ -83,7 +79,6 @@ export class ManageStudents implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🎯 [ManageStudents] Component initialized');
     // Initial load will be handled by the search control with empty string
     // Force an initial load
     this.refreshStudents();
@@ -278,7 +273,6 @@ export class ManageStudents implements OnInit, OnDestroy {
   }
 
   private refreshStudents(): void {
-    console.log('🔄 [ManageStudents] Refreshing students list');
     // Force refresh by triggering the search control
     this.userService.refreshUsersByRole('student');
     const currentSearchTerm = this.searchControl.value || '';

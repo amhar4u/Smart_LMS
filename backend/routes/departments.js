@@ -20,13 +20,9 @@ const requireAdmin = (req, res, next) => {
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    console.log('📋 [DEPARTMENTS] Fetching all active departments');
-
     const departments = await Department.getActiveDepartments()
       .populate('head', 'firstName lastName email')
       .select('-__v');
-
-    console.log(`✅ [DEPARTMENTS] Found ${departments.length} active departments`);
 
     res.json({
       success: true,
@@ -48,8 +44,6 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    console.log(`📋 [DEPARTMENTS] Fetching department with ID: ${req.params.id}`);
-
     const department = await Department.findById(req.params.id)
       .populate('head', 'firstName lastName email')
       .populate('teacherCount')
@@ -61,8 +55,6 @@ router.get('/:id', async (req, res) => {
         message: 'Department not found'
       });
     }
-
-    console.log(`✅ [DEPARTMENTS] Found department: ${department.name}`);
 
     res.json({
       success: true,
@@ -83,8 +75,6 @@ router.get('/:id', async (req, res) => {
 // @access  Private (Admin only)
 router.post('/', auth, requireAdmin, async (req, res) => {
   try {
-    console.log('📋 [DEPARTMENTS] Creating new department:', req.body);
-
     const {
       name,
       code,
@@ -136,8 +126,6 @@ router.post('/', auth, requireAdmin, async (req, res) => {
     // Populate the head information for response
     await department.populate('head', 'firstName lastName email');
 
-    console.log(`✅ [DEPARTMENTS] Department created successfully: ${department.name}`);
-
     res.status(201).json({
       success: true,
       message: 'Department created successfully',
@@ -166,8 +154,6 @@ router.post('/', auth, requireAdmin, async (req, res) => {
 // @access  Private (Admin only)
 router.put('/:id', auth, requireAdmin, async (req, res) => {
   try {
-    console.log(`📋 [DEPARTMENTS] Updating department with ID: ${req.params.id}`);
-
     const {
       name,
       code,
@@ -232,8 +218,6 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
     // Populate the head information for response
     await department.populate('head', 'firstName lastName email');
 
-    console.log(`✅ [DEPARTMENTS] Department updated successfully: ${department.name}`);
-
     res.json({
       success: true,
       message: 'Department updated successfully',
@@ -262,8 +246,6 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
 // @access  Private (Admin only)
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {
-    console.log(`📋 [DEPARTMENTS] Deleting department with ID: ${req.params.id}`);
-
     const department = await Department.findById(req.params.id);
 
     if (!department) {
@@ -290,8 +272,6 @@ router.delete('/:id', auth, requireAdmin, async (req, res) => {
     department.isActive = false;
     await department.save();
 
-    console.log(`✅ [DEPARTMENTS] Department deleted successfully: ${department.name}`);
-
     res.json({
       success: true,
       message: 'Department deleted successfully'
@@ -311,15 +291,11 @@ router.delete('/:id', auth, requireAdmin, async (req, res) => {
 // @access  Private
 router.get('/:id/teachers', auth, async (req, res) => {
   try {
-    console.log(`📋 [DEPARTMENTS] Fetching teachers for department: ${req.params.id}`);
-
     const teachers = await User.find({
       department: req.params.id,
       role: 'teacher',
       isActive: true
     }).select('-password').populate('department', 'name code');
-
-    console.log(`✅ [DEPARTMENTS] Found ${teachers.length} teachers`);
 
     res.json({
       success: true,
@@ -341,8 +317,6 @@ router.get('/:id/teachers', auth, async (req, res) => {
 // @access  Private
 router.get('/:id/students', auth, async (req, res) => {
   try {
-    console.log(`📋 [DEPARTMENTS] Fetching students for department: ${req.params.id}`);
-
     const students = await User.find({
       department: req.params.id,
       role: 'student',
@@ -351,8 +325,6 @@ router.get('/:id/students', auth, async (req, res) => {
       .populate('department', 'name code')
       .populate('course', 'name code')
       .populate('semester', 'name order');
-
-    console.log(`✅ [DEPARTMENTS] Found ${students.length} students`);
 
     res.json({
       success: true,

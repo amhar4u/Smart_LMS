@@ -230,8 +230,6 @@ export class ExtraModuleDialogComponent implements OnInit {
   }
 
   private populateForm(extraModule: ExtraModule): void {
-    console.log('Populating form with extra module:', extraModule);
-    
     this.extraModuleForm.patchValue({
       title: extraModule.title || extraModule.name,
       name: extraModule.name,

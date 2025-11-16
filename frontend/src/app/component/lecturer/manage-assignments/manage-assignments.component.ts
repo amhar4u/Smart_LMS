@@ -383,11 +383,6 @@ export class LecturerManageAssignmentsComponent implements OnInit {
     this.isLoading = true;
     
     const formValue = this.assignmentForm.value;
-    console.log('Form Value:', formValue);
-    console.log('Start Date:', formValue.startDate);
-    console.log('Due Date:', formValue.dueDate);
-    console.log('End Date:', formValue.endDate);
-    console.log('Passing Marks:', formValue.passingMarks);
     
     // Get the selected subject to extract department, course, batch, semester
     const selectedSubject = this.lecturerSubjects.find(s => s._id === formValue.subject);
@@ -409,14 +404,6 @@ export class LecturerManageAssignmentsComponent implements OnInit {
       batch: selectedSubject.batchId?._id || selectedSubject.batchId,
       semester: selectedSubject.semesterId?._id || selectedSubject.semesterId
     };
-
-    console.log('Assignment Data to send:', assignmentData);
-    console.log('Dates:', {
-      startDate: assignmentData.startDate,
-      dueDate: assignmentData.dueDate,
-      endDate: assignmentData.endDate,
-      passingMarks: assignmentData.passingMarks
-    });
 
     try {
       if (this.editingAssignment) {

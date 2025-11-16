@@ -140,7 +140,6 @@ export class StudentSubjects implements OnInit, OnDestroy {
       .subscribe(response => {
         if (response.success && response.data) {
           this.subjects = response.data;
-          console.log('Loaded subjects:', this.subjects);
         }
         this.isLoading = false;
       });
