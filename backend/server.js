@@ -21,8 +21,9 @@ const io = new Server(server, {
       'http://localhost:4202',
       'http://192.168.8.168:4200',
       'http://192.168.8.168:4201',
-      'http://192.168.8.168:4202'
-    ],
+      'http://192.168.8.168:4202',
+      process.env.FRONTEND_URL // Production frontend URL
+    ].filter(Boolean), // Remove undefined values
     credentials: true,
     methods: ['GET', 'POST']
   }
@@ -50,8 +51,9 @@ app.use(cors({
     'http://localhost:4202',
     'http://192.168.8.168:4200',
     'http://192.168.8.168:4201',
-    'http://192.168.8.168:4202'
-  ],
+    'http://192.168.8.168:4202',
+    process.env.FRONTEND_URL // Production frontend URL
+  ].filter(Boolean), // Remove undefined values
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
