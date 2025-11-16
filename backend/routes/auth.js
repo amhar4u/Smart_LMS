@@ -7,6 +7,7 @@ const Batch = require('../models/Batch');
 const Course = require('../models/Course');
 const Department = require('../models/Department');
 const authenticate = require('../middleware/auth');
+const { sendWelcomeEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -168,6 +169,11 @@ router.post('/register/student', [
     // Increment batch enrollment
     await batch.incrementEnrollment();
 
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(user).catch(error => {
+      console.error('Failed to send welcome email:', error);
+    });
+
     // Generate token
     const token = generateToken(user._id);
 
@@ -266,6 +272,11 @@ router.post('/register/teacher', [
     });
 
     await user.save();
+
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(user).catch(error => {
+      console.error('Failed to send welcome email:', error);
+    });
 
     // Generate token
     const token = generateToken(user._id);
