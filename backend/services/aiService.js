@@ -598,11 +598,30 @@ Always respond with valid JSON only, without any markdown formatting or addition
       
       const parsed = JSON.parse(cleanText);
       
+      // Recalculate total marks from question evaluations to ensure accuracy
+      let calculatedTotalMarks = parsed.totalMarks || 0;
+      if (parsed.questionEvaluations && parsed.questionEvaluations.length > 0) {
+        calculatedTotalMarks = parsed.questionEvaluations.reduce((sum, qe) => {
+          return sum + (qe.marksAwarded || 0);
+        }, 0);
+        console.log('🔢 Recalculated total marks from question evaluations:', calculatedTotalMarks);
+        console.log('📊 Question marks breakdown:', parsed.questionEvaluations.map(qe => ({
+          q: qe.questionIndex,
+          marks: qe.marksAwarded
+        })));
+      }
+      
+      // Use the recalculated total if it differs from parsed total
+      const finalMarks = Math.min(calculatedTotalMarks, maxMarks);
+      const finalPercentage = (finalMarks / maxMarks) * 100;
+      
+      console.log(`✅ Final marks: ${finalMarks}/${maxMarks} (${finalPercentage.toFixed(2)}%)`);
+      
       // Validate and normalize the response
       const evaluation = {
-        marks: Math.min(parsed.totalMarks || 0, maxMarks),
-        percentage: parsed.percentage || ((parsed.totalMarks / maxMarks) * 100),
-        level: this.determineLevel(parsed.percentage || ((parsed.totalMarks / maxMarks) * 100)),
+        marks: finalMarks,
+        percentage: finalPercentage,
+        level: this.determineLevel(finalPercentage),
         feedback: parsed.feedback || 'No feedback provided',
         questionEvaluations: parsed.questionEvaluations || [],
         strengths: parsed.strengths || [],
