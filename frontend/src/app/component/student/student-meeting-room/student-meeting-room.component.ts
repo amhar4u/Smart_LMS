@@ -6,6 +6,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import DailyIframe from '@daily-co/daily-js';
+import { SocketService } from '../../../services/socket.service';
+import { EmotionTrackingService, EmotionResult } from '../../../services/emotion-tracking.service';
+import { ConfigService } from '../../../services/config.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-student-meeting-room',
@@ -125,6 +129,10 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private socketService = inject(SocketService);
+  private emotionService = inject(EmotionTrackingService);
+  private configService = inject(ConfigService);
+  private authService = inject(AuthService);
 
   loading = true;
   error = '';
@@ -132,6 +140,9 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
   meetingId = '';
   
   private callFrame: any = null;
+  private currentUser: any = null;
+  private sessionId: string = '';
+  private emotionTrackingInterval = 60000; // Default 1 minute
 
   ngOnInit() {
     this.meetingId = this.route.snapshot.paramMap.get('id') || '';
@@ -141,6 +152,31 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
       this.loading = false;
       return;
     }
+
+    // Get current user
+    this.currentUser = this.authService.getCurrentUser();
+    if (!this.currentUser) {
+      this.error = 'User not authenticated';
+      this.loading = false;
+      return;
+    }
+
+    // Generate unique session ID
+    this.sessionId = `${this.currentUser._id}_${this.meetingId}_${Date.now()}`;
+
+    // Connect to Socket.IO
+    this.socketService.connect();
+
+    // Get emotion tracking configuration
+    this.configService.getEmotionConfig().subscribe({
+      next: (config) => {
+        this.emotionTrackingInterval = config.interval;
+        console.log(`✅ Emotion tracking interval set to: ${this.emotionTrackingInterval}ms (${this.emotionTrackingInterval / 1000}s)`);
+      },
+      error: (error) => {
+        console.warn('Failed to get emotion tracking config, using default:', error);
+      }
+    });
 
     // Get the navigation state for token and room URL
     const navigation = this.router.getCurrentNavigation();
@@ -157,6 +193,16 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.cleanupCallFrame();
+    this.cleanupEmotionTracking();
+    
+    // Leave meeting via Socket.IO
+    if (this.meetingId && this.currentUser) {
+      this.socketService.leaveMeeting(
+        this.meetingId,
+        this.currentUser._id,
+        `${this.currentUser.firstName} ${this.currentUser.lastName}`
+      );
+    }
   }
 
   private async joinWithToken(roomUrl: string, token: string) {
@@ -180,6 +226,16 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
           console.log('Joined meeting successfully');
           this.loading = false;
           this.snackBar.open('You have joined the meeting', 'Close', { duration: 3000 });
+          
+          // Join meeting via Socket.IO for attendance tracking
+          this.socketService.joinMeeting(
+            this.meetingId,
+            this.currentUser._id,
+            `${this.currentUser.firstName} ${this.currentUser.lastName}`
+          );
+          
+          // Start emotion tracking
+          this.initializeEmotionTracking();
         })
         .on('left-meeting', () => {
           console.log('Left meeting');
@@ -230,5 +286,67 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
 
   goBack() {
     this.router.navigate(['/student/meetings']);
+  }
+
+  /**
+   * Initialize emotion tracking
+   */
+  private async initializeEmotionTracking() {
+    try {
+      console.log('🎭 Initializing emotion tracking...');
+      
+      // Load Face-API models
+      await this.emotionService.loadModels();
+      console.log('✅ Face-API models loaded');
+      
+      // Start webcam
+      await this.emotionService.startWebcam();
+      console.log('✅ Webcam started');
+      
+      // Start emotion tracking with callback
+      this.emotionService.startTracking(
+        (emotionResult: EmotionResult) => this.handleEmotionUpdate(emotionResult),
+        this.emotionTrackingInterval
+      );
+      
+      console.log(`✅ Emotion tracking started (interval: ${this.emotionTrackingInterval}ms)`);
+      this.snackBar.open('Emotion tracking started', 'Close', { duration: 2000 });
+      
+    } catch (error: any) {
+      console.error('❌ Error initializing emotion tracking:', error);
+      this.snackBar.open(
+        error.message || 'Failed to start emotion tracking. Please check camera permissions.',
+        'Close',
+        { duration: 5000 }
+      );
+    }
+  }
+
+  /**
+   * Handle emotion update from tracking service
+   */
+  private handleEmotionUpdate(emotionResult: EmotionResult) {
+    console.log('🎭 Emotion detected:', emotionResult);
+    
+    // Send emotion update to server via Socket.IO
+    this.socketService.sendEmotionUpdate(
+      this.meetingId,
+      this.currentUser._id,
+      emotionResult.emotions,
+      emotionResult.dominantEmotion,
+      emotionResult.faceDetected,
+      emotionResult.confidence,
+      this.sessionId
+    );
+    
+    console.log(`📡 Emotion update sent to server - Dominant: ${emotionResult.dominantEmotion}, Face: ${emotionResult.faceDetected}`);
+  }
+
+  /**
+   * Cleanup emotion tracking resources
+   */
+  private cleanupEmotionTracking() {
+    console.log('🧹 Cleaning up emotion tracking...');
+    this.emotionService.cleanup();
   }
 }
