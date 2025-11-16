@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://your-backend-url.com/api', // REPLACE with your actual backend URL
+  apiUrl: 'https://smart-lms-pqp2.onrender.com/api',
   firebase: {
     apiKey: "AIzaSyD_B3ZDSsycZyJKeAesmcqAKzC_BK8zNLI",
     authDomain: "smart-lms-d5ce5.firebaseapp.com",
