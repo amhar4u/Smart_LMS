@@ -200,7 +200,7 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
         duration: meeting.duration,
         status: meeting.status,
         roomUrl: meeting.roomUrl
-      }))}
+      }))
     };
 
     res.json({
@@ -321,7 +321,7 @@ router.get('/admin-dashboard', async (req, res) => {
         duration: meeting.duration,
         status: meeting.status,
         roomUrl: meeting.roomUrl
-      }))}
+      }))
     };
 
     res.json({

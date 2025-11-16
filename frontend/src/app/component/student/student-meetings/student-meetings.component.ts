@@ -108,7 +108,7 @@ export class StudentMeetingsComponent implements OnInit, OnDestroy {
                 }
               });
             });
-          });
+          }
         });
 
         // Sort meetings by date (upcoming first)

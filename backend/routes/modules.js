@@ -184,7 +184,7 @@ router.get('/:id', auth, async (req, res) => {
       .populate('createdBy', 'firstName lastName email');
     
     if (!module) {
-      return res.status(404).json( 
+      return res.status(404).json({ 
         success: false,
         message: 'Module not found' 
       });
