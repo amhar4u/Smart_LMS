@@ -166,16 +166,17 @@ router.post('/', auth, requireAdmin, async (req, res) => {
       });
     }
 
-    // Check if semester with same year and type already exists
-    const existingYearType = await Semester.findOne({
+    // Check if semester with same year, type AND batch already exists
+    const existingYearTypeBatch = await Semester.findOne({
       year,
-      type: type.toLowerCase()
+      type: type.toLowerCase(),
+      batch
     });
 
-    if (existingYearType) {
+    if (existingYearTypeBatch) {
       return res.status(400).json({
         success: false,
-        message: `A ${type} semester for year ${year} already exists`
+        message: `A ${type} semester for year ${year} already exists for this batch`
       });
     }
 
@@ -271,21 +272,23 @@ router.put('/:id', auth, requireAdmin, async (req, res) => {
       }
     }
 
-    // Check if new year and type combination conflicts
-    if ((year && year !== semester.year) || (type && type !== semester.type)) {
+    // Check if new year and type combination conflicts within the same batch
+    if ((year && year !== semester.year) || (type && type !== semester.type) || (batch && batch !== semester.batch.toString())) {
       const checkYear = year || semester.year;
       const checkType = type || semester.type;
+      const checkBatch = batch || semester.batch;
       
-      const existingYearType = await Semester.findOne({
+      const existingYearTypeBatch = await Semester.findOne({
         _id: { $ne: req.params.id },
         year: checkYear,
-        type: checkType.toLowerCase()
+        type: checkType.toLowerCase(),
+        batch: checkBatch
       });
 
-      if (existingYearType) {
+      if (existingYearTypeBatch) {
         return res.status(400).json({
           success: false,
-          message: `A ${checkType} semester for year ${checkYear} already exists`
+          message: `A ${checkType} semester for year ${checkYear} already exists for this batch`
         });
       }
     }

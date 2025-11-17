@@ -100,6 +100,8 @@ semesterSchema.index({ isActive: 1 });
 semesterSchema.index({ isCurrent: 1 });
 semesterSchema.index({ startDate: 1 });
 semesterSchema.index({ endDate: 1 });
+// Compound index to ensure unique semester per batch/year/type combination
+semesterSchema.index({ batch: 1, year: 1, type: 1 }, { unique: true });
 
 // Method to get active semesters ordered by year and type
 semesterSchema.statics.getActiveSemesters = function() {
