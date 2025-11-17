@@ -465,8 +465,406 @@ const sendWelcomeEmail = async (user) => {
   }
 };
 
+/**
+ * Send subject assignment email to lecturer
+ * @param {Object} lecturer - Lecturer user object
+ * @param {Object} subject - Subject object with populated fields
+ * @returns {Promise<Object>} - Email sending result
+ */
+const sendSubjectAssignmentEmailToLecturer = async (lecturer, subject) => {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: {
+        name: 'Smart LMS',
+        address: process.env.EMAIL_USER || 'noreply.smartlms@gmail.com'
+      },
+      to: lecturer.email,
+      subject: '📚 New Subject Assigned to You - Smart LMS',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              background-color: #f4f4f4;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              max-width: 600px;
+              margin: 20px auto;
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .header {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #ffffff;
+              padding: 30px 20px;
+              text-align: center;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 28px;
+            }
+            .content {
+              padding: 30px 20px;
+            }
+            .subject-icon {
+              text-align: center;
+              font-size: 60px;
+              margin: 20px 0;
+            }
+            .info-box {
+              background-color: #f8f9fa;
+              border-left: 4px solid #667eea;
+              padding: 15px;
+              margin: 20px 0;
+              border-radius: 4px;
+            }
+            .info-box strong {
+              color: #667eea;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 8px 0;
+              border-bottom: 1px solid #e9ecef;
+            }
+            .info-row:last-child {
+              border-bottom: none;
+            }
+            .button {
+              display: inline-block;
+              padding: 12px 30px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #ffffff;
+              text-decoration: none;
+              border-radius: 5px;
+              margin: 20px 0;
+              font-weight: bold;
+            }
+            .footer {
+              background-color: #f8f9fa;
+              padding: 20px;
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+            }
+            .footer p {
+              margin: 5px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎓 Smart LMS</h1>
+            </div>
+            <div class="content">
+              <div class="subject-icon">📚</div>
+              <h2 style="color: #333; text-align: center;">New Subject Assigned!</h2>
+              
+              <p>Dear <strong>${lecturer.firstName} ${lecturer.lastName}</strong>,</p>
+              
+              <p>A new subject has been assigned to you. You can now manage this subject and create modules, assignments, and meetings.</p>
+              
+              <div class="info-box">
+                <p><strong>📋 Subject Details:</strong></p>
+                <div class="info-row">
+                  <span><strong>Subject Name:</strong></span>
+                  <span>${subject.name}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Subject Code:</strong></span>
+                  <span>${subject.code}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Credit Hours:</strong></span>
+                  <span>${subject.creditHours}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Department:</strong></span>
+                  <span>${subject.departmentId?.name || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Course:</strong></span>
+                  <span>${subject.courseId?.name || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Batch:</strong></span>
+                  <span>${subject.batchId?.name || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Semester:</strong></span>
+                  <span>${subject.semesterId?.name || 'N/A'}</span>
+                </div>
+                ${subject.description ? `
+                <div style="margin-top: 15px;">
+                  <strong>Description:</strong>
+                  <p style="margin: 5px 0;">${subject.description}</p>
+                </div>
+                ` : ''}
+              </div>
+              
+              <p><strong>🎯 What You Can Do:</strong></p>
+              <ul>
+                <li>Create and manage modules for this subject</li>
+                <li>Upload learning materials and resources</li>
+                <li>Create assignments and grade submissions</li>
+                <li>Schedule and conduct online meetings</li>
+                <li>Track student attendance and progress</li>
+              </ul>
+              
+              <div style="text-align: center;">
+                <p>Ready to get started?</p>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/lecturer/subjects" class="button">
+                  View Subject
+                </a>
+              </div>
+              
+              <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                If you have any questions, please contact the administrator or support team.
+              </p>
+            </div>
+            <div class="footer">
+              <p><strong>Smart LMS - Learning Made Simple</strong></p>
+              <p>This is an automated message, please do not reply to this email.</p>
+              <p>&copy; ${new Date().getFullYear()} Smart LMS. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('✅ [EMAIL] Subject assignment email sent to lecturer:', {
+      to: lecturer.email,
+      subject: subject.name,
+      messageId: info.messageId
+    });
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      message: 'Subject assignment email sent successfully'
+    };
+
+  } catch (error) {
+    console.error('❌ [EMAIL] Failed to send subject assignment email to lecturer:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Send subject enrollment email to student
+ * @param {Object} student - Student user object
+ * @param {Object} subject - Subject object with populated fields
+ * @returns {Promise<Object>} - Email sending result
+ */
+const sendSubjectEnrollmentEmailToStudent = async (student, subject) => {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: {
+        name: 'Smart LMS',
+        address: process.env.EMAIL_USER || 'noreply.smartlms@gmail.com'
+      },
+      to: student.email,
+      subject: '📚 New Subject Available - Smart LMS',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              background-color: #f4f4f4;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              max-width: 600px;
+              margin: 20px auto;
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .header {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #ffffff;
+              padding: 30px 20px;
+              text-align: center;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 28px;
+            }
+            .content {
+              padding: 30px 20px;
+            }
+            .subject-icon {
+              text-align: center;
+              font-size: 60px;
+              margin: 20px 0;
+            }
+            .info-box {
+              background-color: #f8f9fa;
+              border-left: 4px solid #667eea;
+              padding: 15px;
+              margin: 20px 0;
+              border-radius: 4px;
+            }
+            .info-box strong {
+              color: #667eea;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 8px 0;
+              border-bottom: 1px solid #e9ecef;
+            }
+            .info-row:last-child {
+              border-bottom: none;
+            }
+            .button {
+              display: inline-block;
+              padding: 12px 30px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #ffffff;
+              text-decoration: none;
+              border-radius: 5px;
+              margin: 20px 0;
+              font-weight: bold;
+            }
+            .footer {
+              background-color: #f8f9fa;
+              padding: 20px;
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+            }
+            .footer p {
+              margin: 5px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎓 Smart LMS</h1>
+            </div>
+            <div class="content">
+              <div class="subject-icon">📚</div>
+              <h2 style="color: #333; text-align: center;">New Subject Available!</h2>
+              
+              <p>Dear <strong>${student.firstName} ${student.lastName}</strong>,</p>
+              
+              <p>Great news! A new subject has been added to your curriculum. You can now access learning materials, assignments, and attend online meetings for this subject.</p>
+              
+              <div class="info-box">
+                <p><strong>📋 Subject Details:</strong></p>
+                <div class="info-row">
+                  <span><strong>Subject Name:</strong></span>
+                  <span>${subject.name}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Subject Code:</strong></span>
+                  <span>${subject.code}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Credit Hours:</strong></span>
+                  <span>${subject.creditHours}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Lecturer:</strong></span>
+                  <span>${subject.lecturerId?.firstName || ''} ${subject.lecturerId?.lastName || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span><strong>Semester:</strong></span>
+                  <span>${subject.semesterId?.name || 'N/A'}</span>
+                </div>
+                ${subject.description ? `
+                <div style="margin-top: 15px;">
+                  <strong>Description:</strong>
+                  <p style="margin: 5px 0;">${subject.description}</p>
+                </div>
+                ` : ''}
+              </div>
+              
+              <p><strong>🎯 What's Available:</strong></p>
+              <ul>
+                <li>Access learning modules and materials</li>
+                <li>View and complete assignments</li>
+                <li>Attend online meetings and lectures</li>
+                <li>Track your attendance and progress</li>
+                <li>Communicate with your lecturer</li>
+              </ul>
+              
+              <div style="text-align: center;">
+                <p>Ready to start learning?</p>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/student/subjects" class="button">
+                  View Subject
+                </a>
+              </div>
+              
+              <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                Make sure to check regularly for new materials, assignments, and announcements.
+              </p>
+            </div>
+            <div class="footer">
+              <p><strong>Smart LMS - Learning Made Simple</strong></p>
+              <p>This is an automated message, please do not reply to this email.</p>
+              <p>&copy; ${new Date().getFullYear()} Smart LMS. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('✅ [EMAIL] Subject enrollment email sent to student:', {
+      to: student.email,
+      subject: subject.name,
+      messageId: info.messageId
+    });
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      message: 'Subject enrollment email sent successfully'
+    };
+
+  } catch (error) {
+    console.error('❌ [EMAIL] Failed to send subject enrollment email to student:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendRejectionEmail,
-  sendWelcomeEmail
+  sendWelcomeEmail,
+  sendSubjectAssignmentEmailToLecturer,
+  sendSubjectEnrollmentEmailToStudent
 };

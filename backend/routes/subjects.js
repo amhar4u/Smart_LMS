@@ -6,6 +6,7 @@ const Course = require('../models/Course');
 const Semester = require('../models/Semester');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { sendSubjectAssignmentEmailToLecturer, sendSubjectEnrollmentEmailToStudent } = require('../services/emailService');
 
 // Get all subjects with populated data
 router.get('/', auth, async (req, res) => {
@@ -157,10 +158,35 @@ router.post('/', auth, async (req, res) => {
       { path: 'lecturerId', select: 'firstName lastName email' }
     ]);
 
+    // Send email to lecturer (async, don't wait for it)
+    sendSubjectAssignmentEmailToLecturer(lecturer, subject)
+      .catch(err => console.error('Failed to send lecturer email:', err));
+
+    // Find and send emails to all enrolled students in the same batch and semester
+    const enrolledStudents = await User.find({
+      role: 'student',
+      status: 'approved',
+      isActive: true,
+      batch: batchId,
+      semester: semesterId
+    }).select('firstName lastName email');
+
+    console.log(`📧 [SUBJECT] Sending enrollment emails to ${enrolledStudents.length} students...`);
+
+    // Send emails to all enrolled students (async, don't wait)
+    enrolledStudents.forEach(student => {
+      sendSubjectEnrollmentEmailToStudent(student, subject)
+        .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+    });
+
     res.status(201).json({ 
       success: true, 
       message: 'Subject created successfully',
-      data: subject 
+      data: subject,
+      emailsSent: {
+        lecturer: true,
+        students: enrolledStudents.length
+      }
     });
   } catch (error) {
     console.error('Error creating subject:', error);
@@ -248,6 +274,10 @@ router.put('/:id', auth, async (req, res) => {
       });
     }
 
+    // Check if lecturer has changed
+    const lecturerChanged = subject.lecturerId.toString() !== lecturerId;
+    const oldLecturerId = subject.lecturerId;
+
     // Update subject
     subject.name = name.trim();
     subject.code = code.toUpperCase().trim();
@@ -264,14 +294,23 @@ router.put('/:id', auth, async (req, res) => {
     await subject.populate([
       { path: 'departmentId', select: 'name code' },
       { path: 'courseId', select: 'name code' },
+      { path: 'batchId', select: 'name code startYear endYear' },
       { path: 'semesterId', select: 'name code year type' },
       { path: 'lecturerId', select: 'firstName lastName email' }
     ]);
 
+    // If lecturer changed, send email to new lecturer
+    if (lecturerChanged) {
+      console.log(`📧 [SUBJECT] Lecturer changed for subject ${subject.name}, sending email to new lecturer...`);
+      sendSubjectAssignmentEmailToLecturer(lecturer, subject)
+        .catch(err => console.error('Failed to send lecturer email:', err));
+    }
+
     res.json({ 
       success: true, 
       message: 'Subject updated successfully',
-      data: subject 
+      data: subject,
+      lecturerEmailSent: lecturerChanged
     });
   } catch (error) {
     console.error('Error updating subject:', error);
