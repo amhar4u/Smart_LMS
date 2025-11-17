@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
 import { AuthService } from '../../../services/auth.service';
 import { LoadingService } from '../../../services/loading.service';
@@ -32,6 +33,7 @@ import { LoginRequest, UserRole } from '../../../models/user.model';
     MatSelectModule,
     MatCheckboxModule,
     MatSnackBarModule,
+    MatDialogModule,
     // LoadingSpinnerComponent
   ],
   templateUrl: './login.html',
@@ -47,7 +49,8 @@ export class LoginComponent implements OnInit {
     private loadingService: LoadingService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -109,32 +112,26 @@ export class LoginComponent implements OnInit {
               (error.error?.status === 'pending' || 
                error.error?.message?.includes('pending approval'))) {
             
-            // Show pending approval message instead of redirecting
-            this.snackBar.open(
-              '⏳ Your registration is still pending approval. Please wait for admin approval before accessing the system.', 
-              'Understood', 
-              {
-                duration: 8000,
-                panelClass: ['warning-snackbar'],
-                horizontalPosition: 'center',
-                verticalPosition: 'top'
-              }
-            );
+            // Show alert dialog for pending approval
+            const userInfo = error.error?.user || {};
+            const userName = userInfo.firstName && userInfo.lastName 
+              ? `${userInfo.firstName} ${userInfo.lastName}` 
+              : 'User';
+            
+            alert(`⏳ Account Pending Approval\n\nHello ${userName},\n\nYour account registration is currently pending administrator approval.\n\nYou will receive an email notification once your account has been approved and you can access the system.\n\nThank you for your patience!`);
+            
             return;
           }
           
           // Check if account is rejected
           if (error.status === 403 && error.error?.status === 'rejected') {
-            this.snackBar.open(
-              '❌ Your registration has been rejected. Please contact administrator for more information.', 
-              'Close', 
-              {
-                duration: 8000,
-                panelClass: ['error-snackbar'],
-                horizontalPosition: 'center',
-                verticalPosition: 'top'
-              }
-            );
+            const userInfo = error.error?.user || {};
+            const userName = userInfo.firstName && userInfo.lastName 
+              ? `${userInfo.firstName} ${userInfo.lastName}` 
+              : 'User';
+            
+            alert(`❌ Account Registration Rejected\n\nHello ${userName},\n\nWe regret to inform you that your account registration has been rejected by the administrator.\n\nPlease contact the administrator for more information or to discuss your registration.\n\nEmail: admin@smartlms.com`);
+            
             return;
           }
           

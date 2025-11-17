@@ -97,15 +97,24 @@ export class AuthService {
   }
 
   registerTeacher(registration: TeacherRegistration): Observable<AuthResponse> {
-    const payload = {
+    // Build payload, excluding empty optional fields
+    const payload: any = {
       firstName: registration.firstName,
       lastName: registration.lastName,
       email: registration.email,
       password: registration.password,
-      phone: registration.phone,
-      employeeId: registration.employeeId || '',
       department: registration.department
     };
+
+    // Only include phone if it has a value
+    if (registration.phone && registration.phone.trim()) {
+      payload.phone = registration.phone.trim();
+    }
+
+    // Only include employeeId if it has a value
+    if (registration.employeeId && registration.employeeId.trim()) {
+      payload.employeeId = registration.employeeId.trim();
+    }
 
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API_URL}/auth/register/teacher`, payload).pipe(
       map(response => {
