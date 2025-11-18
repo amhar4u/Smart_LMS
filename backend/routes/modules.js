@@ -5,8 +5,10 @@ const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const Module = require('../models/Module');
 const Subject = require('../models/Subject');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { uploadFile, deleteFile, getResourceType } = require('../config/cloudinary');
+const { sendModuleNotification } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -317,6 +319,55 @@ router.post('/', auth, upload.fields([
     const savedModule = await Module.findById(module._id)
       .populate('subject', 'name code')
       .populate('createdBy', 'name email');
+
+    // Send email notifications
+    try {
+      // Get subject with batch and semester info
+      const subjectFull = await Subject.findById(subjectId)
+        .populate('lecturerId', 'firstName lastName email')
+        .populate('batchId')
+        .populate('semesterId');
+      
+      if (subjectFull && subjectFull.batchId && subjectFull.semesterId) {
+        // Get enrolled students
+        const enrolledStudents = await User.find({
+          role: 'student',
+          status: 'approved',
+          isActive: true,
+          batch: subjectFull.batchId._id,
+          semester: subjectFull.semesterId._id
+        }).select('firstName lastName email');
+
+        console.log(`📧 [MODULE] Sending notifications for module: ${title}`);
+        
+        // If created by admin, send to both lecturer and students
+        if (req.user.role === 'admin') {
+          // Send to lecturer
+          if (subjectFull.lecturerId) {
+            sendModuleNotification(subjectFull.lecturerId, { ...savedModule.toObject(), subjectId: subjectFull }, 'lecturer')
+              .catch(err => console.error('Failed to send lecturer email:', err));
+          }
+          
+          // Send to students
+          console.log(`   Sending to ${enrolledStudents.length} students...`);
+          enrolledStudents.forEach(student => {
+            sendModuleNotification(student, { ...savedModule.toObject(), subjectId: subjectFull }, 'student')
+              .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+          });
+        } 
+        // If created by lecturer, send only to students
+        else if (req.user.role === 'teacher') {
+          console.log(`   Sending to ${enrolledStudents.length} students...`);
+          enrolledStudents.forEach(student => {
+            sendModuleNotification(student, { ...savedModule.toObject(), subjectId: subjectFull }, 'student')
+              .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+          });
+        }
+      }
+    } catch (emailError) {
+      console.error('❌ [MODULE] Email notification error:', emailError);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       message: 'Module created successfully',

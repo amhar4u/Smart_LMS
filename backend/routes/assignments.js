@@ -7,10 +7,12 @@ const Course = require('../models/Course');
 const Batch = require('../models/Batch');
 const Semester = require('../models/Semester');
 const Subject = require('../models/Subject');
+const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
 const aiService = require('../services/aiService');
 const { updateStudentSubjectLevel } = require('../services/studentSubjectLevelService');
+const { sendAssignmentNotification } = require('../services/emailService');
 
 // Validation rules for assignment creation
 const assignmentValidation = [
@@ -295,7 +297,56 @@ router.post('/', auth, assignmentValidation, async (req, res) => {
       .populate('semester', 'name')
       .populate('subject', 'name')
       .populate('modules', 'title')
-      .populate('createdBy', 'name email');
+      .populate('createdBy', 'firstName lastName email');
+
+    // Send email notifications only if assignment is active
+    try {
+      // Only send notifications if the assignment is active
+      if (savedAssignment.isActive) {
+        // Get lecturer for the subject (if created by admin)
+        const subjectWithLecturer = await Subject.findById(subject).populate('lecturerId', 'firstName lastName email');
+        
+        // Get enrolled students
+        const enrolledStudents = await User.find({
+          role: 'student',
+          status: 'approved',
+          isActive: true,
+          batch: batch,
+          semester: semester
+        }).select('firstName lastName email');
+
+        console.log(`📧 [ASSIGNMENT] Sending notifications for assignment: ${title} (Active)`);
+        
+        // If created by admin, send to both lecturer and students
+        if (req.user.role === 'admin') {
+          // Send to lecturer
+          if (subjectWithLecturer && subjectWithLecturer.lecturerId) {
+            sendAssignmentNotification(subjectWithLecturer.lecturerId, populatedAssignment, 'lecturer')
+              .catch(err => console.error('Failed to send lecturer email:', err));
+          }
+          
+          // Send to students
+          console.log(`   Sending to ${enrolledStudents.length} students...`);
+          enrolledStudents.forEach(student => {
+            sendAssignmentNotification(student, populatedAssignment, 'student')
+              .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+          });
+        } 
+        // If created by lecturer, send only to students
+        else if (req.user.role === 'teacher') {
+          console.log(`   Sending to ${enrolledStudents.length} students...`);
+          enrolledStudents.forEach(student => {
+            sendAssignmentNotification(student, populatedAssignment, 'student')
+              .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+          });
+        }
+      } else {
+        console.log(`⚠️ [ASSIGNMENT] Skipping notifications - assignment is inactive: ${title}`);
+      }
+    } catch (emailError) {
+      console.error('❌ [ASSIGNMENT] Email notification error:', emailError);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       success: true,
@@ -419,8 +470,65 @@ router.post('/:id/toggle-status', auth, async (req, res) => {
       });
     }
 
+    const wasActive = assignment.isActive;
     assignment.isActive = !assignment.isActive;
     await assignment.save();
+
+    // Send email notifications when assignment is activated
+    if (!wasActive && assignment.isActive) {
+      try {
+        // Populate assignment details for email
+        const populatedAssignment = await Assignment.findById(assignment._id)
+          .populate('department', 'name')
+          .populate('course', 'name')
+          .populate('batch', 'name')
+          .populate('semester', 'name')
+          .populate('subject', 'name')
+          .populate('modules', 'title')
+          .populate('createdBy', 'firstName lastName email');
+
+        // Get lecturer for the subject
+        const subjectWithLecturer = await Subject.findById(assignment.subject).populate('lecturerId', 'firstName lastName email');
+        
+        // Get enrolled students
+        const enrolledStudents = await User.find({
+          role: 'student',
+          status: 'approved',
+          isActive: true,
+          batch: assignment.batch,
+          semester: assignment.semester
+        }).select('firstName lastName email');
+
+        console.log(`📧 [ASSIGNMENT ACTIVATED] Sending notifications for: ${assignment.title}`);
+        
+        // If user is admin, send to both lecturer and students
+        if (req.user.role === 'admin') {
+          // Send to lecturer
+          if (subjectWithLecturer && subjectWithLecturer.lecturerId) {
+            sendAssignmentNotification(subjectWithLecturer.lecturerId, populatedAssignment, 'lecturer')
+              .catch(err => console.error('Failed to send lecturer email:', err));
+          }
+          
+          // Send to students
+          console.log(`   Sending to ${enrolledStudents.length} students...`);
+          enrolledStudents.forEach(student => {
+            sendAssignmentNotification(student, populatedAssignment, 'student')
+              .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+          });
+        } 
+        // If user is lecturer, send only to students
+        else if (req.user.role === 'teacher') {
+          console.log(`   Sending to ${enrolledStudents.length} students...`);
+          enrolledStudents.forEach(student => {
+            sendAssignmentNotification(student, populatedAssignment, 'student')
+              .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+          });
+        }
+      } catch (emailError) {
+        console.error('❌ [ASSIGNMENT ACTIVATION] Email notification error:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     res.json({
       success: true,
@@ -536,7 +644,6 @@ router.post('/preview-questions', auth, async (req, res) => {
 
 // GET /api/assignments/:id/submissions - Get all submissions for an assignment
 const AssignmentSubmission = require('../models/AssignmentSubmission');
-const User = require('../models/User');
 
 router.get('/:id/submissions', auth, async (req, res) => {
   try {

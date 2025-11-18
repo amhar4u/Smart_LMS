@@ -3,8 +3,10 @@ const router = express.Router();
 const Meeting = require('../models/Meeting');
 const Subject = require('../models/Subject');
 const Module = require('../models/Module');
+const User = require('../models/User');
 const dailyService = require('../services/dailyService');
 const auth = require('../middleware/auth');
+const { sendMeetingNotification } = require('../services/emailService');
 
 /**
  * @route   POST /api/meetings
@@ -101,6 +103,50 @@ router.post('/', auth, async (req, res) => {
 
     // Populate references before sending response
     const populatedMeeting = await Meeting.getMeetingWithDetails(meeting._id);
+
+    // Send email notifications
+    try {
+      // Get lecturer for the subject
+      const subjectWithLecturer = await Subject.findById(subjectId).populate('lecturerId', 'firstName lastName email');
+      
+      // Get enrolled students
+      const enrolledStudents = await User.find({
+        role: 'student',
+        status: 'approved',
+        isActive: true,
+        batch: batchId,
+        semester: semesterId
+      }).select('firstName lastName email');
+
+      console.log(`📧 [MEETING] Sending notifications for meeting: ${topic}`);
+      
+      // If created by admin, send to both lecturer and students
+      if (req.user.role === 'admin') {
+        // Send to lecturer
+        if (subjectWithLecturer && subjectWithLecturer.lecturerId) {
+          sendMeetingNotification(subjectWithLecturer.lecturerId, populatedMeeting, 'lecturer')
+            .catch(err => console.error('Failed to send lecturer email:', err));
+        }
+        
+        // Send to students
+        console.log(`   Sending to ${enrolledStudents.length} students...`);
+        enrolledStudents.forEach(student => {
+          sendMeetingNotification(student, populatedMeeting, 'student')
+            .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+        });
+      } 
+      // If created by lecturer, send only to students
+      else if (req.user.role === 'teacher') {
+        console.log(`   Sending to ${enrolledStudents.length} students...`);
+        enrolledStudents.forEach(student => {
+          sendMeetingNotification(student, populatedMeeting, 'student')
+            .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
+        });
+      }
+    } catch (emailError) {
+      console.error('❌ [MEETING] Email notification error:', emailError);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       success: true,

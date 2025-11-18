@@ -104,14 +104,20 @@ router.get('/course/:courseId/public', async (req, res) => {
       .populate('course', 'name code')
       .populate('department', 'name code')
       .populate('currentSemester', 'name code year type')
+      .populate('semesters', 'name code year type')
       .sort({ startYear: -1, name: 1 });
     
-    // Filter to only include batches with:
-    // 1. Available slots
-    // 2. Current semester assigned (required for registration)
+    // Filter to only include batches with available slots
+    // Note: If no currentSemester is set, use the first semester from semesters array
     const availableBatches = batches.filter(batch => 
-      batch.currentEnrollment < batch.maxStudents && batch.currentSemester
-    );
+      batch.currentEnrollment < batch.maxStudents
+    ).map(batch => {
+      // If no currentSemester but has semesters, auto-assign the first one for display
+      if (!batch.currentSemester && batch.semesters && batch.semesters.length > 0) {
+        batch.currentSemester = batch.semesters[0];
+      }
+      return batch;
+    });
     
     res.json({
       success: true,

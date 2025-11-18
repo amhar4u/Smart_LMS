@@ -861,10 +861,283 @@ const sendSubjectEnrollmentEmailToStudent = async (student, subject) => {
   }
 };
 
+/**
+ * Send assignment creation notification email
+ * @param {Object} recipient - User object (student or lecturer)
+ * @param {Object} assignment - Assignment object with populated fields
+ * @param {String} role - Recipient role ('student' or 'lecturer')
+ * @returns {Promise<Object>} - Email sending result
+ */
+const sendAssignmentNotification = async (recipient, assignment, role = 'student') => {
+  try {
+    const transporter = createTransporter();
+    
+    const dueDate = new Date(assignment.dueDate).toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const mailOptions = {
+      from: {
+        name: 'Smart LMS',
+        address: process.env.EMAIL_USER || 'noreply.smartlms@gmail.com'
+      },
+      to: recipient.email,
+      subject: `📝 New Assignment: ${assignment.title}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 30px 20px; text-align: center; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .content { padding: 30px 20px; }
+            .icon { text-align: center; font-size: 60px; margin: 20px 0; }
+            .info-box { background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px; }
+            .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+            .info-row:last-child { border-bottom: none; }
+            .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+            .due-date { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header"><h1>🎓 Smart LMS</h1></div>
+            <div class="content">
+              <div class="icon">📝</div>
+              <h2 style="color: #333; text-align: center;">New Assignment ${role === 'lecturer' ? 'Created' : 'Available'}!</h2>
+              <p>Dear <strong>${recipient.firstName} ${recipient.lastName}</strong>,</p>
+              <p>${role === 'lecturer' ? 'You have successfully created a new assignment.' : 'A new assignment has been posted for your subject.'}</p>
+              <div class="info-box">
+                <p><strong>📋 Assignment Details:</strong></p>
+                <div class="info-row"><span><strong>Title:</strong></span><span>${assignment.title}</span></div>
+                <div class="info-row"><span><strong>Subject:</strong></span><span>${assignment.subject?.name || 'N/A'}</span></div>
+                <div class="info-row"><span><strong>Type:</strong></span><span>${assignment.assignmentType || 'N/A'}</span></div>
+                <div class="info-row"><span><strong>Total Marks:</strong></span><span>${assignment.totalMarks || 'N/A'}</span></div>
+                <div class="info-row"><span><strong>Questions:</strong></span><span>${assignment.questionCount || 0}</span></div>
+                ${assignment.description ? `<div style="margin-top: 15px;"><strong>Description:</strong><p style="margin: 5px 0;">${assignment.description}</p></div>` : ''}
+              </div>
+              <div class="due-date">⏰ Due Date: ${dueDate}</div>
+              ${role === 'student' ? `
+                <p><strong>📌 What to do:</strong></p>
+                <ul>
+                  <li>Review the assignment requirements carefully</li>
+                  <li>Complete and submit before the due date</li>
+                  <li>Check for any attachments or additional resources</li>
+                </ul>
+              ` : ''}
+              <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/${role === 'lecturer' ? 'lecturer' : 'student'}/assignments" class="button">View Assignment</a>
+              </div>
+            </div>
+            <div class="footer">
+              <p><strong>Smart LMS - Learning Made Simple</strong></p>
+              <p>This is an automated message, please do not reply to this email.</p>
+              <p>&copy; ${new Date().getFullYear()} Smart LMS. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ [EMAIL] Failed to send assignment notification:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send meeting notification email
+ * @param {Object} recipient - User object (student or lecturer)
+ * @param {Object} meeting - Meeting object with populated fields
+ * @param {String} role - Recipient role ('student' or 'lecturer')
+ * @returns {Promise<Object>} - Email sending result
+ */
+const sendMeetingNotification = async (recipient, meeting, role = 'student') => {
+  try {
+    const transporter = createTransporter();
+    
+    const meetingDate = new Date(meeting.startTime).toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const mailOptions = {
+      from: {
+        name: 'Smart LMS',
+        address: process.env.EMAIL_USER || 'noreply.smartlms@gmail.com'
+      },
+      to: recipient.email,
+      subject: `📹 New Meeting Scheduled: ${meeting.topic}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 30px 20px; text-align: center; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .content { padding: 30px 20px; }
+            .icon { text-align: center; font-size: 60px; margin: 20px 0; }
+            .info-box { background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px; }
+            .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+            .info-row:last-child { border-bottom: none; }
+            .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+            .meeting-time { background-color: #e7f3ff; border-left: 4px solid #2196F3; padding: 15px; margin: 20px 0; border-radius: 4px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header"><h1>🎓 Smart LMS</h1></div>
+            <div class="content">
+              <div class="icon">📹</div>
+              <h2 style="color: #333; text-align: center;">New Meeting Scheduled!</h2>
+              <p>Dear <strong>${recipient.firstName} ${recipient.lastName}</strong>,</p>
+              <p>${role === 'lecturer' ? 'You have successfully scheduled a new meeting.' : 'A new online meeting has been scheduled for your subject.'}</p>
+              <div class="info-box">
+                <p><strong>📋 Meeting Details:</strong></p>
+                <div class="info-row"><span><strong>Topic:</strong></span><span>${meeting.topic}</span></div>
+                <div class="info-row"><span><strong>Subject:</strong></span><span>${meeting.subjectId?.name || 'N/A'}</span></div>
+                <div class="info-row"><span><strong>Duration:</strong></span><span>${meeting.duration || 'N/A'} minutes</span></div>
+                ${meeting.description ? `<div style="margin-top: 15px;"><strong>Description:</strong><p style="margin: 5px 0;">${meeting.description}</p></div>` : ''}
+              </div>
+              <div class="meeting-time">📅 Scheduled: ${meetingDate}</div>
+              ${role === 'student' ? `
+                <p><strong>📌 Important:</strong></p>
+                <ul>
+                  <li>Join the meeting on time</li>
+                  <li>Prepare any materials needed</li>
+                  <li>Test your camera and microphone beforehand</li>
+                </ul>
+              ` : ''}
+              <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/${role === 'lecturer' ? 'lecturer' : 'student'}/meetings" class="button">View Meetings</a>
+              </div>
+            </div>
+            <div class="footer">
+              <p><strong>Smart LMS - Learning Made Simple</strong></p>
+              <p>This is an automated message, please do not reply to this email.</p>
+              <p>&copy; ${new Date().getFullYear()} Smart LMS. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ [EMAIL] Failed to send meeting notification:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send module creation notification email
+ * @param {Object} recipient - User object (student or lecturer)
+ * @param {Object} module - Module object with populated fields
+ * @param {String} role - Recipient role ('student' or 'lecturer')
+ * @returns {Promise<Object>} - Email sending result
+ */
+const sendModuleNotification = async (recipient, module, role = 'student') => {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: {
+        name: 'Smart LMS',
+        address: process.env.EMAIL_USER || 'noreply.smartlms@gmail.com'
+      },
+      to: recipient.email,
+      subject: `📚 New Module: ${module.name}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 30px 20px; text-align: center; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .content { padding: 30px 20px; }
+            .icon { text-align: center; font-size: 60px; margin: 20px 0; }
+            .info-box { background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px; }
+            .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; }
+            .info-row:last-child { border-bottom: none; }
+            .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header"><h1>🎓 Smart LMS</h1></div>
+            <div class="content">
+              <div class="icon">📚</div>
+              <h2 style="color: #333; text-align: center;">New Learning Module Available!</h2>
+              <p>Dear <strong>${recipient.firstName} ${recipient.lastName}</strong>,</p>
+              <p>${role === 'lecturer' ? 'You have successfully created a new module.' : 'A new learning module has been added to your subject.'}</p>
+              <div class="info-box">
+                <p><strong>📋 Module Details:</strong></p>
+                <div class="info-row"><span><strong>Module Name:</strong></span><span>${module.name}</span></div>
+                <div class="info-row"><span><strong>Module Code:</strong></span><span>${module.code || 'N/A'}</span></div>
+                <div class="info-row"><span><strong>Subject:</strong></span><span>${module.subjectId?.name || 'N/A'}</span></div>
+                ${module.description ? `<div style="margin-top: 15px;"><strong>Description:</strong><p style="margin: 5px 0;">${module.description}</p></div>` : ''}
+              </div>
+              ${role === 'student' ? `
+                <p><strong>📌 What's Inside:</strong></p>
+                <ul>
+                  <li>Learning materials and resources</li>
+                  <li>Lecture notes and documents</li>
+                  <li>Practice exercises</li>
+                </ul>
+              ` : ''}
+              <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/${role === 'lecturer' ? 'lecturer' : 'student'}/modules" class="button">View Modules</a>
+              </div>
+            </div>
+            <div class="footer">
+              <p><strong>Smart LMS - Learning Made Simple</strong></p>
+              <p>This is an automated message, please do not reply to this email.</p>
+              <p>&copy; ${new Date().getFullYear()} Smart LMS. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ [EMAIL] Failed to send module notification:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendRejectionEmail,
   sendWelcomeEmail,
   sendSubjectAssignmentEmailToLecturer,
-  sendSubjectEnrollmentEmailToStudent
+  sendSubjectEnrollmentEmailToStudent,
+  sendAssignmentNotification,
+  sendMeetingNotification,
+  sendModuleNotification
 };
