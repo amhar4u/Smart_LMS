@@ -263,16 +263,9 @@ export class AuthService {
     return (error: HttpErrorResponse): Observable<T> => {
       console.error(`${operation} failed:`, error);
       
-      let errorMessage = 'An unexpected error occurred';
-      
-      if (error.error?.message) {
-        errorMessage = error.error.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      // Return a user-friendly error message
-      return throwError(() => new Error(errorMessage));
+      // For registration/auth operations, preserve the full error structure
+      // so components can access error.error.message, error.error.errors, etc.
+      return throwError(() => error);
     };
   }
 }

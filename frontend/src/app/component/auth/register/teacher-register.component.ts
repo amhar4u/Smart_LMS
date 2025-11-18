@@ -162,7 +162,21 @@ export class TeacherRegisterComponent implements OnInit {
         },
         error: (error) => {
           this.loadingService.hide();
-          this.snackBar.open('Registration failed. Please try again.', 'Close', {
+          // Extract the actual error message from backend
+          let errorMessage = 'Registration failed. Please try again.';
+          
+          if (error.error?.errors && Array.isArray(error.error.errors) && error.error.errors.length > 0) {
+            // Validation errors array
+            errorMessage = error.error.errors[0].msg || error.error.errors[0].message || errorMessage;
+          } else if (error.error?.message) {
+            // Single error message
+            errorMessage = error.error.message;
+          } else if (error.message) {
+            // Fallback to error message
+            errorMessage = error.message;
+          }
+          
+          this.snackBar.open(errorMessage, 'Close', {
             duration: 5000,
             panelClass: ['error-snackbar']
           });

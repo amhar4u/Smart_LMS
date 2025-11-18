@@ -93,7 +93,6 @@ router.post('/register/student', [
 
     // Verify batch exists and has available slots
     const batch = await Batch.findById(batchId)
-      .populate('currentSemester')
       .populate('course')
       .populate('department');
 
@@ -126,13 +125,18 @@ router.post('/register/student', [
       });
     }
 
-    // Get current semester from batch (automatic assignment)
-    const currentSemester = batch.currentSemester;
-    if (!currentSemester) {
-      return res.status(400).json({
-        success: false,
-        message: 'Selected batch does not have a current semester assigned. Please contact administrator.'
-      });
+    // Find a semester for this batch (look for any semester matching batch, year, and type)
+    // This allows registration even without explicit currentSemester setting
+    const Semester = require('../models/Semester');
+    let semesterToAssign = null;
+    
+    const matchingSemester = await Semester.findOne({
+      batch: batchId,
+      isActive: true
+    }).sort({ year: 1, createdAt: 1 }); // Get the first/earliest semester
+    
+    if (matchingSemester) {
+      semesterToAssign = matchingSemester._id;
     }
 
     // Create new student user
@@ -147,7 +151,7 @@ router.post('/register/student', [
       department,
       course,
       batch: batchId,
-      semester: currentSemester._id
+      semester: semesterToAssign // Can be null if no semester exists yet
     });
 
     await user.save();

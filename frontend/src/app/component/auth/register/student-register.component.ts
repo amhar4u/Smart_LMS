@@ -259,16 +259,24 @@ export class StudentRegisterComponent implements OnInit {
         error: (error) => {
           this.loadingService.hide();
           console.error('Registration error details:', error);
+          console.error('Error.error content:', error.error);
           
           // Extract error message from backend
           let errorMessage = 'Registration failed. Please try again.';
-          if (error.error?.errors && error.error.errors.length > 0) {
+          
+          // Check for validation errors array
+          if (error.error?.errors && Array.isArray(error.error.errors) && error.error.errors.length > 0) {
             // Show validation errors
             const validationErrors = error.error.errors.map((e: any) => e.msg || e.message).join(', ');
-            errorMessage = `Validation failed: ${validationErrors}`;
-            console.error('Validation errors:', error.error.errors);
-          } else if (error.error?.message) {
+            errorMessage = validationErrors;
+          } 
+          // Check for direct message in error.error.message
+          else if (error.error?.message) {
             errorMessage = error.error.message;
+          }
+          // Check for message in error itself
+          else if (error.message) {
+            errorMessage = error.message;
           }
           
           this.snackBar.open(errorMessage, 'Close', {
