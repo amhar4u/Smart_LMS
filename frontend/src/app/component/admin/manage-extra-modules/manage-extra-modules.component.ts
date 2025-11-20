@@ -25,6 +25,7 @@ import { ConfirmationService } from '../../../services/confirmation.service';
 import { ExtraModule, StudentLevel, STUDENT_LEVELS } from '../../../models/extra-module.model';
 import { AdminLayout } from '../admin-layout/admin-layout';
 import { ExtraModuleDialogComponent } from './extra-module-dialog/extra-module-dialog.component';
+import { ExtraModuleViewDialogComponent } from '../extra-module-view-dialog/extra-module-view-dialog.component';
 
 @Component({
   selector: 'app-manage-extra-modules',
@@ -184,7 +185,13 @@ export class ManageExtraModulesComponent implements OnInit {
   }
 
   openDetailsDialog(extraModule: ExtraModule): void {
-    this.snackBar.open('Details view coming soon!', 'Close', { duration: 3000 });
+    this.dialog.open(ExtraModuleViewDialogComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: extraModule,
+      autoFocus: false
+    });
   }
 
   deleteExtraModule(extraModule: ExtraModule): void {

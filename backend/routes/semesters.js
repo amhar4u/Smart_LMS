@@ -204,6 +204,14 @@ router.post('/', auth, requireAdmin, async (req, res) => {
     const semester = new Semester(semesterData);
     await semester.save();
 
+    // Add semester to batch's semesters array
+    const Batch = require('../models/Batch');
+    await Batch.findByIdAndUpdate(
+      batch,
+      { $addToSet: { semesters: semester._id } },
+      { new: true }
+    );
+
     res.status(201).json({
       success: true,
       data: semester,

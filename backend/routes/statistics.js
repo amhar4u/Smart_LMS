@@ -68,28 +68,22 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
 
     const subjectIds = subjects.map(s => s._id);
 
-    // Get assignments for student's subjects
-    const [
-      totalAssignments,
-      pendingAssignments,
-      completedSubmissions,
-      assignmentSubmissions
-    ] = await Promise.all([
-      Assignment.countDocuments({
-        subject: { $in: subjectIds },
-        isActive: true
-      }),
-      Assignment.countDocuments({
-        subject: { $in: subjectIds },
-        isActive: true,
-        dueDate: { $gte: new Date() }
-      }),
-      AssignmentSubmission.countDocuments({
-        studentId: studentId,
-        status: 'completed'
-      }),
-      AssignmentSubmission.find({ studentId: studentId }).lean()
-    ]);
+    // Get all assignments for student's subjects
+    const allAssignments = await Assignment.find({
+      subject: { $in: subjectIds },
+      isActive: true
+    }).select('_id dueDate').lean();
+
+    const assignmentIds = allAssignments.map(a => a._id);
+    const totalAssignments = allAssignments.length;
+    const pendingAssignments = allAssignments.filter(a => new Date(a.dueDate) >= new Date()).length;
+
+    // Get student's submissions (status can be: submitted, graded, or returned)
+    const completedSubmissions = await AssignmentSubmission.countDocuments({
+      studentId: studentId,
+      assignmentId: { $in: assignmentIds },
+      submittedAt: { $ne: null } // Count all submissions that have been submitted
+    });
 
     // Get meetings for student's batch and semester
     const [
@@ -173,33 +167,33 @@ router.get('/student-dashboard/:studentId', async (req, res) => {
         upcoming: upcomingMeetings,
         completed: completedMeetings
       },
-      upcomingAssignments: upcomingAssignmentsList.map(assignment => ({
+      nextAssignments: upcomingAssignmentsList.map(assignment => ({
         _id: assignment._id,
         title: assignment.title,
         description: assignment.description,
-        subject: assignment.subject,
+        subjectId: assignment.subject,
         modules: assignment.modules,
         totalMarks: assignment.totalMarks,
         questionCount: assignment.questionCount,
         dueDate: assignment.dueDate,
-        assignmentType: assignment.assignmentType,
-        assignmentLevel: assignment.assignmentLevel,
+        type: assignment.assignmentType,
+        level: assignment.assignmentLevel,
         createdAt: assignment.createdAt,
         daysRemaining: Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24))
       })),
-      upcomingMeetings: upcomingMeetingsList.map(meeting => ({
+      recentMeetings: upcomingMeetingsList.map(meeting => ({
         _id: meeting._id,
         topic: meeting.topic,
         description: meeting.description,
-        subject: meeting.subjectId,
-        batch: meeting.batchId,
-        semester: meeting.semesterId,
+        subjectId: meeting.subjectId,
+        batchId: meeting.batchId,
+        semesterId: meeting.semesterId,
         modules: meeting.moduleIds,
         meetingDate: meeting.meetingDate,
-        startTime: meeting.startTime,
+        meetingTime: meeting.startTime,
         duration: meeting.duration,
         status: meeting.status,
-        roomUrl: meeting.roomUrl
+        meetingLink: meeting.roomUrl
       }))
     };
 

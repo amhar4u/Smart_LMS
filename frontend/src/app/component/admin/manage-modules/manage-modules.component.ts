@@ -23,6 +23,7 @@ import { LoadingService } from '../../../services/loading.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { Module, CreateModuleRequest, UpdateModuleRequest } from '../../../models/module.model';
 import { ModuleDialogComponent } from './module-dialog/module-dialog.component';
+import { ModuleViewDialogComponent } from '../module-view-dialog/module-view-dialog.component';
 import { AdminLayout } from '../admin-layout/admin-layout';
 
 @Component({
@@ -180,7 +181,13 @@ export class ManageModulesComponent implements OnInit {
   }
 
   openDetailsDialog(module: Module): void {
-    // TODO: Implement module details dialog
+    this.dialog.open(ModuleViewDialogComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: module,
+      autoFocus: false
+    });
   }
 
   createModule(moduleData: CreateModuleRequest): void {

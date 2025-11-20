@@ -145,6 +145,13 @@ export class BatchService {
   }
 
   /**
+   * Get batches by department and course ID
+   */
+  getBatchesByDepartmentAndCourse(departmentId: string, courseId: string): Observable<BatchResponse> {
+    return this.getBatches({ department: departmentId, course: courseId });
+  }
+
+  /**
    * Get batch by ID
    */
   getBatchById(id: string): Observable<SingleBatchResponse> {

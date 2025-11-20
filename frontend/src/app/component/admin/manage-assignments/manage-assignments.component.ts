@@ -160,6 +160,11 @@ export class ManageAssignmentsComponent implements OnInit {
       this.onCourseChange(courseId);
     });
 
+    // Watch for batch changes
+    this.assignmentForm.get('batch')?.valueChanges.subscribe((batchId) => {
+      this.onBatchChange(batchId);
+    });
+
     // Watch for semester changes
     this.assignmentForm.get('semester')?.valueChanges.subscribe((semesterId) => {
       this.onSemesterChange(semesterId);
@@ -222,26 +227,85 @@ export class ManageAssignmentsComponent implements OnInit {
 
   private onCourseChange(courseId: string): void {
     if (courseId) {
-      // Load batches filtered by course
-      this.batchService.getBatchesByCourse(courseId).subscribe({
+      const departmentId = this.assignmentForm.get('department')?.value;
+      
+      // Load batches filtered by course and department
+      if (departmentId) {
+        this.batchService.getBatchesByDepartmentAndCourse(departmentId, courseId).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.filteredBatches = response.data;
+            }
+          },
+          error: (error) => {
+            console.error('Error loading batches:', error);
+            // Fallback to course-only filter
+            this.batchService.getBatchesByCourse(courseId).subscribe({
+              next: (response) => {
+                if (response.success) {
+                  this.filteredBatches = response.data;
+                }
+              },
+              error: (error) => {
+                console.error('Error loading batches:', error);
+                this.filteredBatches = [];
+              }
+            });
+          }
+        });
+      }
+      
+      // Reset dependent fields but not batch
+      this.assignmentForm.patchValue({
+        semester: '',
+        subject: '',
+        modules: []
+      });
+      
+      this.filteredSemesters = [];
+      this.filteredSubjects = [];
+      this.filteredModules = [];
+    } else {
+      this.filteredBatches = [];
+      this.filteredSemesters = [];
+      this.filteredSubjects = [];
+      this.filteredModules = [];
+    }
+  }
+
+  private onBatchChange(batchId: string): void {
+    if (batchId) {
+      // Load semesters for the selected batch
+      this.batchService.getBatchById(batchId).subscribe({
         next: (response) => {
-          if (response.success) {
-            this.filteredBatches = response.data;
+          if (response.success && response.data) {
+            const batch = response.data;
+            
+            if (batch.semesters && batch.semesters.length > 0) {
+              // The batch.semesters are already populated objects from the API
+              // So we can use them directly
+              this.filteredSemesters = batch.semesters.map((sem: any) => ({
+                _id: sem._id,
+                name: sem.name,
+                code: sem.code,
+                year: sem.year,
+                type: sem.type,
+                startDate: sem.startDate,
+                endDate: sem.endDate
+              }));
+            } else {
+              this.filteredSemesters = [];
+            }
           }
         },
         error: (error) => {
-          console.error('Error loading batches:', error);
-          this.filteredBatches = [];
+          console.error('Error loading batch details:', error);
+          this.filteredSemesters = [];
         }
       });
       
-      // Load semesters - we need to filter them based on available data
-      // For now, show all semesters and let user select
-      this.filteredSemesters = this.semesters;
-      
       // Reset dependent fields
       this.assignmentForm.patchValue({
-        batch: '',
         semester: '',
         subject: '',
         modules: []
@@ -250,7 +314,6 @@ export class ManageAssignmentsComponent implements OnInit {
       this.filteredSubjects = [];
       this.filteredModules = [];
     } else {
-      this.filteredBatches = [];
       this.filteredSemesters = [];
       this.filteredSubjects = [];
       this.filteredModules = [];
@@ -460,26 +523,64 @@ export class ManageAssignmentsComponent implements OnInit {
     this.selectedTab = 0;
     this.previewQuestions = assignment.questions || [];
     
-    // First patch the form with assignment data
+    // Extract IDs from populated objects
+    const departmentId = typeof assignment.department === 'object' && assignment.department ? assignment.department._id : assignment.department;
+    const courseId = typeof assignment.course === 'object' && assignment.course ? assignment.course._id : assignment.course;
+    const batchId = typeof assignment.batch === 'object' && assignment.batch ? assignment.batch._id : assignment.batch;
+    const semesterId = typeof assignment.semester === 'object' && assignment.semester ? assignment.semester._id : assignment.semester;
+    const subjectId = typeof assignment.subject === 'object' && assignment.subject ? assignment.subject._id : assignment.subject;
+    const moduleIds = Array.isArray(assignment.modules) ? assignment.modules.map((m: any) => typeof m === 'object' ? m._id : m) : [];
+    
+    // First patch the form with assignment data using IDs
     this.assignmentForm.patchValue({
-      ...assignment,
+      title: assignment.title,
+      description: assignment.description,
+      department: departmentId,
+      course: courseId,
+      batch: batchId,
+      semester: semesterId,
+      subject: subjectId,
+      modules: moduleIds,
       dueDate: new Date(assignment.dueDate),
+      assignmentLevel: assignment.assignmentLevel,
+      assignmentType: assignment.assignmentType,
+      numberOfQuestions: assignment.numberOfQuestions,
+      maxMarks: assignment.maxMarks,
+      instructions: assignment.instructions,
+      submissionType: assignment.submissionType,
+      allowLateSubmission: assignment.allowLateSubmission,
+      lateSubmissionPenalty: assignment.lateSubmissionPenalty,
+      timeLimit: assignment.timeLimit,
       contentSource: 'module_name'
     });
 
-    // Then trigger the cascading dropdown updates
+    // Then trigger the cascading dropdown updates sequentially
     setTimeout(() => {
-      if (typeof assignment.department === 'object' && assignment.department) {
-        this.onDepartmentChange(assignment.department._id);
+      if (departmentId) {
+        this.onDepartmentChange(departmentId);
         setTimeout(() => {
-          if (typeof assignment.course === 'object' && assignment.course) {
-            this.onCourseChange(assignment.course._id);
+          if (courseId) {
+            this.assignmentForm.patchValue({ course: courseId }, { emitEvent: false });
+            this.onCourseChange(courseId);
             setTimeout(() => {
-              if (typeof assignment.semester === 'object' && assignment.semester) {
-                this.onSemesterChange(assignment.semester._id);
+              if (batchId) {
+                this.assignmentForm.patchValue({ batch: batchId }, { emitEvent: false });
+                this.onBatchChange(batchId);
                 setTimeout(() => {
-                  if (typeof assignment.subject === 'object' && assignment.subject) {
-                    this.onSubjectChange(assignment.subject._id);
+                  if (semesterId) {
+                    this.assignmentForm.patchValue({ semester: semesterId }, { emitEvent: false });
+                    this.onSemesterChange(semesterId);
+                    setTimeout(() => {
+                      if (subjectId) {
+                        this.assignmentForm.patchValue({ subject: subjectId }, { emitEvent: false });
+                        this.onSubjectChange(subjectId);
+                        setTimeout(() => {
+                          if (moduleIds.length > 0) {
+                            this.assignmentForm.patchValue({ modules: moduleIds }, { emitEvent: false });
+                          }
+                        }, 100);
+                      }
+                    }, 100);
                   }
                 }, 100);
               }

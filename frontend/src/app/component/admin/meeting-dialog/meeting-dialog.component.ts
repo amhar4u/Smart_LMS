@@ -625,20 +625,45 @@ export class MeetingDialogComponent implements OnInit {
       this.meetingForm.get('subjectId')?.disable();
     }
 
-    this.semesterService.getSemesters().subscribe({
-      next: (response: any) => {
-        this.semesters = response.semesters || response.data || response;
-        this.meetingForm.get('semesterId')?.enable();
-        
-        // If in edit mode and has existing semesterId, trigger semester change
-        if (this.isEditMode && currentSemesterId) {
-          setTimeout(() => this.onSemesterChange(), 50);
+    if (batchId) {
+      // Load semesters for the selected batch
+      this.batchService.getBatchById(batchId).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            const batch = response.data;
+            
+            if (batch.semesters && batch.semesters.length > 0) {
+              // The batch.semesters are already populated objects from the API
+              this.semesters = batch.semesters.map((sem: any) => ({
+                _id: sem._id,
+                name: sem.name,
+                code: sem.code,
+                year: sem.year,
+                type: sem.type,
+                startDate: sem.startDate,
+                endDate: sem.endDate
+              }));
+            } else {
+              this.semesters = [];
+            }
+            
+            this.meetingForm.get('semesterId')?.enable();
+            
+            // If in edit mode and has existing semesterId, trigger semester change
+            if (this.isEditMode && currentSemesterId) {
+              setTimeout(() => this.onSemesterChange(), 50);
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Error loading batch details:', error);
+          this.semesters = [];
+          this.snackBar.open('Failed to load semesters for this batch', 'Close', { duration: 3000 });
         }
-      },
-      error: (error) => {
-        this.snackBar.open('Failed to load semesters', 'Close', { duration: 3000 });
-      }
-    });
+      });
+    } else {
+      this.meetingForm.get('semesterId')?.disable();
+    }
   }
 
   onSemesterChange() {
