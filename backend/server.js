@@ -79,6 +79,7 @@ app.use('/api/lecturer', require('./routes/lecturer'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/student-subject-levels', require('./routes/studentSubjectLevels'));
 app.use('/api/emotions', require('./routes/emotions'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Emotion tracking configuration endpoint
 app.get('/api/config/emotion-tracking', (req, res) => {
@@ -570,6 +571,66 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.error('Error fetching attendance:', error);
       socket.emit('error', { message: 'Failed to fetch attendance data' });
+    }
+  });
+
+  // ============================================
+  // 🔔 NOTIFICATION SYSTEM HANDLERS
+  // ============================================
+  
+  // User authentication and joining their notification room
+  socket.on('authenticate', (userId) => {
+    if (userId) {
+      socket.join(`user:${userId}`);
+      console.log(`🔔 User ${userId} joined notification room`);
+      
+      // Send confirmation
+      socket.emit('authenticated', {
+        userId,
+        message: 'Connected to notification system',
+        timestamp: new Date()
+      });
+    }
+  });
+
+  // Request unread notification count
+  socket.on('get-unread-count', async (userId) => {
+    try {
+      const Notification = require('./models/Notification');
+      const count = await Notification.getUnreadCount(userId);
+      socket.emit('unread-count', { count });
+    } catch (error) {
+      console.error('Error getting unread count:', error);
+      socket.emit('notification-error', { message: 'Failed to get unread count' });
+    }
+  });
+
+  // Mark notification as read
+  socket.on('mark-read', async ({ notificationId, userId }) => {
+    try {
+      const Notification = require('./models/Notification');
+      await Notification.markAsRead(notificationId, userId);
+      socket.emit('notification-read', { notificationId });
+      
+      // Send updated unread count
+      const count = await Notification.getUnreadCount(userId);
+      socket.emit('unread-count', { count });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      socket.emit('notification-error', { message: 'Failed to mark as read' });
+    }
+  });
+
+  // Mark all notifications as read
+  socket.on('mark-all-read', async (userId) => {
+    try {
+      const Notification = require('./models/Notification');
+      await Notification.markAllAsRead(userId);
+      socket.emit('all-notifications-read');
+      socket.emit('unread-count', { count: 0 });
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      socket.emit('notification-error', { message: 'Failed to mark all as read' });
     }
   });
 

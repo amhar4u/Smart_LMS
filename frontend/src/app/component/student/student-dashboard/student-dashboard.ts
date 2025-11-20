@@ -120,12 +120,12 @@ export class StudentDashboard implements OnInit, OnDestroy {
         route: '/student/subjects'
       },
       {
-        title: 'Pending Assignments',
-        value: this.studentDashboardStats.assignments.pending,
-        icon: 'pending_actions',
+        title: 'Total Assignments',
+        value: this.studentDashboardStats.assignments.total,
+        icon: 'assignment',
         color: '#FF9800',
-        subtitle: 'Due soon',
-        growth: `${this.studentDashboardStats.assignments.completed} completed`,
+        subtitle: 'All assignments',
+        growth: `${this.studentDashboardStats.assignments.pending} pending`,
         route: '/student/assignments'
       },
       {
@@ -138,12 +138,12 @@ export class StudentDashboard implements OnInit, OnDestroy {
         route: '/student/assignments'
       },
       {
-        title: 'Upcoming Meetings',
-        value: this.studentDashboardStats.meetings.upcoming,
+        title: 'Total Meetings',
+        value: this.studentDashboardStats.meetings.total,
         icon: 'video_call',
         color: '#9C27B0',
-        subtitle: 'Scheduled',
-        growth: `${this.studentDashboardStats.meetings.completed} completed`,
+        subtitle: 'All meetings',
+        growth: `${this.studentDashboardStats.meetings.upcoming} upcoming`,
         route: '/student/meetings'
       }
     ];
@@ -259,7 +259,7 @@ export class StudentDashboard implements OnInit, OnDestroy {
           ? Math.round((this.studentDashboardStats.subjects.active / this.studentDashboardStats.subjects.total) * 100) 
           : 0;
       
-      case 'Pending Assignments':
+      case 'Total Assignments':
         return this.studentDashboardStats.assignments.total > 0 
           ? Math.round((this.studentDashboardStats.assignments.pending / this.studentDashboardStats.assignments.total) * 100) 
           : 0;
@@ -267,7 +267,7 @@ export class StudentDashboard implements OnInit, OnDestroy {
       case 'Completed Assignments':
         return this.studentDashboardStats.assignments.submissionRate;
       
-      case 'Upcoming Meetings':
+      case 'Total Meetings':
         return this.studentDashboardStats.meetings.total > 0 
           ? Math.round((this.studentDashboardStats.meetings.upcoming / this.studentDashboardStats.meetings.total) * 100) 
           : 0;

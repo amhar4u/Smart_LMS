@@ -9,6 +9,7 @@ const Subject = require('../models/Subject');
 const Module = require('../models/Module');
 const Meeting = require('../models/Meeting');
 const { evaluateAssignment } = require('../services/aiService');
+const NotificationService = require('../services/notificationService');
 
 // Middleware to ensure user is a student
 const isStudent = (req, res, next) => {
@@ -385,6 +386,28 @@ router.post('/assignments/:id/submit', auth, isStudent, async (req, res) => {
     }
 
     await submission.save();
+
+    // Send real-time notification to lecturer about submission
+    try {
+      const io = req.app.get('io');
+      const notificationService = new NotificationService(io);
+      
+      const student = await User.findById(studentId);
+      const subjectDetails = await Subject.findById(assignment.subject);
+      
+      if (subjectDetails && subjectDetails.lecturerId) {
+        await notificationService.notifyAssignmentSubmission(
+          submission,
+          assignment,
+          student,
+          subjectDetails.lecturerId
+        );
+        console.log(`🔔 [SUBMISSION] Notification sent to lecturer`);
+      }
+    } catch (notifError) {
+      console.error('❌ [SUBMISSION] Notification error:', notifError);
+      // Don't fail the submission if notification fails
+    }
 
     res.json({
       success: true,

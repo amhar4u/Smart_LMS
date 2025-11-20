@@ -98,6 +98,9 @@
           <input type="text" placeholder="Search students, courses..." class="search-input">
         </div>
         
+        <!-- Notifications -->
+        <app-notification-bell></app-notification-bell>
+        
         <!-- User Info -->
         <div class="user-info" *ngIf="currentUser$ | async as currentUser">
           <span class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</span>

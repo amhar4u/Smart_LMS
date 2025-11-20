@@ -9,6 +9,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { uploadFile, deleteFile, getResourceType } = require('../config/cloudinary');
 const { sendModuleNotification } = require('../services/emailService');
+const NotificationService = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -362,6 +363,41 @@ router.post('/', auth, upload.fields([
             sendModuleNotification(student, { ...savedModule.toObject(), subjectId: subjectFull }, 'student')
               .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
           });
+        }
+        
+        // Send real-time notifications
+        try {
+          const io = req.app.get('io');
+          const notificationService = new NotificationService(io);
+          
+          const lecturerId = subjectFull.lecturerId?._id;
+          const studentIds = enrolledStudents.map(s => s._id);
+          
+          if (req.user.role === 'admin') {
+            // Admin created: notify both lecturer and students
+            await notificationService.notifyModuleCreated(
+              req.user._id,
+              lecturerId ? [lecturerId, ...studentIds] : studentIds,
+              savedModule._id,
+              savedModule.title,
+              subjectFull.name,
+              subjectFull._id
+            );
+            console.log(`🔔 [MODULE] Notifications sent by admin to lecturer and ${enrolledStudents.length} students`);
+          } else if (req.user.role === 'teacher') {
+            // Lecturer created: notify only students
+            await notificationService.notifyModuleCreated(
+              req.user._id,
+              studentIds,
+              savedModule._id,
+              savedModule.title,
+              subjectFull.name,
+              subjectFull._id
+            );
+            console.log(`🔔 [MODULE] Notifications sent by lecturer to ${enrolledStudents.length} students`);
+          }
+        } catch (notifError) {
+          console.error('❌ Failed to send module notifications:', notifError);
         }
       }
     } catch (emailError) {

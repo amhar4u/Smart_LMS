@@ -9,6 +9,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
+import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-lecturer-layout',
@@ -19,7 +20,8 @@ import { AuthService } from '../../../services/auth.service';
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,
-    RouterModule
+    RouterModule,
+    NotificationBellComponent
   ],
   templateUrl: './lecturer-layout.html',
   styleUrl: './lecturer-layout.css'

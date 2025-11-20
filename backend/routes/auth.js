@@ -8,6 +8,7 @@ const Course = require('../models/Course');
 const Department = require('../models/Department');
 const authenticate = require('../middleware/auth');
 const { sendWelcomeEmail } = require('../services/emailService');
+const NotificationService = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -163,6 +164,38 @@ router.post('/register/student', [
     sendWelcomeEmail(user).catch(error => {
       console.error('Failed to send welcome email:', error);
     });
+    
+    // Send real-time notifications to all admins about new registration
+    try {
+      const io = req.app?.get('io');
+      if (io) {
+        const notificationService = new NotificationService(io);
+        
+        // Get all admins
+        const admins = await User.find({ role: 'admin', isActive: true }).select('_id');
+        const adminIds = admins.map(a => a._id);
+        
+        await notificationService.createBulkNotifications(
+          user._id,
+          adminIds,
+          'user_registered',
+          'New Student Registration',
+          `${user.firstName} ${user.lastName} has registered as a student`,
+          { entityType: 'user', entityId: user._id },
+          `/users/${user._id}`,
+          'normal',
+          { 
+            userRole: 'student',
+            userName: `${user.firstName} ${user.lastName}`,
+            email: user.email
+          }
+        );
+        
+        console.log(`🔔 [AUTH] New student registration notifications sent to ${adminIds.length} admins`);
+      }
+    } catch (notifError) {
+      console.error('❌ Failed to send registration notifications:', notifError);
+    }
 
     // Generate token
     const token = generateToken(user._id);
@@ -267,6 +300,38 @@ router.post('/register/teacher', [
     sendWelcomeEmail(user).catch(error => {
       console.error('Failed to send welcome email:', error);
     });
+    
+    // Send real-time notifications to all admins about new registration
+    try {
+      const io = req.app?.get('io');
+      if (io) {
+        const notificationService = new NotificationService(io);
+        
+        // Get all admins
+        const admins = await User.find({ role: 'admin', isActive: true }).select('_id');
+        const adminIds = admins.map(a => a._id);
+        
+        await notificationService.createBulkNotifications(
+          user._id,
+          adminIds,
+          'user_registered',
+          'New Teacher Registration',
+          `${user.firstName} ${user.lastName} has registered as a teacher`,
+          { entityType: 'user', entityId: user._id },
+          `/users/${user._id}`,
+          'normal',
+          { 
+            userRole: 'teacher',
+            userName: `${user.firstName} ${user.lastName}`,
+            email: user.email
+          }
+        );
+        
+        console.log(`🔔 [AUTH] New teacher registration notifications sent to ${adminIds.length} admins`);
+      }
+    } catch (notifError) {
+      console.error('❌ Failed to send registration notifications:', notifError);
+    }
 
     // Generate token
     const token = generateToken(user._id);

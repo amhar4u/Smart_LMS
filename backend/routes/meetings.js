@@ -7,6 +7,7 @@ const User = require('../models/User');
 const dailyService = require('../services/dailyService');
 const auth = require('../middleware/auth');
 const { sendMeetingNotification } = require('../services/emailService');
+const NotificationService = require('../services/notificationService');
 
 /**
  * @route   POST /api/meetings
@@ -142,6 +143,45 @@ router.post('/', auth, async (req, res) => {
           sendMeetingNotification(student, populatedMeeting, 'student')
             .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
         });
+      }
+      
+      // Send real-time notifications
+      try {
+        const io = req.app.get('io');
+        const notificationService = new NotificationService(io);
+        
+        const lecturerId = subjectWithLecturer?.lecturerId?._id;
+        const studentIds = enrolledStudents.map(s => s._id);
+        
+        if (req.user.role === 'admin') {
+          // Admin created: notify both lecturer and students
+          await notificationService.notifyMeetingScheduled(
+            req.user._id,
+            lecturerId ? [lecturerId, ...studentIds] : studentIds,
+            meeting._id,
+            topic,
+            populatedMeeting.subjectId?.name || 'Unknown Subject',
+            subjectId,
+            meetingDate,
+            startTime
+          );
+          console.log(`🔔 [MEETING] Notifications sent by admin to lecturer and ${enrolledStudents.length} students`);
+        } else if (req.user.role === 'teacher') {
+          // Lecturer created: notify only students
+          await notificationService.notifyMeetingScheduled(
+            req.user._id,
+            studentIds,
+            meeting._id,
+            topic,
+            populatedMeeting.subjectId?.name || 'Unknown Subject',
+            subjectId,
+            meetingDate,
+            startTime
+          );
+          console.log(`🔔 [MEETING] Notifications sent by lecturer to ${enrolledStudents.length} students`);
+        }
+      } catch (notifError) {
+        console.error('❌ Failed to send meeting notifications:', notifError);
       }
     } catch (emailError) {
       console.error('❌ [MEETING] Email notification error:', emailError);
@@ -323,6 +363,54 @@ router.post('/:id/start', auth, async (req, res) => {
     meeting.status = 'ongoing';
     meeting.startedAt = new Date();
     await meeting.save();
+    
+    // Send real-time notifications when admin hosts meeting (lecturer absent scenario)
+    if (req.user.role === 'admin' && meeting.lecturerId.toString() !== req.user.id) {
+      try {
+        const io = req.app.get('io');
+        const notificationService = new NotificationService(io);
+        
+        // Get enrolled students
+        const enrolledStudents = await User.find({
+          role: 'student',
+          status: 'approved',
+          isActive: true,
+          batch: meeting.batchId,
+          semester: meeting.semesterId
+        }).select('_id');
+        
+        // Get meeting details for notification
+        const meetingDetails = await Meeting.findById(meeting._id)
+          .populate('subjectId', 'name');
+        
+        const studentIds = enrolledStudents.map(s => s._id);
+        const recipients = [meeting.lecturerId, ...studentIds];
+        
+        // Notify lecturer and students that admin has hosted the meeting
+        await notificationService.createBulkNotifications(
+          req.user._id,
+          recipients,
+          'meeting_hosted',
+          'Meeting Started by Admin',
+          `Admin has started the meeting "${meeting.topic}" for ${meetingDetails.subjectId?.name || 'your subject'}`,
+          { 
+            entityType: 'meeting', 
+            entityId: meeting._id 
+          },
+          `/meetings/${meeting._id}`,
+          'high',
+          { 
+            meetingTopic: meeting.topic,
+            subjectName: meetingDetails.subjectId?.name,
+            startedAt: meeting.startedAt
+          }
+        );
+        
+        console.log(`🔔 [MEETING] Admin hosted - notifications sent to lecturer and ${studentIds.length} students`);
+      } catch (notifError) {
+        console.error('❌ Failed to send meeting hosting notifications:', notifError);
+      }
+    }
 
     // Create meeting token for the lecturer
     const token = await dailyService.createMeetingToken(meeting.dailyRoomName, {

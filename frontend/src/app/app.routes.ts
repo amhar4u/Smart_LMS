@@ -102,6 +102,11 @@ export const routes: Routes = [
     canActivate: [teacherGuard]
   },
   {
+    path: 'lecturer/notifications',
+    loadComponent: () => import('./component/shared/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent),
+    canActivate: [teacherGuard]
+  },
+  {
     path: 'student/meetings',
     loadComponent: () => import('./component/student/student-meetings/student-meetings.component').then(m => m.StudentMeetingsComponent),
     canActivate: [studentGuard]
@@ -109,6 +114,11 @@ export const routes: Routes = [
   {
     path: 'student/meetings/room/:id',
     loadComponent: () => import('./component/student/student-meeting-room/student-meeting-room.component').then(m => m.StudentMeetingRoomComponent),
+    canActivate: [studentGuard]
+  },
+  {
+    path: 'student/notifications',
+    loadComponent: () => import('./component/shared/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent),
     canActivate: [studentGuard]
   },
   {
@@ -184,6 +194,11 @@ export const routes: Routes = [
   {
     path: 'admin/manage-meetings',
     loadComponent: () => import('./component/admin/manage-meetings/manage-meetings.component').then(m => m.ManageMeetingsComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/notifications',
+    loadComponent: () => import('./component/shared/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent),
     canActivate: [adminGuard]
   },
   {

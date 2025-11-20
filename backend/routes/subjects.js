@@ -7,6 +7,7 @@ const Semester = require('../models/Semester');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const { sendSubjectAssignmentEmailToLecturer, sendSubjectEnrollmentEmailToStudent } = require('../services/emailService');
+const NotificationService = require('../services/notificationService');
 
 // Get all subjects with populated data
 router.get('/', auth, async (req, res) => {
@@ -179,6 +180,25 @@ router.post('/', auth, async (req, res) => {
         .catch(err => console.error(`Failed to send email to student ${student.email}:`, err));
     });
 
+    // Send real-time notifications
+    try {
+      const io = req.app.get('io');
+      const notificationService = new NotificationService(io);
+      
+      await notificationService.notifySubjectAssignment(
+        req.user._id,
+        lecturer._id,
+        enrolledStudents.map(s => s._id),
+        subject._id,
+        subject.name,
+        subject.code
+      );
+      
+      console.log(`🔔 [SUBJECT] Notifications sent to lecturer and ${enrolledStudents.length} students`);
+    } catch (notifError) {
+      console.error('❌ Failed to send subject notifications:', notifError);
+    }
+
     res.status(201).json({ 
       success: true, 
       message: 'Subject created successfully',
@@ -304,6 +324,34 @@ router.put('/:id', auth, async (req, res) => {
       console.log(`📧 [SUBJECT] Lecturer changed for subject ${subject.name}, sending email to new lecturer...`);
       sendSubjectAssignmentEmailToLecturer(lecturer, subject)
         .catch(err => console.error('Failed to send lecturer email:', err));
+      
+      // Send real-time notifications
+      try {
+        const io = req.app.get('io');
+        const notificationService = new NotificationService(io);
+        
+        // Get enrolled students
+        const enrolledStudents = await User.find({
+          role: 'student',
+          status: 'approved',
+          isActive: true,
+          batch: subject.batchId,
+          semester: subject.semesterId
+        }).select('_id');
+        
+        await notificationService.notifySubjectAssignment(
+          req.user._id,
+          lecturer._id,
+          enrolledStudents.map(s => s._id),
+          subject._id,
+          subject.name,
+          subject.code
+        );
+        
+        console.log(`🔔 [SUBJECT] Lecturer reassignment notifications sent to new lecturer and ${enrolledStudents.length} students`);
+      } catch (notifError) {
+        console.error('❌ Failed to send subject reassignment notifications:', notifError);
+      }
     }
 
     res.json({ 

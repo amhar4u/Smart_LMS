@@ -5,6 +5,7 @@ const Course = require('../models/Course');
 const Batch = require('../models/Batch');
 const auth = require('../middleware/auth');
 const { sendVerificationEmail, sendRejectionEmail } = require('../services/emailService');
+const NotificationService = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -206,6 +207,23 @@ router.put('/:id/approve', auth, async (req, res) => {
     sendVerificationEmail(user).catch(error => {
       console.error('Failed to send verification email:', error);
     });
+    
+    // Send real-time notification to the approved user
+    try {
+      const io = req.app.get('io');
+      const notificationService = new NotificationService(io);
+      
+      await notificationService.notifyAccountApproval(
+        req.user._id,
+        user._id,
+        true, // approved
+        null  // no reason for approval
+      );
+      
+      console.log(`🔔 [USERS] Account approval notification sent to ${user.firstName} ${user.lastName}`);
+    } catch (notifError) {
+      console.error('❌ Failed to send approval notification:', notifError);
+    }
 
     res.status(200).json({
       success: true,
@@ -255,6 +273,23 @@ router.put('/:id/reject', auth, async (req, res) => {
     sendRejectionEmail(user, reason).catch(error => {
       console.error('Failed to send rejection email:', error);
     });
+    
+    // Send real-time notification to the rejected user
+    try {
+      const io = req.app.get('io');
+      const notificationService = new NotificationService(io);
+      
+      await notificationService.notifyAccountApproval(
+        req.user._id,
+        user._id,
+        false, // rejected
+        reason
+      );
+      
+      console.log(`🔔 [USERS] Account rejection notification sent to ${user.firstName} ${user.lastName}`);
+    } catch (notifError) {
+      console.error('❌ Failed to send rejection notification:', notifError);
+    }
 
     res.status(200).json({
       success: true,

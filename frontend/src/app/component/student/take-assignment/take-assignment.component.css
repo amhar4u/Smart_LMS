@@ -288,24 +288,70 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 8px;
+}
+
+.mcq-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mcq-option-wrapper {
+  width: 100%;
 }
 
 .mcq-option {
-  padding: 16px;
+  width: 100%;
+  padding: 16px 20px;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   transition: all 0.2s;
   cursor: pointer;
+  background-color: white;
+  display: flex;
+  align-items: center;
 }
 
 .mcq-option:hover {
   border-color: #2196f3;
   background-color: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
 }
 
-.mcq-option.mat-radio-checked {
+.mcq-option.mat-mdc-radio-checked {
   border-color: #2196f3;
   background-color: #e3f2fd;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.mcq-option .option-text {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.5;
+  margin-left: 12px;
+  flex: 1;
+}
+
+.mcq-option.mat-mdc-radio-checked .option-text {
+  font-weight: 500;
+  color: #1565c0;
+}
+
+/* Material Radio Button Customization */
+.mcq-option ::ng-deep .mdc-radio {
+  padding: 0;
+}
+
+.mcq-option ::ng-deep .mdc-radio__background {
+  width: 24px;
+  height: 24px;
+}
+
+.mcq-option ::ng-deep .mat-mdc-radio-button .mdc-label {
+  padding-left: 12px;
 }
 
 /* Answer Input */
@@ -536,8 +582,17 @@
     gap: 10px;
   }
   
+  .mcq-radio-group {
+    gap: 10px;
+  }
+  
   .mcq-option {
-    padding: 12px;
+    padding: 12px 16px;
+  }
+  
+  .mcq-option .option-text {
+    font-size: 0.95rem;
+    margin-left: 10px;
   }
   
   .submit-section {
@@ -707,9 +762,23 @@
     gap: 8px;
   }
   
+  .mcq-radio-group {
+    gap: 8px;
+  }
+  
   .mcq-option {
-    padding: 10px;
+    padding: 10px 14px;
     font-size: 0.9rem;
+  }
+  
+  .mcq-option .option-text {
+    font-size: 0.9rem;
+    margin-left: 8px;
+  }
+  
+  .mcq-option ::ng-deep .mdc-radio__background {
+    width: 20px;
+    height: 20px;
   }
   
   .answer-input {

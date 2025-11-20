@@ -13,6 +13,7 @@ const auth = require('../middleware/auth');
 const aiService = require('../services/aiService');
 const { updateStudentSubjectLevel } = require('../services/studentSubjectLevelService');
 const { sendAssignmentNotification } = require('../services/emailService');
+const NotificationService = require('../services/notificationService');
 
 // Validation rules for assignment creation
 const assignmentValidation = [
@@ -299,7 +300,7 @@ router.post('/', auth, assignmentValidation, async (req, res) => {
       .populate('modules', 'title')
       .populate('createdBy', 'firstName lastName email');
 
-    // Send email notifications only if assignment is active
+    // Send email and real-time notifications only if assignment is active
     try {
       // Only send notifications if the assignment is active
       if (savedAssignment.isActive) {
@@ -316,6 +317,19 @@ router.post('/', auth, assignmentValidation, async (req, res) => {
         }).select('firstName lastName email');
 
         console.log(`📧 [ASSIGNMENT] Sending notifications for assignment: ${title} (Active)`);
+        
+        // Send real-time notifications via Socket.IO
+        const io = req.app.get('io');
+        const notificationService = new NotificationService(io);
+        
+        await notificationService.notifyAssignmentCreated(
+          populatedAssignment,
+          subjectWithLecturer?.lecturerId,
+          enrolledStudents,
+          req.user._id,
+          req.user.role
+        );
+        console.log(`🔔 [ASSIGNMENT] Real-time notifications sent`);
         
         // If created by admin, send to both lecturer and students
         if (req.user.role === 'admin') {
@@ -344,8 +358,8 @@ router.post('/', auth, assignmentValidation, async (req, res) => {
         console.log(`⚠️ [ASSIGNMENT] Skipping notifications - assignment is inactive: ${title}`);
       }
     } catch (emailError) {
-      console.error('❌ [ASSIGNMENT] Email notification error:', emailError);
-      // Don't fail the request if email fails
+      console.error('❌ [ASSIGNMENT] Email/Notification error:', emailError);
+      // Don't fail the request if email/notification fails
     }
 
     res.status(201).json({
@@ -474,7 +488,7 @@ router.post('/:id/toggle-status', auth, async (req, res) => {
     assignment.isActive = !assignment.isActive;
     await assignment.save();
 
-    // Send email notifications when assignment is activated
+    // Send email and real-time notifications when assignment is activated
     if (!wasActive && assignment.isActive) {
       try {
         // Populate assignment details for email
@@ -501,6 +515,19 @@ router.post('/:id/toggle-status', auth, async (req, res) => {
 
         console.log(`📧 [ASSIGNMENT ACTIVATED] Sending notifications for: ${assignment.title}`);
         
+        // Send real-time notifications via Socket.IO
+        const io = req.app.get('io');
+        const notificationService = new NotificationService(io);
+        
+        await notificationService.notifyAssignmentCreated(
+          populatedAssignment,
+          subjectWithLecturer?.lecturerId,
+          enrolledStudents,
+          req.user._id,
+          req.user.role
+        );
+        console.log(`🔔 [ASSIGNMENT ACTIVATED] Real-time notifications sent`);
+        
         // If user is admin, send to both lecturer and students
         if (req.user.role === 'admin') {
           // Send to lecturer
@@ -525,8 +552,8 @@ router.post('/:id/toggle-status', auth, async (req, res) => {
           });
         }
       } catch (emailError) {
-        console.error('❌ [ASSIGNMENT ACTIVATION] Email notification error:', emailError);
-        // Don't fail the request if email fails
+        console.error('❌ [ASSIGNMENT ACTIVATION] Email/Notification error:', emailError);
+        // Don't fail the request if email/notification fails
       }
     }
 
@@ -929,6 +956,23 @@ router.post('/:assignmentId/submissions/:submissionId/evaluate', auth, async (re
       } catch (levelError) {
         console.error('⚠️ Failed to update student subject level:', levelError);
         // Don't fail the evaluation if level update fails
+      }
+
+      // Send real-time notification to student about evaluation
+      try {
+        const io = req.app.get('io');
+        const notificationService = new NotificationService(io);
+        
+        await notificationService.notifyAssignmentEvaluated(
+          submission,
+          assignment,
+          submission.studentId,
+          req.user._id
+        );
+        console.log(`🔔 [ASSIGNMENT] Evaluation notification sent to student`);
+      } catch (notifError) {
+        console.error('❌ [ASSIGNMENT] Notification error:', notifError);
+        // Don't fail the evaluation if notification fails
       }
 
       res.json({

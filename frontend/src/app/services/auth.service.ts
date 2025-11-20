@@ -5,6 +5,7 @@ import { tap, catchError, map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { User, UserRole, LoginRequest, AuthResponse, StudentRegistration, TeacherRegistration } from '../models/user.model';
 import { environment } from '../../environments/environment';
+import { NotificationService } from './notification.service';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -21,7 +22,11 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(
+    private http: HttpClient, 
+    private router: Router,
+    private notificationService: NotificationService
+  ) {
     // Check if user is logged in on service initialization
     const savedUser = localStorage.getItem('currentUser');
     const token = localStorage.getItem('token');
@@ -31,6 +36,12 @@ export class AuthService {
       try {
         const user = JSON.parse(savedUser);
         this.currentUserSubject.next(user);
+        // Reconnect notification socket for existing session
+        const userId = user._id || user.id;
+        if (userId) {
+          this.notificationService.connectSocket(userId, token);
+          this.notificationService.requestNotificationPermission();
+        }
       } catch (error) {
         console.error('Error parsing saved user data:', error);
         this.clearAuthData();
@@ -52,6 +63,14 @@ export class AuthService {
           localStorage.setItem('currentUser', JSON.stringify(response.data.user));
           localStorage.setItem('token', response.data.token);
           this.currentUserSubject.next(response.data.user);
+          
+          // Connect notification socket
+          const userId = response.data.user._id || response.data.user.id;
+          if (userId) {
+            this.notificationService.connectSocket(userId, response.data.token);
+            this.notificationService.requestNotificationPermission();
+          }
+          
           return response.data;
         } else {
           throw new Error(response.message || 'Login failed');
@@ -133,6 +152,9 @@ export class AuthService {
   }
 
   logout(): void {
+    // Disconnect notification socket
+    this.notificationService.disconnectSocket();
+    
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
     localStorage.removeItem('pendingUser');

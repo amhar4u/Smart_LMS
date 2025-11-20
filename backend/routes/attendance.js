@@ -5,6 +5,7 @@ const Meeting = require('../models/Meeting');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const AttendanceService = require('../services/attendanceService');
+const NotificationService = require('../services/notificationService');
 
 /**
  * @route   POST /api/attendance/join
@@ -567,6 +568,35 @@ router.post('/meeting/:meetingId/finalize', auth, async (req, res) => {
       }
       
       await attendance.save();
+    }
+    
+    // Send real-time notifications to students about their attendance
+    try {
+      const io = req.app.get('io');
+      const notificationService = new NotificationService(io);
+      
+      // Get all attendances for this meeting (including those who didn't join)
+      const allAttendances = await Attendance.find({ meetingId })
+        .populate('studentId', 'firstName lastName')
+        .populate('meetingId', 'topic');
+      
+      const meetingDetails = await Meeting.findById(meetingId).populate('subjectId', 'name');
+      
+      for (const attendance of allAttendances) {
+        await notificationService.notifyAttendanceMarked(
+          req.user._id,
+          attendance.studentId._id,
+          meetingId,
+          meetingDetails.topic,
+          meetingDetails.subjectId?.name || 'Unknown Subject',
+          attendance.status,
+          attendance.attendancePercentage
+        );
+      }
+      
+      console.log(`🔔 [ATTENDANCE] Notifications sent to ${allAttendances.length} students`);
+    } catch (notifError) {
+      console.error('❌ Failed to send attendance notifications:', notifError);
     }
 
     res.status(200).json({

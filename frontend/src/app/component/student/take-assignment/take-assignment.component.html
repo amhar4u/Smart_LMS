@@ -138,13 +138,16 @@
 
               <!-- MCQ Options -->
               <div *ngIf="assignment.questions![i].type === 'MCQ'" class="mcq-options">
-                <mat-radio-group formControlName="selectedOption">
-                  <mat-radio-button 
+                <mat-radio-group formControlName="selectedOption" class="mcq-radio-group">
+                  <div 
                     *ngFor="let option of assignment.questions![i].options" 
-                    [value]="option.option"
-                    class="mcq-option">
-                    {{ option.option }}
-                  </mat-radio-button>
+                    class="mcq-option-wrapper">
+                    <mat-radio-button 
+                      [value]="option.option"
+                      class="mcq-option">
+                      <span class="option-text">{{ option.option }}</span>
+                    </mat-radio-button>
+                  </div>
                 </mat-radio-group>
               </div>
 
