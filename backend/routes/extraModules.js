@@ -227,12 +227,31 @@ router.post('/', auth, upload.fields([
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, name, description, subjectId, code, studentLevel } = req.body;
+    let { title, name, description, subjectId, code, studentLevel, department, course, batch, semester } = req.body;
 
-    // Check if subject exists
-    const subject = await Subject.findById(subjectId);
+    // Check if subject exists and populate relationships for auto-population
+    const subject = await Subject.findById(subjectId)
+      .populate('departmentId')
+      .populate('courseId')
+      .populate('batchId')
+      .populate('semesterId');
+      
     if (!subject) {
       return res.status(400).json({ message: 'Subject not found' });
+    }
+
+    // Auto-populate department/course/batch/semester from subject if not provided (for lecturers)
+    if (!department && subject.departmentId) {
+      department = subject.departmentId._id || subject.departmentId;
+    }
+    if (!course && subject.courseId) {
+      course = subject.courseId._id || subject.courseId;
+    }
+    if (!batch && subject.batchId) {
+      batch = subject.batchId._id || subject.batchId;
+    }
+    if (!semester && subject.semesterId) {
+      semester = subject.semesterId._id || subject.semesterId;
     }
 
     // Check if extra module code already exists for this subject
@@ -468,12 +487,31 @@ router.put('/:id', auth, upload.fields([
       return res.status(404).json({ message: 'Extra module not found' });
     }
 
-    const { title, name, description, subjectId, code, studentLevel } = req.body;
+    let { title, name, description, subjectId, code, studentLevel, department, course, batch, semester } = req.body;
 
-    // Check if subject exists
-    const subject = await Subject.findById(subjectId);
+    // Check if subject exists and populate relationships for auto-population
+    const subject = await Subject.findById(subjectId)
+      .populate('departmentId')
+      .populate('courseId')
+      .populate('batchId')
+      .populate('semesterId');
+      
     if (!subject) {
       return res.status(400).json({ message: 'Subject not found' });
+    }
+
+    // Auto-populate department/course/batch/semester from subject if not provided (for lecturers)
+    if (!department && subject.departmentId) {
+      department = subject.departmentId._id || subject.departmentId;
+    }
+    if (!course && subject.courseId) {
+      course = subject.courseId._id || subject.courseId;
+    }
+    if (!batch && subject.batchId) {
+      batch = subject.batchId._id || subject.batchId;
+    }
+    if (!semester && subject.semesterId) {
+      semester = subject.semesterId._id || subject.semesterId;
     }
 
     // Update basic fields

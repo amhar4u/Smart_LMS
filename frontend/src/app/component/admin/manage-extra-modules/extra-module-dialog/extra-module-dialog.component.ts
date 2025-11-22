@@ -24,6 +24,8 @@ import { ExtraModule, StudentLevel, STUDENT_LEVELS } from '../../../../models/ex
 export interface ExtraModuleDialogData {
   extraModule?: ExtraModule;
   mode: 'create' | 'edit';
+  lecturerId?: string;
+  lecturerSubjects?: any[];
 }
 
 @Component({
@@ -78,27 +80,55 @@ export class ExtraModuleDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadDepartments();
+    // If lecturerId is provided, this is lecturer mode - only load lecturer's subjects
+    if (this.data.lecturerId) {
+      this.loadLecturerSubjects();
+    } else {
+      // Admin mode - load departments for cascading dropdowns
+      this.loadDepartments();
+    }
+    
     if (this.data.mode === 'edit' && this.data.extraModule) {
       this.populateForm(this.data.extraModule);
     }
   }
 
   private createForm(): FormGroup {
+    // For lecturers: dept/course/batch/semester are optional and auto-populated from subject
+    const isLecturer = !!this.data.lecturerId;
+    
     return this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       name: ['', [Validators.required, Validators.minLength(3)]],
       code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9-]+$/)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
-      department: ['', Validators.required],
-      course: ['', Validators.required],
-      batch: ['', Validators.required],
-      semester: ['', Validators.required],
+      department: ['', isLecturer ? [] : Validators.required],
+      course: ['', isLecturer ? [] : Validators.required],
+      batch: ['', isLecturer ? [] : Validators.required],
+      semester: ['', isLecturer ? [] : Validators.required],
       subjectId: ['', Validators.required],
       studentLevel: ['', Validators.required],
       order: [1, [Validators.required, Validators.min(1)]],
       isActive: [true]
     });
+  }
+
+  private loadLecturerSubjects(): void {
+    if (this.data.lecturerSubjects && this.data.lecturerSubjects.length > 0) {
+      // Use provided lecturer subjects
+      this.subjects = this.data.lecturerSubjects;
+    } else if (this.data.lecturerId) {
+      // Fetch lecturer subjects from API
+      this.subjectService.getSubjects({ lecturer: this.data.lecturerId }).subscribe({
+        next: (response: any) => {
+          this.subjects = response.data || response.subjects || response;
+        },
+        error: (error) => {
+          console.error('Error loading lecturer subjects:', error);
+          this.snackBar.open('Failed to load subjects', 'Close', { duration: 3000 });
+        }
+      });
+    }
   }
 
   private loadDepartments(): void {
@@ -283,6 +313,51 @@ export class ExtraModuleDialogComponent implements OnInit {
           }
         }, 500);
       }
+    }
+  }
+
+  onSubjectChange(subjectId: string): void {
+    if (!subjectId || !this.data.lecturerId) return;
+    
+    // For lecturers: auto-populate dept/course/batch/semester from selected subject
+    const subject = this.subjects.find(s => s._id === subjectId);
+    if (subject) {
+      const deptId = typeof subject.departmentId === 'string' ? subject.departmentId : subject.departmentId?._id;
+      const courseId = typeof subject.courseId === 'string' ? subject.courseId : subject.courseId?._id;
+      const batchId = typeof subject.batchId === 'string' ? subject.batchId : subject.batchId?._id;
+      const semesterId = typeof subject.semesterId === 'string' ? subject.semesterId : subject.semesterId?._id;
+      
+      this.extraModuleForm.patchValue({
+        department: deptId || '',
+        course: courseId || '',
+        batch: batchId || '',
+        semester: semesterId || ''
+      });
+    }
+  }
+
+  getSelectedSubjectInfo(field: 'department' | 'course' | 'batch' | 'semester'): string {
+    const subjectId = this.extraModuleForm.get('subjectId')?.value;
+    if (!subjectId) return 'N/A';
+    
+    const subject = this.subjects.find(s => s._id === subjectId);
+    if (!subject) return 'N/A';
+    
+    switch (field) {
+      case 'department':
+        if (typeof subject.departmentId === 'string') return subject.departmentId;
+        return (subject.departmentId as any)?.name || 'N/A';
+      case 'course':
+        if (typeof subject.courseId === 'string') return subject.courseId;
+        return (subject.courseId as any)?.name || 'N/A';
+      case 'batch':
+        if (typeof subject.batchId === 'string') return subject.batchId;
+        return (subject.batchId as any)?.name || 'N/A';
+      case 'semester':
+        if (typeof subject.semesterId === 'string') return subject.semesterId;
+        return (subject.semesterId as any)?.name || 'N/A';
+      default:
+        return 'N/A';
     }
   }
 
