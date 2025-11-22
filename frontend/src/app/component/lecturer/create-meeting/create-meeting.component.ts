@@ -64,80 +64,41 @@ import { SubjectService } from '../../../services/subject.service';
               </mat-error>
             </mat-form-field>
 
-            <!-- Department -->
+            <!-- Subject Selection - Only field lecturer needs to select -->
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Department</mat-label>
-              <mat-select formControlName="departmentId" (selectionChange)="onDepartmentChange()">
-                <mat-option *ngFor="let dept of departments" [value]="dept._id">
-                  {{ dept.name }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="meetingForm.get('departmentId')?.hasError('required')">
-                Department is required
-              </mat-error>
-            </mat-form-field>
-
-            <!-- Course -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Course</mat-label>
-              <mat-select formControlName="courseId" (selectionChange)="onCourseChange()" 
-                          [disabled]="!meetingForm.get('departmentId')?.value">
-                <mat-option *ngFor="let course of courses" [value]="course._id">
-                  {{ course.name }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="meetingForm.get('courseId')?.hasError('required')">
-                Course is required
-              </mat-error>
-            </mat-form-field>
-
-            <!-- Batch -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Batch</mat-label>
-              <mat-select formControlName="batchId" (selectionChange)="onBatchChange()" 
-                          [disabled]="!meetingForm.get('courseId')?.value">
-                <mat-option *ngFor="let batch of batches" [value]="batch._id">
-                  {{ batch.name }} - {{ batch.year }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="meetingForm.get('batchId')?.hasError('required')">
-                Batch is required
-              </mat-error>
-            </mat-form-field>
-
-            <!-- Semester -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Semester</mat-label>
-              <mat-select formControlName="semesterId" (selectionChange)="onSemesterChange()" 
-                          [disabled]="!meetingForm.get('batchId')?.value">
-                <mat-option *ngFor="let semester of semesters" [value]="semester._id">
-                  {{ semester.name }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="meetingForm.get('semesterId')?.hasError('required')">
-                Semester is required
-              </mat-error>
-            </mat-form-field>
-
-            <!-- Subject -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Subject</mat-label>
-              <mat-select formControlName="subjectId" (selectionChange)="onSubjectChange()" 
-                          [disabled]="!meetingForm.get('semesterId')?.value">
+              <mat-label>Select Your Subject</mat-label>
+              <mat-select formControlName="subjectId" (selectionChange)="onSubjectChange()">
                 <mat-option *ngFor="let subject of subjects" [value]="subject._id">
                   {{ subject.name }} ({{ subject.code }})
+                  <span *ngIf="subject.departmentId && typeof subject.departmentId === 'object'">
+                    - {{ subject.departmentId.name }}
+                  </span>
                 </mat-option>
               </mat-select>
               <mat-error *ngIf="meetingForm.get('subjectId')?.hasError('required')">
                 Subject is required
               </mat-error>
+              <mat-hint *ngIf="subjects.length === 0">No subjects assigned to you yet</mat-hint>
             </mat-form-field>
 
-            <!-- Lecturer Info (Read-only) -->
-            <mat-form-field appearance="outline" class="full-width" *ngIf="lecturerInfo">
-              <mat-label>Lecturer</mat-label>
-              <input matInput [value]="lecturerInfo" readonly>
-            </mat-form-field>
+            <!-- Auto-populated information (Read-only) -->
+            <div class="auto-populated-info" *ngIf="meetingForm.get('subjectId')?.value">
+              <h3>Subject Details</h3>
+              <div class="info-grid">
+                <div class="info-item" *ngIf="getSelectedSubjectInfo().department">
+                  <strong>Department:</strong> {{ getSelectedSubjectInfo().department }}
+                </div>
+                <div class="info-item" *ngIf="getSelectedSubjectInfo().course">
+                  <strong>Course:</strong> {{ getSelectedSubjectInfo().course }}
+                </div>
+                <div class="info-item" *ngIf="getSelectedSubjectInfo().batch">
+                  <strong>Batch:</strong> {{ getSelectedSubjectInfo().batch }}
+                </div>
+                <div class="info-item" *ngIf="getSelectedSubjectInfo().semester">
+                  <strong>Semester:</strong> {{ getSelectedSubjectInfo().semester }}
+                </div>
+              </div>
+            </div>
 
             <!-- Module Selection -->
             <div class="module-selection" *ngIf="modules.length > 0">
@@ -226,6 +187,42 @@ import { SubjectService } from '../../../services/subject.service';
       background-color: #f9f9f9;
     }
 
+    .auto-populated-info {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      border-radius: 4px;
+    }
+
+    .auto-populated-info h3 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      color: #1976d2;
+      font-weight: 500;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .info-item {
+      padding: 8px;
+      background-color: white;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .info-item strong {
+      color: #555;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
     .form-actions {
       display: flex;
       justify-content: flex-end;
@@ -265,124 +262,38 @@ export class CreateMeetingComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
-    this.loadDepartments();
+    this.loadLecturerSubjects();
   }
 
   initForm() {
     this.meetingForm = this.fb.group({
       topic: ['', Validators.required],
       description: ['', Validators.required],
-      departmentId: ['', Validators.required],
-      courseId: ['', Validators.required],
-      batchId: ['', Validators.required],
-      semesterId: ['', Validators.required],
+      departmentId: [''],
+      courseId: [''],
+      batchId: [''],
+      semesterId: [''],
       subjectId: ['', Validators.required],
       meetingDate: ['', Validators.required],
       startTime: ['', Validators.required]
     });
   }
 
-  loadDepartments() {
-    this.departmentService.getDepartments().subscribe({
-      next: (response: any) => {
-        this.departments = response.departments || response;
-      },
-      error: (error) => {
-        this.snackBar.open('Failed to load departments', 'Close', { duration: 3000 });
-      }
-    });
-  }
+  loadLecturerSubjects() {
+    // Get current user ID from auth service or local storage
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const lecturerId = currentUser._id;
 
-  onDepartmentChange() {
-    const departmentId = this.meetingForm.get('departmentId')?.value;
-    this.courses = [];
-    this.batches = [];
-    this.semesters = [];
-    this.subjects = [];
-    this.modules = [];
-    this.meetingForm.patchValue({
-      courseId: '',
-      batchId: '',
-      semesterId: '',
-      subjectId: ''
-    });
-
-    if (departmentId) {
-      this.courseService.getCoursesByDepartment(departmentId).subscribe({
-        next: (response: any) => {
-          this.courses = response.courses || response;
-        },
-        error: (error) => {
-          this.snackBar.open('Failed to load courses', 'Close', { duration: 3000 });
-        }
-      });
-    }
-  }
-
-  onCourseChange() {
-    const courseId = this.meetingForm.get('courseId')?.value;
-    this.batches = [];
-    this.semesters = [];
-    this.subjects = [];
-    this.modules = [];
-    this.meetingForm.patchValue({
-      batchId: '',
-      semesterId: '',
-      subjectId: ''
-    });
-
-    if (courseId) {
-      this.batchService.getBatchesByCourse(courseId).subscribe({
-        next: (response: any) => {
-          this.batches = response.batches || response;
-        },
-        error: (error) => {
-          this.snackBar.open('Failed to load batches', 'Close', { duration: 3000 });
-        }
-      });
-    }
-  }
-
-  onBatchChange() {
-    this.semesters = [];
-    this.subjects = [];
-    this.modules = [];
-    this.meetingForm.patchValue({
-      semesterId: '',
-      subjectId: ''
-    });
-
-    this.semesterService.getSemesters().subscribe({
-      next: (response: any) => {
-        this.semesters = response.semesters || response;
-      },
-      error: (error) => {
-        this.snackBar.open('Failed to load semesters', 'Close', { duration: 3000 });
-      }
-    });
-  }
-
-  onSemesterChange() {
-    const semesterId = this.meetingForm.get('semesterId')?.value;
-    const departmentId = this.meetingForm.get('departmentId')?.value;
-    const courseId = this.meetingForm.get('courseId')?.value;
-    const batchId = this.meetingForm.get('batchId')?.value;
-    
-    this.subjects = [];
-    this.modules = [];
-    this.meetingForm.patchValue({ subjectId: '' });
-
-    if (semesterId && departmentId && courseId && batchId) {
-      this.subjectService.getSubjects({
-        department: departmentId,
-        course: courseId,
-        semester: semesterId
-      }).subscribe({
+    if (lecturerId) {
+      this.subjectService.getSubjects({ lecturer: lecturerId }).subscribe({
         next: (response: any) => {
           this.subjects = response.data || response.subjects || response;
+          if (this.subjects.length === 0) {
+            this.snackBar.open('No subjects assigned to you', 'Close', { duration: 3000 });
+          }
         },
         error: (error) => {
-          this.snackBar.open('Failed to load subjects', 'Close', { duration: 3000 });
+          this.snackBar.open('Failed to load your subjects', 'Close', { duration: 3000 });
         }
       });
     }
@@ -394,13 +305,33 @@ export class CreateMeetingComponent implements OnInit {
     this.selectedModules = [];
 
     if (subjectId) {
-      // Get lecturer info
+      // Get subject details including department, course, batch, semester
       const subject = this.subjects.find(s => s._id === subjectId);
-      if (subject && subject.lecturerId) {
-        this.lecturerInfo = `${subject.lecturerId.firstName} ${subject.lecturerId.lastName}`;
+      
+      if (subject) {
+        // Auto-populate department, course, batch, semester from subject
+        const departmentId = typeof subject.departmentId === 'object' ? subject.departmentId._id : subject.departmentId;
+        const courseId = typeof subject.courseId === 'object' ? subject.courseId._id : subject.courseId;
+        const batchId = typeof subject.batchId === 'object' ? subject.batchId._id : subject.batchId;
+        const semesterId = typeof subject.semesterId === 'object' ? subject.semesterId._id : subject.semesterId;
+
+        this.meetingForm.patchValue({
+          departmentId: departmentId,
+          courseId: courseId,
+          batchId: batchId,
+          semesterId: semesterId
+        });
+
+        // Set lecturer info
+        if (subject.lecturerId) {
+          const lecturer = typeof subject.lecturerId === 'object' ? subject.lecturerId : null;
+          if (lecturer) {
+            this.lecturerInfo = `${lecturer.firstName} ${lecturer.lastName}`;
+          }
+        }
       }
 
-      // Get modules
+      // Get modules for the subject
       this.meetingService.getModulesBySubject(subjectId).subscribe({
         next: (response: any) => {
           this.modules = response.modules || response;
@@ -424,6 +355,22 @@ export class CreateMeetingComponent implements OnInit {
     } else {
       this.selectedModules = this.selectedModules.filter(id => id !== moduleId);
     }
+  }
+
+  getSelectedSubjectInfo(): any {
+    const subjectId = this.meetingForm.get('subjectId')?.value;
+    if (!subjectId) return {};
+
+    const subject = this.subjects.find(s => s._id === subjectId);
+    if (!subject) return {};
+
+    return {
+      department: typeof subject.departmentId === 'object' ? subject.departmentId.name : '',
+      course: typeof subject.courseId === 'object' ? subject.courseId.name : '',
+      batch: typeof subject.batchId === 'object' ? 
+        `${subject.batchId.name} (${subject.batchId.startYear} - ${subject.batchId.endYear})` : '',
+      semester: typeof subject.semesterId === 'object' ? subject.semesterId.name : ''
+    };
   }
 
   onSubmit() {

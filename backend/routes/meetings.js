@@ -16,7 +16,7 @@ const NotificationService = require('../services/notificationService');
  */
 router.post('/', auth, async (req, res) => {
   try {
-    const {
+    let {
       topic,
       description,
       departmentId,
@@ -31,16 +31,21 @@ router.post('/', auth, async (req, res) => {
       studentCount
     } = req.body;
 
-    // Validate required fields
-    if (!topic || !description || !departmentId || !courseId || !batchId || !semesterId || !subjectId || !moduleIds || moduleIds.length === 0 || !meetingDate || !startTime) {
+    // Validate required fields (department, course, batch, semester are optional now)
+    if (!topic || !description || !subjectId || !moduleIds || moduleIds.length === 0 || !meetingDate || !startTime) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required'
+        message: 'Topic, description, subject, modules, meeting date, and start time are required'
       });
     }
 
-    // Get subject details to retrieve lecturer
-    const subject = await Subject.findById(subjectId);
+    // Get subject details to retrieve lecturer and auto-populate missing fields
+    const subject = await Subject.findById(subjectId)
+      .populate('departmentId')
+      .populate('courseId')
+      .populate('batchId')
+      .populate('semesterId');
+      
     if (!subject) {
       return res.status(404).json({
         success: false,
@@ -53,6 +58,28 @@ router.post('/', auth, async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'You are not authorized to create meetings for this subject'
+      });
+    }
+
+    // Auto-populate department, course, batch, semester from subject if not provided
+    if (!departmentId && subject.departmentId) {
+      departmentId = subject.departmentId._id || subject.departmentId;
+    }
+    if (!courseId && subject.courseId) {
+      courseId = subject.courseId._id || subject.courseId;
+    }
+    if (!batchId && subject.batchId) {
+      batchId = subject.batchId._id || subject.batchId;
+    }
+    if (!semesterId && subject.semesterId) {
+      semesterId = subject.semesterId._id || subject.semesterId;
+    }
+
+    // Validate that we now have all required IDs
+    if (!departmentId || !courseId || !batchId || !semesterId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Could not determine department, course, batch, or semester from subject'
       });
     }
 
