@@ -199,6 +199,13 @@
                   <mat-icon>edit</mat-icon>
                 </button>
                 <button mat-icon-button 
+                        color="accent" 
+                        (click)="openDuplicateDialog(subject)"
+                        matTooltip="Duplicate Subject"
+                        class="action-btn duplicate-btn">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+                <button mat-icon-button 
                         color="warn" 
                         (click)="deleteSubject(subject)"
                         matTooltip="Delete Subject"

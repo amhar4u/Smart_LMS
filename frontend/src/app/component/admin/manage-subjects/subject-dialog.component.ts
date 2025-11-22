@@ -13,7 +13,7 @@ import { SubjectService, Subject, Department, Course, Batch, Semester, Lecturer 
 import { LoadingService } from '../../../services/loading.service';
 
 interface DialogData {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'duplicate';
   subject?: Subject;
   departments: Department[];
   lecturers: Lecturer[];
@@ -51,12 +51,14 @@ export class SubjectDialogComponent implements OnInit {
     private snackBar: MatSnackBar,
     private loadingService: LoadingService
   ) {
+    // Duplicate mode should behave like create (isEdit = false) but with pre-populated data
     this.isEdit = data.mode === 'edit';
     this.form = this.createForm();
   }
 
   ngOnInit() {
-    if (this.isEdit && this.data.subject) {
+    // Populate form for both edit and duplicate modes
+    if ((this.isEdit || this.data.mode === 'duplicate') && this.data.subject) {
       this.populateForm();
     }
   }

@@ -325,6 +325,33 @@ export class ManageSubjectsComponent implements OnInit {
     });
   }
 
+  openDuplicateDialog(subject: Subject) {
+    // Create a copy of the subject without the _id to make it a new record
+    const duplicateSubject = {
+      ...subject,
+      _id: undefined, // Remove ID so it creates a new record
+      name: `${subject.name} (Copy)`,
+      code: `${subject.code}-COPY` // Modify code to avoid duplicate
+    };
+
+    const dialogRef = this.dialog.open(SubjectDialogComponent, {
+      width: '600px',
+      data: {
+        mode: 'duplicate',
+        subject: duplicateSubject,
+        departments: this.departments,
+        lecturers: this.lecturers
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadSubjects();
+        this.showSuccess('Subject duplicated successfully');
+      }
+    });
+  }
+
   async deleteSubject(subject: Subject) {
     const confirmed = await this.confirmationService.confirm({
       title: 'Delete Subject',
