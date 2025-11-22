@@ -43,62 +43,104 @@
         <mat-error>{{ getErrorMessage('description') }}</mat-error>
       </mat-form-field>
 
-      <!-- Hierarchical Selection -->
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Department *</mat-label>
-          <mat-select formControlName="department" required (selectionChange)="onDepartmentChange($event.value)">
-            <mat-option *ngFor="let department of departments" [value]="department._id">
-              {{ department.name }} ({{ department.code }})
-            </mat-option>
-          </mat-select>
-          <mat-error>{{ getErrorMessage('department') }}</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Course *</mat-label>
-          <mat-select formControlName="course" required (selectionChange)="onCourseChange($event.value)" [disabled]="!courses.length">
-            <mat-option *ngFor="let course of courses" [value]="course._id">
-              {{ course.name }} ({{ course.code }})
-            </mat-option>
-          </mat-select>
-          <mat-error>{{ getErrorMessage('course') }}</mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Batch *</mat-label>
-          <mat-select formControlName="batch" required (selectionChange)="onBatchChange($event.value)" [disabled]="!batches.length">
-            <mat-option *ngFor="let batch of batches" [value]="batch._id">
-              {{ batch.name }} ({{ batch.code }})
-            </mat-option>
-          </mat-select>
-          <mat-error>{{ getErrorMessage('batch') }}</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Semester *</mat-label>
-          <mat-select formControlName="semester" required (selectionChange)="onSemesterChange($event.value)" [disabled]="!semesters.length">
-            <mat-option *ngFor="let semester of semesters" [value]="semester._id">
-              {{ semester.name }} - {{ semester.year }}
-            </mat-option>
-          </mat-select>
-          <mat-error>{{ getErrorMessage('semester') }}</mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="half-width">
+      <!-- Lecturer Mode: Subject Selection First -->
+      <ng-container *ngIf="data.lecturerId">
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Subject *</mat-label>
-          <mat-select formControlName="subjectId" required [disabled]="!subjects.length">
+          <mat-select formControlName="subjectId" required (selectionChange)="onSubjectChange($event.value)">
             <mat-option *ngFor="let subject of subjects" [value]="subject._id">
               {{ subject.name }} ({{ subject.code }})
             </mat-option>
           </mat-select>
+          <mat-hint>Select your subject - other details will be auto-populated</mat-hint>
           <mat-error>{{ getErrorMessage('subjectId') }}</mat-error>
         </mat-form-field>
-      </div>
+
+        <!-- Auto-populated Info Panel -->
+        <div class="auto-populated-info" *ngIf="moduleForm.get('subjectId')?.value">
+          <div class="info-header">
+            <mat-icon>info</mat-icon>
+            <h4>Auto-populated Information</h4>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Department</label>
+              <span>{{ getSelectedSubjectInfo('department') }}</span>
+            </div>
+            <div class="info-item">
+              <label>Course</label>
+              <span>{{ getSelectedSubjectInfo('course') }}</span>
+            </div>
+            <div class="info-item">
+              <label>Batch</label>
+              <span>{{ getSelectedSubjectInfo('batch') }}</span>
+            </div>
+            <div class="info-item">
+              <label>Semester</label>
+              <span>{{ getSelectedSubjectInfo('semester') }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Admin Mode: Hierarchical Selection -->
+      <ng-container *ngIf="!data.lecturerId">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Department *</mat-label>
+            <mat-select formControlName="department" required (selectionChange)="onDepartmentChange($event.value)">
+              <mat-option *ngFor="let department of departments" [value]="department._id">
+                {{ department.name }} ({{ department.code }})
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('department') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Course *</mat-label>
+            <mat-select formControlName="course" required (selectionChange)="onCourseChange($event.value)" [disabled]="!courses.length">
+              <mat-option *ngFor="let course of courses" [value]="course._id">
+                {{ course.name }} ({{ course.code }})
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('course') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Batch *</mat-label>
+            <mat-select formControlName="batch" required (selectionChange)="onBatchChange($event.value)" [disabled]="!batches.length">
+              <mat-option *ngFor="let batch of batches" [value]="batch._id">
+                {{ batch.name }} ({{ batch.code }})
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('batch') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Semester *</mat-label>
+            <mat-select formControlName="semester" required (selectionChange)="onSemesterChange($event.value)" [disabled]="!semesters.length">
+              <mat-option *ngFor="let semester of semesters" [value]="semester._id">
+                {{ semester.name }} - {{ semester.year }}
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('semester') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Subject *</mat-label>
+            <mat-select formControlName="subjectId" required [disabled]="!subjects.length">
+              <mat-option *ngFor="let subject of subjects" [value]="subject._id">
+                {{ subject.name }} ({{ subject.code }})
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('subjectId') }}</mat-error>
+          </mat-form-field>
+        </div>
+      </ng-container>
 
       <div class="checkbox-container">
         <mat-checkbox formControlName="isActive" color="primary">
