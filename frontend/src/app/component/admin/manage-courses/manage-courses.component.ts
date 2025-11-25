@@ -237,11 +237,12 @@ export class ManageCoursesComponent implements OnInit {
   }
 
   deleteCourse(course: Course): void {
-    this.confirmationService.confirm({
-      title: 'Delete Course',
-      message: `Are you sure you want to delete the course "${course.name}"? This action cannot be undone.`,
-      type: 'delete'
-    }).subscribe(confirmed => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      course._id!,
+      course.name,
+      'course'
+    ).subscribe(confirmed => {
       if (confirmed) {
         this.loadingService.show();
         

@@ -99,7 +99,7 @@ import { ExtraModule } from '../../../models/extra-module.model';
         <div class="info-section">
           <h3 class="section-title">
             <mat-icon>description</mat-icon>
-            Documents ({{ module.documents?.length || 0 }})
+            Documents ({{ module.documents.length || 0 }})
           </h3>
           
           <div *ngIf="!module.documents || module.documents.length === 0" class="empty-state">

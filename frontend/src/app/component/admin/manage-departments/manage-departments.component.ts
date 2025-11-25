@@ -17,6 +17,7 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { DepartmentService, Department } from '../../../services/department.service';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 @Component({
   selector: 'app-manage-departments',
@@ -71,7 +72,8 @@ export class ManageDepartmentsComponent implements OnInit {
     private departmentService: DepartmentService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private confirmationService: ConfirmationService
   ) {
     this.initializeForm();
   }
@@ -276,19 +278,13 @@ export class ManageDepartmentsComponent implements OnInit {
   }
 
   deleteDepartment(department: Department): void {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Delete Department',
-        message: `Are you sure you want to delete "${department.name}"? This action cannot be undone.`,
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
-        type: 'danger'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      department._id,
+      department.name,
+      'department'
+    ).subscribe(confirmed => {
+      if (confirmed) {
         this.departmentService.deleteDepartment(department._id).subscribe({
           next: (response) => {
             if (response.success) {

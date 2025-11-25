@@ -214,11 +214,12 @@ export class ManageDepartments implements OnInit, AfterViewInit {
   }
 
   deleteDepartment(department: Department): void {
-    this.confirmationService.confirm({
-      title: 'Delete Department',
-      message: `Are you sure you want to delete the department "${department.name}"? This action cannot be undone and will affect all related courses and users.`,
-      type: 'delete'
-    }).subscribe(confirmed => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      department._id,
+      department.name,
+      'department'
+    ).subscribe(confirmed => {
       if (confirmed) {
         this.loadingService.show();
         

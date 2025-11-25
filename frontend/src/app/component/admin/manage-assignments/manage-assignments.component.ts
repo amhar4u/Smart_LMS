@@ -674,11 +674,12 @@ export class ManageAssignmentsComponent implements OnInit {
   }
 
   async deleteAssignment(assignment: Assignment) {
-    const confirmed = await this.confirmationService.confirm({
-      title: 'Delete Assignment',
-      message: `Are you sure you want to delete "${assignment.title}"? This action cannot be undone.`,
-      type: 'delete'
-    }).toPromise();
+    // Check dependencies before deletion
+    const confirmed = await this.confirmationService.confirmDeleteWithDependencyCheck(
+      assignment._id!,
+      assignment.title,
+      'assignment'
+    ).toPromise();
 
     if (confirmed) {
       try {

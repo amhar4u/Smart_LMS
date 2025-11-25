@@ -275,14 +275,12 @@ export class ManageBatchesComponent implements OnInit {
   }
 
   deleteBatch(batch: Batch): void {
-    const message = `Are you sure you want to delete batch "${batch.name}"? This action cannot be undone.`;
-    
-    this.confirmationService.confirm({
-      title: 'Delete Batch',
-      message: message,
-      confirmText: 'Delete',
-      cancelText: 'Cancel'
-    }).subscribe((confirmed: boolean) => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      batch._id,
+      batch.name,
+      'batch'
+    ).subscribe((confirmed: boolean) => {
       if (confirmed) {
         this.performDelete(batch);
       }

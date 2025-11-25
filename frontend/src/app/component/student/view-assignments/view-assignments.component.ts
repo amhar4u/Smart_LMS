@@ -406,14 +406,14 @@ export class ViewAssignmentsComponent implements OnInit {
             <div class="detail-item">
               <span class="label">Subject</span>
               <span class="value">
-                <mat-chip class="subject-chip">{{data.subject?.name || 'N/A'}}</mat-chip>
+                <mat-chip class="subject-chip">{{data.subject.name || 'N/A'}}</mat-chip>
                 <span class="subject-code" *ngIf="data.subject?.code">{{data.subject.code}}</span>
               </span>
             </div>
 
             <div class="detail-item">
               <span class="label">Course</span>
-              <span class="value">{{data.course?.name || 'N/A'}}</span>
+              <span class="value">{{data.course.name || 'N/A'}}</span>
             </div>
 
             <div class="detail-item">

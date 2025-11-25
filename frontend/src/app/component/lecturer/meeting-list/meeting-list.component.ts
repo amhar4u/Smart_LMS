@@ -627,13 +627,12 @@ export class MeetingListComponent implements OnInit, OnDestroy {
 
     if (!meeting._id) return;
 
-    this.confirmationService.confirm({
-      title: 'Delete Meeting',
-      message: `Are you sure you want to delete the meeting "${meeting.topic}"? This action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      type: 'delete'
-    }).subscribe(confirmed => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      meeting._id,
+      meeting.topic,
+      'meeting'
+    ).subscribe(confirmed => {
       if (confirmed && meeting._id) {
         this.meetingService.deleteMeeting(meeting._id).subscribe({
           next: (response) => {

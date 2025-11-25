@@ -14,6 +14,7 @@ import { AdminLayout } from '../admin-layout/admin-layout';
 import { UserManagementService, User } from '../../../services/user-management.service';
 import { UserDialogComponent, UserDialogData } from '../../../shared/user-dialog/user-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged, startWith, switchMap, map, catchError } from 'rxjs/operators';
 
@@ -46,7 +47,8 @@ export class ManageLecturers implements OnInit, OnDestroy {
   constructor(
     private userService: UserManagementService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private confirmationService: ConfirmationService
   ) {
     // Setup live search with better error handling
     this.lecturers$ = this.searchControl.valueChanges.pipe(
@@ -179,25 +181,20 @@ export class ManageLecturers implements OnInit, OnDestroy {
 
   deleteLecturer(lecturer: User): void {
     const name = lecturer.fullName || `${lecturer.firstName} ${lecturer.lastName}`;
+    const lecturerId = lecturer._id || lecturer.id;
     
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Delete Lecturer',
-        message: `Are you sure you want to delete ${name}? This action cannot be undone.`,
-        confirmText: 'Delete',
-        cancelText: 'Cancel'
-      }
-    });
+    if (!lecturerId) {
+      this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
+      return;
+    }
 
-    dialogRef.afterClosed().subscribe(result => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      lecturerId,
+      name,
+      'lecturer'
+    ).subscribe(result => {
       if (result) {
-        const lecturerId = lecturer._id || lecturer.id;
-        if (!lecturerId) {
-          this.snackBar.open('Lecturer ID not found', 'Close', { duration: 3000 });
-          return;
-        }
-        
         this.userService.deleteUser(lecturerId, 'teacher').subscribe({
           next: (success) => {
             if (success) {

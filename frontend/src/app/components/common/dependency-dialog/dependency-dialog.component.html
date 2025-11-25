@@ -1,0 +1,178 @@
+<div class="dependency-dialog">
+  <!-- Header -->
+  <div class="dialog-header" [class.warning]="hasDependencies" [class.info]="!hasDependencies">
+    <mat-icon class="header-icon">
+      {{ step === 'dependencies' ? 'warning' : 'delete_forever' }}
+    </mat-icon>
+    <h2 mat-dialog-title>
+      {{ step === 'dependencies' ? 'Delete Confirmation' : 'Final Confirmation Required' }}
+    </h2>
+    <button mat-icon-button (click)="onCancel()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div mat-dialog-content class="dialog-content">
+    
+    <!-- Step 1: Show Dependencies -->
+    <div *ngIf="step === 'dependencies'" class="dependency-warning">
+      <p class="main-message">
+        You are about to delete <strong>{{ data.entityName }}</strong>.
+        <span *ngIf="hasDependencies"> This {{ data.entityType.toLowerCase() }} has 
+        <strong>{{ getTotalDependencyCount() }}</strong> dependent record(s).</span>
+      </p>
+
+      <div class="action-required" *ngIf="hasDependencies">
+        <mat-icon>warning</mat-icon>
+        <p><strong>Warning:</strong> The following related data exists:</p>
+      </div>
+
+      <div class="action-required" *ngIf="!hasDependencies" style="background: #e3f2fd; border-color: #2196f3;">
+        <mat-icon style="color: #1976d2;">info</mat-icon>
+        <p>This {{ data.entityType.toLowerCase() }} has no dependent records and can be safely deleted.</p>
+      </div>
+
+      <!-- Dependencies List -->
+      <div class="dependencies-list" *ngIf="hasDependencies">
+        <mat-accordion>
+          <mat-expansion-panel *ngFor="let key of getDependencyKeys()" class="dependency-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="dependency-title">
+                <mat-icon class="dep-icon">{{ getDependencyIcon(key) }}</mat-icon>
+                <span class="dep-label">{{ formatDependencyLabel(key) }}</span>
+                <span class="dep-count">{{ data.dependencies.dependencies[key].count }}</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <!-- Dependency Items -->
+            <div class="dependency-items">
+              <div *ngIf="data.dependencies.dependencies[key].items.length > 0">
+                <mat-list dense>
+                  <mat-list-item *ngFor="let item of data.dependencies.dependencies[key].items">
+                    <mat-icon matListItemIcon class="item-icon">
+                      {{ getItemIcon(key) }}
+                    </mat-icon>
+                    <div matListItemTitle>
+                      {{ dependencyService.getItemDisplayName(item) }}
+                    </div>
+                    <div matListItemLine *ngIf="item.code">
+                      <small class="item-code">{{ item.code }}</small>
+                    </div>
+                  </mat-list-item>
+                </mat-list>
+                <p *ngIf="data.dependencies.dependencies[key].count > data.dependencies.dependencies[key].items.length" 
+                   class="more-items">
+                  ... and {{ data.dependencies.dependencies[key].count - data.dependencies.dependencies[key].items.length }} more
+                </p>
+              </div>
+              <div *ngIf="data.dependencies.dependencies[key].items.length === 0" class="no-preview">
+                <mat-icon>lock</mat-icon>
+                <p>{{ data.dependencies.dependencies[key].count }} record(s) exist</p>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+
+      <div class="cleanup-hint" *ngIf="hasDependencies">
+        <mat-icon>info</mat-icon>
+        <p><strong>Important:</strong> All dependent records listed above will also be deleted. This action cannot be undone!</p>
+      </div>
+    </div>
+
+    <!-- Step 2: Final Confirmation with Name Input -->
+    <div *ngIf="step === 'confirmation'" class="confirmation-section">
+      <div class="final-warning">
+        <mat-icon class="large-warning-icon">warning</mat-icon>
+        <h3>⚠️ This is your final warning!</h3>
+        <p class="danger-text">
+          You are about to permanently delete <strong>{{ data.entityName }}</strong>
+          <span *ngIf="hasDependencies"> and <strong>{{ getTotalDependencyCount() }}</strong> related record(s)</span>.
+        </p>
+        <p class="danger-subtext">This action is <strong>irreversible</strong> and cannot be undone!</p>
+      </div>
+
+      <!-- Show what will be deleted -->
+      <div *ngIf="hasDependencies" class="will-delete-section">
+        <div class="warning-box">
+          <mat-icon>delete_sweep</mat-icon>
+          <div>
+            <p><strong>Records that will be permanently deleted:</strong></p>
+            <ul class="deletion-list">
+              <li *ngFor="let key of getDependencyKeys()">
+                <mat-icon class="list-icon">arrow_right</mat-icon>
+                {{ data.dependencies.dependencies[key].count }} {{ formatDependencyLabel(key) }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Name Confirmation Input -->
+      <div class="delete-confirmation">
+        <p class="confirm-instruction">
+          <mat-icon>keyboard</mat-icon>
+          To confirm, type the exact name: <strong class="entity-name-highlight">{{ data.entityName }}</strong>
+        </p>
+        <mat-form-field appearance="outline" class="delete-input">
+          <mat-label>Type "{{ data.entityName }}" to confirm deletion</mat-label>
+          <input 
+            matInput 
+            [(ngModel)]="deleteConfirmation" 
+            [placeholder]="data.entityName"
+            autocomplete="off"
+            (keyup.enter)="canProceedWithDelete && onDelete()">
+          <mat-icon matSuffix [class.valid]="canProceedWithDelete">
+            {{ canProceedWithDelete ? 'check_circle' : 'cancel' }}
+          </mat-icon>
+        </mat-form-field>
+        <p class="hint-text" *ngIf="!canProceedWithDelete && deleteConfirmation.length > 0">
+          ❌ Name doesn't match. Please type exactly: {{ data.entityName }}
+        </p>
+        <p class="hint-text success" *ngIf="canProceedWithDelete">
+          ✓ Name matches! You can now proceed with deletion.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Actions -->
+  <div mat-dialog-actions class="dialog-actions">
+    <!-- Step 1: Dependency View Actions -->
+    <ng-container *ngIf="step === 'dependencies'">
+      <button mat-stroked-button (click)="onCancel()" class="cancel-btn">
+        <mat-icon>close</mat-icon>
+        Cancel
+      </button>
+      
+      <button 
+        mat-raised-button 
+        color="warn" 
+        (click)="onProceedToConfirmation()"
+        class="proceed-btn">
+        <mat-icon>arrow_forward</mat-icon>
+        I Understand, Proceed to Delete
+      </button>
+    </ng-container>
+
+    <!-- Step 2: Confirmation Actions -->
+    <ng-container *ngIf="step === 'confirmation'">
+      <button mat-stroked-button (click)="onBackToDependencies()" class="back-btn">
+        <mat-icon>arrow_back</mat-icon>
+        Back
+      </button>
+      
+      <button 
+        mat-raised-button 
+        color="warn" 
+        (click)="onDelete()"
+        [disabled]="!canProceedWithDelete"
+        class="delete-btn">
+        <mat-icon>delete_forever</mat-icon>
+        Delete Permanently
+      </button>
+    </ng-container>
+  </div>
+</div>

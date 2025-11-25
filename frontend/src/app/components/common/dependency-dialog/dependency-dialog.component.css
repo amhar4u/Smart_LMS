@@ -1,0 +1,401 @@
+.dependency-dialog {
+  width: 600px;
+  max-width: 90vw;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+}
+
+.dialog-header.warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-bottom-color: #ffb74d;
+}
+
+.dialog-header.info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-bottom-color: #64b5f6;
+}
+
+.header-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.dialog-header.warning .header-icon {
+  color: #f57c00;
+}
+
+.dialog-header.info .header-icon {
+  color: #1976d2;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.dialog-content {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.main-message {
+  font-size: 16px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.sub-message {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+/* Warning Section */
+.dependency-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.action-required {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff3e0;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+}
+
+.action-required mat-icon {
+  color: #f57c00;
+  margin-top: 2px;
+}
+
+.action-required p {
+  margin: 0;
+  flex: 1;
+  font-weight: 500;
+}
+
+/* Dependencies List */
+.dependencies-list {
+  margin: 16px 0;
+}
+
+.dependency-panel {
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.dependency-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.dep-icon {
+  color: #1976d2;
+}
+
+.dep-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.dep-count {
+  background: #1976d2;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dependency-items {
+  padding: 12px 0;
+}
+
+.item-icon {
+  color: #666;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}
+
+.item-code {
+  color: #666;
+  font-size: 12px;
+}
+
+.more-items {
+  padding: 8px 16px;
+  color: #666;
+  font-style: italic;
+  font-size: 14px;
+  margin: 8px 0 0 0;
+}
+
+.no-preview {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+}
+
+.no-preview mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #ccc;
+  margin-bottom: 8px;
+}
+
+.cleanup-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff3e0;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+}
+
+.cleanup-hint mat-icon {
+  color: #f57c00;
+  margin-top: 2px;
+}
+
+.cleanup-hint p {
+  margin: 0;
+  color: #e65100;
+  font-weight: 500;
+}
+
+/* Confirmation Section */
+.confirmation-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.will-delete-section {
+  margin: 16px 0;
+}
+
+.warning-box {
+  display: flex;
+  gap: 12px;
+  background: #ffebee;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #f44336;
+}
+
+.warning-box mat-icon {
+  color: #d32f2f;
+  margin-top: 2px;
+}
+
+.warning-box strong {
+  color: #c62828;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.deletion-list {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  color: #c62828;
+}
+
+.deletion-list li {
+  margin: 4px 0;
+  font-weight: 500;
+}
+
+/* Delete Confirmation */
+.delete-confirmation {
+  background: #fafafa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 2px dashed #ccc;
+}
+
+.confirm-instruction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.confirm-instruction mat-icon {
+  color: #666;
+}
+
+.delete-input {
+  width: 100%;
+}
+
+.delete-input mat-icon.valid {
+  color: #4caf50;
+}
+
+.delete-input mat-icon:not(.valid) {
+  color: #f44336;
+}
+
+/* Final Warning Section */
+.final-warning {
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border-radius: 12px;
+  border: 2px solid #f44336;
+  margin-bottom: 20px;
+}
+
+.large-warning-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: #d32f2f;
+  margin-bottom: 12px;
+}
+
+.final-warning h3 {
+  color: #c62828;
+  margin: 12px 0;
+  font-size: 20px;
+}
+
+.danger-text {
+  color: #c62828;
+  font-size: 16px;
+  margin: 12px 0;
+  font-weight: 600;
+}
+
+.danger-subtext {
+  color: #d32f2f;
+  font-size: 14px;
+  margin: 8px 0 0 0;
+}
+
+.entity-name-highlight {
+  background: #ffeb3b;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #000;
+  font-weight: 700;
+}
+
+.hint-text {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: #f44336;
+  font-weight: 500;
+}
+
+.hint-text.success {
+  color: #4caf50;
+}
+
+.list-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+/* Dialog Actions */
+.dialog-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cancel-btn,
+.back-btn {
+  min-width: 100px;
+}
+
+.proceed-btn {
+  min-width: 180px;
+  font-weight: 600;
+}
+
+.delete-btn {
+  min-width: 160px;
+}
+
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar Styling */
+.dialog-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dialog-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.dialog-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.dialog-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .dependency-dialog {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .dialog-header {
+    padding: 16px;
+  }
+
+  .dialog-content {
+    padding: 16px;
+  }
+
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-btn,
+  .delete-btn {
+    width: 100%;
+  }
+}

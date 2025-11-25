@@ -195,13 +195,12 @@ export class ManageExtraModulesComponent implements OnInit {
   }
 
   deleteExtraModule(extraModule: ExtraModule): void {
-    this.confirmationService.confirm({
-      title: 'Delete Extra Module',
-      message: `Are you sure you want to delete the extra module "${extraModule.name}"? This will also delete all associated documents and videos.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      type: 'delete'
-    }).subscribe((confirmed) => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      extraModule._id,
+      extraModule.name,
+      'module'
+    ).subscribe((confirmed) => {
       if (confirmed) {
         this.loadingService.show();
         

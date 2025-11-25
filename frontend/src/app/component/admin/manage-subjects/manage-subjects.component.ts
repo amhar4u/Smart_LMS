@@ -353,11 +353,12 @@ export class ManageSubjectsComponent implements OnInit {
   }
 
   async deleteSubject(subject: Subject) {
-    const confirmed = await this.confirmationService.confirm({
-      title: 'Delete Subject',
-      message: `Are you sure you want to delete the subject "${subject.name}"?`,
-      type: 'delete'
-    }).toPromise();
+    // Check dependencies before deletion
+    const confirmed = await this.confirmationService.confirmDeleteWithDependencyCheck(
+      subject._id!,
+      subject.name,
+      'subject'
+    ).toPromise();
 
     if (confirmed) {
       this.loadingService.show();

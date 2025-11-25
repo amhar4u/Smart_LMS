@@ -24,6 +24,7 @@ import { DepartmentService, Department } from '../../../services/department.serv
 import { CourseService, Course } from '../../../services/course.service';
 import { SemesterDialogComponent } from './semester-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { AdminLayout } from '../admin-layout/admin-layout';
 
 @Component({
@@ -93,7 +94,8 @@ export class ManageSemestersComponent implements OnInit {
     private courseService: CourseService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private confirmationService: ConfirmationService
   ) {
     this.initializeFilterForm();
   }
@@ -360,18 +362,12 @@ export class ManageSemestersComponent implements OnInit {
   }
 
   deleteSemester(semester: Semester): void {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Delete Semester',
-        message: `Are you sure you want to delete "${semester.name}"? This action cannot be undone.`,
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
-        type: 'danger'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      semester._id!,
+      semester.name,
+      'semester'
+    ).subscribe(result => {
       if (result) {
         this.semesterService.deleteSemester(semester._id!).subscribe({
           next: (response) => {

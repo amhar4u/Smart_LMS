@@ -231,13 +231,12 @@ export class ManageModulesComponent implements OnInit {
   }
 
   deleteModule(module: Module): void {
-    this.confirmationService.confirm({
-      title: 'Delete Module',
-      message: `Are you sure you want to delete the module "${module.name}"? This will also delete all associated documents and videos.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      type: 'delete'
-    }).subscribe((confirmed) => {
+    // Check dependencies before deletion
+    this.confirmationService.confirmDeleteWithDependencyCheck(
+      module._id,
+      module.name,
+      'module'
+    ).subscribe((confirmed) => {
       if (confirmed) {
         this.loadingService.show();
         
