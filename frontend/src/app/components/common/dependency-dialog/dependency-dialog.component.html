@@ -122,7 +122,10 @@
             [(ngModel)]="deleteConfirmation" 
             [placeholder]="data.entityName"
             autocomplete="off"
-            (keyup.enter)="canProceedWithDelete && onDelete()">
+            (keyup.enter)="canProceedWithDelete && onDelete()"
+            (paste)="$event.preventDefault()"
+            (copy)="$event.preventDefault()"
+            (cut)="$event.preventDefault()">
           <mat-icon matSuffix [class.valid]="canProceedWithDelete">
             {{ canProceedWithDelete ? 'check_circle' : 'cancel' }}
           </mat-icon>
