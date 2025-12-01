@@ -378,11 +378,15 @@ router.post('/:id/start', auth, async (req, res) => {
       });
     }
 
-    // Check if meeting can start
+    // Check if meeting can start (5 minutes before scheduled time)
     if (!meeting.canStartNow()) {
+      const now = new Date();
+      const meetingStart = new Date(meeting.startTime);
+      const minutesUntilStart = Math.ceil((meetingStart - now) / (60 * 1000));
+      
       return res.status(400).json({
         success: false,
-        message: 'Meeting cannot be started yet. Please wait until the scheduled time.'
+        message: `Meeting can be started 5 minutes before the scheduled time. Please wait ${minutesUntilStart} more minute(s).`
       });
     }
 

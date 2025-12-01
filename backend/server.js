@@ -281,7 +281,7 @@ io.on('connection', (socket) => {
   // Receive emotion data from student
   socket.on('emotion-update', async (data) => {
     try {
-      const { meetingId, studentId, emotions, dominantEmotion, faceDetected, confidence, sessionId } = data;
+      const { meetingId, studentId, studentName, emotions, dominantEmotion, faceDetected, confidence, sessionId } = data;
       
       // Get current time for logging
       const now = new Date();
@@ -340,6 +340,7 @@ io.on('connection', (socket) => {
       const emotionRecord = new StudentEmotion({
         meetingId,
         studentId,
+        studentName: studentName || 'Student',
         emotions,
         dominantEmotion,
         faceDetected,
@@ -379,8 +380,10 @@ io.on('connection', (socket) => {
         io.to(`meeting-${meetingId}`).emit('emotion-alert', {
           type: 'negative-emotion',
           studentId,
+          studentName: emotionRecord.studentName || 'Student',
           emotion: dominantEmotion,
           value: emotions[dominantEmotion],
+          message: `${emotionRecord.studentName || 'Student'} is feeling ${dominantEmotion}`,
           severity: severity.toLowerCase(),
           timestamp: new Date()
         });
@@ -389,12 +392,12 @@ io.on('connection', (socket) => {
       // Check for low attentiveness
       if (!faceDetected || confidence < 0.5) {
         const alertMsg = `⚠️  ALERT: Low attentiveness detected (${faceDetected ? 'Low confidence' : 'Face not detected'}: ${(confidence * 100).toFixed(2)}%)`;
-        alerts.push(alertMsg);
-        
         io.to(`meeting-${meetingId}`).emit('emotion-alert', {
           type: 'low-attentiveness',
           studentId,
+          studentName: emotionRecord.studentName || 'Student',
           attentiveness: confidence,
+          message: `${emotionRecord.studentName || 'Student'} has low attentiveness`,
           severity: 'low',
           timestamp: new Date()
         });
@@ -410,6 +413,7 @@ io.on('connection', (socket) => {
       // Send real-time update to lecturer
       io.to(`meeting-${meetingId}`).emit('student-emotion-live', {
         studentId,
+        studentName: emotionRecord.studentName || 'Student',
         emotions,
         dominantEmotion,
         faceDetected,

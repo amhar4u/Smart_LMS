@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 
 export interface EmotionUpdateEvent {
   studentId: string;
+  studentName: string;
   emotions: any;
   dominantEmotion: string;
   faceDetected: boolean;
@@ -15,10 +16,12 @@ export interface EmotionUpdateEvent {
 export interface EmotionAlertEvent {
   type: string;
   studentId: string;
+  studentName: string;
   emotion?: string;
   value?: number;
   attentiveness?: number;
   severity: string;
+  message?: string;
   timestamp: Date;
 }
 
@@ -168,7 +171,8 @@ export class SocketService {
     dominantEmotion: string,
     faceDetected: boolean,
     confidence: number,
-    sessionId: string
+    sessionId: string,
+    studentName?: string
   ): void {
     if (!this.socket) {
       console.error('Socket not connected');
@@ -178,6 +182,7 @@ export class SocketService {
     this.socket.emit('emotion-update', {
       meetingId,
       studentId,
+      studentName,
       emotions,
       dominantEmotion,
       faceDetected,

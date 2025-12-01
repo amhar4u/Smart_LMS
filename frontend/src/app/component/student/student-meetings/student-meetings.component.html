@@ -148,19 +148,17 @@
                 </span>
 
                 <!-- Join Button in Header (for upcoming/ongoing meetings) -->
-                <a *ngIf="canJoinMeeting(meeting)" 
-                   [href]="meeting.dailyRoomUrl" 
-                   target="_blank"
+                <button *ngIf="canJoinMeeting(meeting)" 
                    mat-raised-button 
                    class="header-join-btn"
                    [ngClass]="{
                      'btn-join-now': getMeetingStatus(meeting) === 'ongoing',
                      'btn-join-scheduled': getMeetingStatus(meeting) === 'upcoming'
                    }"
-                   (click)="$event.stopPropagation()">
+                   (click)="joinMeeting(meeting); $event.stopPropagation()">
                   <mat-icon>video_call</mat-icon>
                   <span>{{ getMeetingStatus(meeting) === 'ongoing' ? 'Join Now' : 'Join' }}</span>
-                </a>
+                </button>
               </div>
             </mat-panel-description>
           </mat-expansion-panel-header>
@@ -244,18 +242,17 @@
             <!-- Meeting Actions -->
             <div class="meeting-actions">
               <!-- Join Button - Only for upcoming and ongoing -->
-              <a *ngIf="canJoinMeeting(meeting)" 
-                 [href]="meeting.dailyRoomUrl" 
-                 target="_blank"
+              <button *ngIf="canJoinMeeting(meeting)" 
                  mat-raised-button 
                  class="join-meeting-btn"
                  [ngClass]="{
                    'btn-join-now': getMeetingStatus(meeting) === 'ongoing',
                    'btn-join-scheduled': getMeetingStatus(meeting) === 'upcoming'
-                 }">
+                 }"
+                 (click)="joinMeeting(meeting)">
                 <mat-icon>video_call</mat-icon>
                 <span>{{ getMeetingStatus(meeting) === 'ongoing' ? 'Join Now' : 'Join Meeting' }}</span>
-              </a>
+              </button>
 
               <!-- Meeting Expired Message -->
               <div *ngIf="getMeetingStatus(meeting) === 'expired'" class="meeting-expired-msg">

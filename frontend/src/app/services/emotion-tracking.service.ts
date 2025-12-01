@@ -40,17 +40,21 @@ export class EmotionTrackingService {
     }
 
     try {
-      const MODEL_URL = '/assets/models'; // Store models in assets/models folder
+      // Use CDN models to avoid Vite parsing issues
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+      
+      console.log('Loading Face-API models from CDN:', MODEL_URL);
       
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
         faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
       ]);
 
+      console.log('✅ All Face-API models loaded successfully');
       this.modelsLoaded = true;
     } catch (error) {
-      console.error('Error loading Face-API models:', error);
-      throw new Error('Failed to load emotion detection models');
+      console.error('❌ Error loading Face-API models:', error);
+      throw new Error('Failed to load emotion detection models from CDN');
     }
   }
 
@@ -102,13 +106,32 @@ export class EmotionTrackingService {
     }
 
     try {
+      // Validate video element is ready
+      if (this.videoElement.readyState !== 4) {
+        console.warn('Video element not ready for detection');
+        return null;
+      }
+
       const detections = await faceapi
-        .detectSingleFace(this.videoElement, new faceapi.TinyFaceDetectorOptions())
+        .detectSingleFace(this.videoElement, new faceapi.TinyFaceDetectorOptions({
+          inputSize: 416,
+          scoreThreshold: 0.3
+        }))
         .withFaceExpressions();
 
-      if (detections && detections.expressions) {
+      if (detections && detections.expressions && detections.detection) {
         const expressions = detections.expressions;
         const detection = detections.detection;
+
+        // Validate detection bounding box
+        if (!detection.box || 
+            detection.box.x == null || 
+            detection.box.y == null || 
+            detection.box.width == null || 
+            detection.box.height == null) {
+          console.warn('Invalid bounding box in detection');
+          return null;
+        }
 
         const emotions: EmotionData = {
           happy: expressions.happy,

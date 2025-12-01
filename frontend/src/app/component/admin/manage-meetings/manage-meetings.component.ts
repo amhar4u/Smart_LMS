@@ -919,28 +919,34 @@ export class ManageMeetingsComponent implements OnInit {
       return;
     }
 
-    // Open meeting in new window/tab with host privileges
-    if (meeting.dailyRoomUrl) {
-      const meetingUrl = `${meeting.dailyRoomUrl}?t=host&userName=Host`;
-      window.open(meetingUrl, '_blank', 'width=1200,height=800');
-      
-      // Update meeting status to ongoing
-      if (meeting._id) {
-        this.meetingService.updateMeeting(meeting._id, {
-          status: 'ongoing',
-          startedAt: new Date().toISOString()
-        } as any).subscribe({
-          next: () => {
-            this.snackBar.open('Meeting started! Opening meeting room...', 'Close', { duration: 3000 });
-            this.loadMeetings();
-          },
-          error: (error) => {
-            console.error('Failed to update meeting status', error);
-          }
-        });
-      }
+    // Start meeting and get token (admin acts as host)
+    if (meeting._id) {
+      this.meetingService.startMeeting(meeting._id).subscribe({
+        next: (response) => {
+          // Navigate to lecturer meeting room component with token
+          this.router.navigate(['/lecturer/meetings/room', meeting._id], {
+            state: {
+              token: response.token,
+              roomUrl: response.roomUrl,
+              meetingInfo: {
+                topic: meeting.topic,
+                description: meeting.description
+              }
+            }
+          });
+          this.snackBar.open('Starting meeting...', 'Close', { duration: 2000 });
+        },
+        error: (error) => {
+          console.error('Failed to start meeting', error);
+          this.snackBar.open(
+            error.error?.message || 'Failed to start meeting',
+            'Close',
+            { duration: 3000 }
+          );
+        }
+      });
     } else {
-      this.snackBar.open('Meeting room URL not found', 'Close', { duration: 3000 });
+      this.snackBar.open('Meeting ID not found', 'Close', { duration: 3000 });
     }
   }
 
@@ -967,20 +973,35 @@ export class ManageMeetingsComponent implements OnInit {
       }
     }
 
-    // Open meeting in new window/tab
-    if (meeting.dailyRoomUrl) {
-      const userName = prompt('Enter your name to join the meeting:');
-      if (!userName || userName.trim() === '') {
-        this.snackBar.open('Name is required to join the meeting', 'Close', { duration: 3000 });
-        return;
-      }
-
-      const meetingUrl = `${meeting.dailyRoomUrl}?userName=${encodeURIComponent(userName)}`;
-      window.open(meetingUrl, '_blank', 'width=1200,height=800');
-      
-      this.snackBar.open('Joining meeting...', 'Close', { duration: 2000 });
+    // Join meeting as participant (admin)
+    if (meeting._id) {
+      this.meetingService.joinMeeting(meeting._id).subscribe({
+        next: (response) => {
+          // Navigate to student meeting room component with token
+          this.router.navigate(['/student/meetings/room', meeting._id], {
+            state: {
+              token: response.token,
+              roomUrl: response.roomUrl,
+              meetingInfo: {
+                topic: response.meeting.topic,
+                description: response.meeting.description,
+                startTime: response.meeting.startTime
+              }
+            }
+          });
+          this.snackBar.open('Joining meeting...', 'Close', { duration: 2000 });
+        },
+        error: (error) => {
+          console.error('Failed to join meeting', error);
+          this.snackBar.open(
+            error.error?.message || 'Failed to join meeting',
+            'Close',
+            { duration: 3000 }
+          );
+        }
+      });
     } else {
-      this.snackBar.open('Meeting room URL not found', 'Close', { duration: 3000 });
+      this.snackBar.open('Meeting ID not found', 'Close', { duration: 3000 });
     }
   }
 }

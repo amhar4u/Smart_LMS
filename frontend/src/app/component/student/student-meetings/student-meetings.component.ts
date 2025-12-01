@@ -18,6 +18,7 @@ import { StudentLayout } from '../student-layout/student-layout';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
+import { MeetingService } from '../../../services/meeting.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -48,6 +49,7 @@ export class StudentMeetingsComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private authService = inject(AuthService);
+  private meetingService = inject(MeetingService);
   private apiUrl = `${environment.apiUrl}/students`;
 
   meetings: any[] = [];
@@ -370,5 +372,42 @@ export class StudentMeetingsComponent implements OnInit, OnDestroy {
 
   getOngoingMeetings(): number {
     return this.meetings.filter(m => this.getMeetingStatus(m) === 'ongoing').length;
+  }
+
+  /**
+   * Join a meeting - navigates to custom meeting room
+   */
+  joinMeeting(meeting: any): void {
+    if (!meeting._id) {
+      this.snackBar.open('Meeting ID not found', 'Close', { duration: 3000 });
+      return;
+    }
+
+    // Call backend to get meeting access token
+    this.meetingService.joinMeeting(meeting._id).subscribe({
+      next: (response) => {
+        // Navigate to our custom meeting room component with token
+        this.router.navigate(['/student/meetings/room', meeting._id], {
+          state: {
+            token: response.token,
+            roomUrl: response.roomUrl,
+            meetingInfo: {
+              topic: response.meeting.topic,
+              description: response.meeting.description,
+              startTime: response.meeting.startTime
+            }
+          }
+        });
+        this.snackBar.open('Joining meeting...', 'Close', { duration: 2000 });
+      },
+      error: (error) => {
+        console.error('Failed to join meeting', error);
+        this.snackBar.open(
+          error.error?.message || 'Failed to join meeting',
+          'Close',
+          { duration: 3000 }
+        );
+      }
+    });
   }
 }

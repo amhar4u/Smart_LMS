@@ -150,11 +150,13 @@ meetingSchema.index({ meetingDate: 1 });
 meetingSchema.index({ startTime: 1 });
 meetingSchema.index({ status: 1 });
 
-// Method to check if meeting can start
+// Method to check if meeting can start (allows starting 5 minutes before scheduled time)
 meetingSchema.methods.canStartNow = function() {
   const now = new Date();
   const meetingStart = new Date(this.startTime);
-  return now >= meetingStart && this.status === 'scheduled';
+  const fiveMinutesBeforeStart = new Date(meetingStart.getTime() - (5 * 60 * 1000)); // 5 minutes before
+  
+  return now >= fiveMinutesBeforeStart && this.status === 'scheduled';
 };
 
 // Method to get meeting details with populated references
