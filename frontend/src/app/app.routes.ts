@@ -102,6 +102,16 @@ export const routes: Routes = [
     canActivate: [teacherGuard]
   },
   {
+    path: 'lecturer/meeting-analytics',
+    loadComponent: () => import('./component/lecturer/lecturer-meeting-analytics/lecturer-meeting-analytics.component').then(m => m.LecturerMeetingAnalyticsComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/meeting-analytics/:id',
+    loadComponent: () => import('./component/admin/meeting-analytics-detail/meeting-analytics-detail.component').then(m => m.MeetingAnalyticsDetailComponent),
+    canActivate: [teacherGuard]
+  },
+  {
     path: 'lecturer/notifications',
     loadComponent: () => import('./component/shared/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent),
     canActivate: [teacherGuard]
@@ -194,6 +204,16 @@ export const routes: Routes = [
   {
     path: 'admin/manage-meetings',
     loadComponent: () => import('./component/admin/manage-meetings/manage-meetings.component').then(m => m.ManageMeetingsComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/meeting-analytics',
+    loadComponent: () => import('./component/admin/admin-meeting-analytics/admin-meeting-analytics.component').then(m => m.AdminMeetingAnalyticsComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/meeting-analytics/:id',
+    loadComponent: () => import('./component/admin/meeting-analytics-detail/meeting-analytics-detail.component').then(m => m.MeetingAnalyticsDetailComponent),
     canActivate: [adminGuard]
   },
   {

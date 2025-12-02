@@ -64,6 +64,14 @@
           </div>
         </div>
 
+        <!-- Meeting Analytics -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/meeting-analytics" [attr.data-tooltip]="sidebarCollapsed ? 'Meeting Analytics' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">analytics</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Meeting Analytics</span>
+          </div>
+        </div>
+
         <!-- Modules -->
         <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/modules" [attr.data-tooltip]="sidebarCollapsed ? 'Modules' : null">
           <div class="nav-content">

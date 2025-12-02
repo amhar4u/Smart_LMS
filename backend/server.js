@@ -81,6 +81,7 @@ app.use('/api/student-subject-levels', require('./routes/studentSubjectLevels'))
 app.use('/api/emotions', require('./routes/emotions'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/dependencies', require('./routes/dependencies'));
+app.use('/api/analytics', require('./routes/analytics'));
 
 // Emotion tracking configuration endpoint
 app.get('/api/config/emotion-tracking', (req, res) => {
