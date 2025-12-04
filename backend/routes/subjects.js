@@ -13,13 +13,25 @@ const NotificationService = require('../services/notificationService');
 router.get('/', auth, async (req, res) => {
   try {
     const { department, course, semester, lecturer } = req.query;
+    const userId = req.user.id;
+    
+    // Get user details to check role
+    const user = await User.findById(userId);
     
     let filter = { isActive: true };
     
-    if (department) filter.departmentId = department;
-    if (course) filter.courseId = course;
-    if (semester) filter.semesterId = semester;
-    if (lecturer) filter.lecturerId = lecturer;
+    // If user is a student, filter by their enrolled course, batch, and semester
+    if (user.role === 'student') {
+      filter.courseId = user.course;
+      filter.batchId = user.batch;
+      filter.semesterId = user.semester;
+    } else {
+      // For teachers and admins, allow query filters
+      if (department) filter.departmentId = department;
+      if (course) filter.courseId = course;
+      if (semester) filter.semesterId = semester;
+      if (lecturer) filter.lecturerId = lecturer;
+    }
 
     const subjects = await Subject.find(filter)
       .populate('departmentId', 'name code')

@@ -828,8 +828,8 @@ export class AdminMeetingAnalyticsComponent implements OnInit {
   loadFilterData() {
     forkJoin({
       departments: this.departmentService.getDepartments(),
-      courses: this.courseService.getAllCourses(),
-      batches: this.batchService.getAllBatches()
+      courses: this.courseService.getCourses(),
+      batches: this.batchService.getBatches()
     }).subscribe({
       next: (result) => {
         this.departments = result.departments.data || [];

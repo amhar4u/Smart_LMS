@@ -72,6 +72,14 @@
           </div>
         </div>
 
+        <!-- Student Doubts -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/doubts" [attr.data-tooltip]="sidebarCollapsed ? 'Student Doubts' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">help_outline</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Student Doubts</span>
+          </div>
+        </div>
+
         <!-- Modules -->
         <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/modules" [attr.data-tooltip]="sidebarCollapsed ? 'Modules' : null">
           <div class="nav-content">

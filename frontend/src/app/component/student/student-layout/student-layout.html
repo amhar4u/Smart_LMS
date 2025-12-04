@@ -16,9 +16,6 @@
             <mat-icon>school</mat-icon>
           </div>
         </div>
-        <button mat-icon-button class="collapse-toggle" (click)="toggleSidebar()" *ngIf="!isMobileView">
-          <mat-icon>{{ isSidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
-        </button>
       </div>
 
       <!-- Navigation Menu -->
@@ -54,6 +51,14 @@
             <span class="nav-text">My Meetings</span>
           </div>
         </div>
+
+        <!-- My Doubts -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/student/doubts" data-tooltip="My Doubts">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">help_outline</mat-icon>
+            <span class="nav-text">My Doubts</span>
+          </div>
+        </div>
       </nav>
     </mat-sidenav>
 
@@ -61,7 +66,7 @@
     <mat-sidenav-content class="main-content">
       <!-- Top Toolbar -->
       <mat-toolbar class="top-toolbar">
-        <button mat-icon-button (click)="drawer.toggle()" class="menu-toggle">
+        <button mat-icon-button (click)="toggleSidebar()" class="menu-toggle">
           <mat-icon>menu</mat-icon>
         </button>
         

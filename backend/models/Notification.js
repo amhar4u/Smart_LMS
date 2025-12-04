@@ -50,6 +50,11 @@ const notificationSchema = new mongoose.Schema({
       'student_enrolled',
       'lecturer_assigned',
       
+      // Doubt/Q&A related
+      'doubt_asked',
+      'doubt_answered',
+      'doubt_resolved',
+      
       // General
       'announcement',
       'system_notification'
@@ -69,7 +74,7 @@ const notificationSchema = new mongoose.Schema({
   relatedEntity: {
     entityType: {
       type: String,
-      enum: ['Assignment', 'Meeting', 'Module', 'ExtraModule', 'Subject', 'Attendance', 'AssignmentSubmission', 'Batch', 'Semester']
+      enum: ['Assignment', 'Meeting', 'Module', 'ExtraModule', 'Subject', 'Attendance', 'AssignmentSubmission', 'Batch', 'Semester', 'Doubt']
     },
     entityId: {
       type: mongoose.Schema.Types.ObjectId

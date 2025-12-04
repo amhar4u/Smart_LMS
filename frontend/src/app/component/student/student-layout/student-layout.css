@@ -471,7 +471,7 @@
 }
 
 .page-content {
-  padding: 20px;
+  padding: 0;
   min-height: calc(100vh - 64px);
 }
 
@@ -618,7 +618,7 @@
   }
   
   .page-content {
-    padding: 16px;
+    padding: 0;
   }
 }
 
@@ -639,7 +639,7 @@
   }
   
   .page-content {
-    padding: 12px;
+    padding: 0;
   }
   
   .top-toolbar {

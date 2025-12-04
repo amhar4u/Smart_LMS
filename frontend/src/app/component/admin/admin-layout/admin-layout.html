@@ -121,6 +121,14 @@
           </div>
         </div>
 
+        <!-- Doubts Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/doubts" [attr.data-tooltip]="sidebarCollapsed ? 'Doubts Management' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">help_outline</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Doubts Management</span>
+          </div>
+        </div>
+
         <!-- Departments Management -->
         <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments" [attr.data-tooltip]="sidebarCollapsed ? 'Departments' : null">
           <div class="nav-content">
