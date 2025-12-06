@@ -52,6 +52,11 @@ export const routes: Routes = [
     canActivate: [studentGuard]
   },
   {
+    path: 'student/profile',
+    loadComponent: () => import('./component/student/student-profile/student-profile.component').then(m => m.StudentProfileComponent),
+    canActivate: [studentGuard]
+  },
+  {
     path: 'lecturer/dashboard',
     loadComponent: () => import('./component/lecturer/lecturer-dashboard/lecturer-dashboard').then(m => m.LecturerDashboard),
     canActivate: [teacherGuard]
@@ -119,6 +124,11 @@ export const routes: Routes = [
   {
     path: 'lecturer/doubts',
     loadComponent: () => import('./component/lecturer/lecturer-doubts/lecturer-doubts.component').then(m => m.LecturerDoubtsComponent),
+    canActivate: [teacherGuard]
+  },
+  {
+    path: 'lecturer/profile',
+    loadComponent: () => import('./component/lecturer/lecturer-profile/lecturer-profile.component').then(m => m.LecturerProfileComponent),
     canActivate: [teacherGuard]
   },
   {
@@ -234,6 +244,11 @@ export const routes: Routes = [
   {
     path: 'admin/doubts',
     loadComponent: () => import('./component/admin/admin-doubts/admin-doubts.component').then(m => m.AdminDoubtsComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'admin/profile',
+    loadComponent: () => import('./component/admin/admin-profile/admin-profile.component').then(m => m.AdminProfileComponent),
     canActivate: [adminGuard]
   },
   {

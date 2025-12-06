@@ -1,0 +1,153 @@
+<app-admin-layout>
+  <div class="profile-container">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading profile...</p>
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="!loading" class="profile-content">
+      <!-- Page Header -->
+      <div class="page-header">
+        <h1>My Profile</h1>
+        <p>Manage your personal information and profile picture</p>
+      </div>
+
+      <div class="profile-grid">
+        <!-- Profile Card -->
+        <mat-card class="profile-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>person</mat-icon>
+              Profile Information
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Profile Picture Section -->
+            <div class="profile-picture-section">
+              <div class="avatar-container">
+                <div class="avatar" *ngIf="!imagePreview">
+                  {{ getInitials() }}
+                </div>
+                <img *ngIf="imagePreview" [src]="imagePreview" alt="Profile Picture" class="avatar-image">
+                <button mat-mini-fab color="primary" class="edit-avatar-btn" (click)="fileInput.click()">
+                  <mat-icon>photo_camera</mat-icon>
+                </button>
+                <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+              </div>
+              <div class="avatar-actions">
+                <button mat-stroked-button color="primary" (click)="fileInput.click()">
+                  <mat-icon>upload</mat-icon>
+                  Upload Photo
+                </button>
+                <button mat-stroked-button color="warn" *ngIf="selectedFile" (click)="cancelSelection()">
+                  <mat-icon>cancel</mat-icon>
+                  Cancel
+                </button>
+                <button mat-stroked-button color="warn" *ngIf="!selectedFile && currentUser?.profilePicture" (click)="deleteProfilePicture()">
+                  <mat-icon>delete</mat-icon>
+                  Delete Photo
+                </button>
+              </div>
+              <p class="avatar-hint">Maximum file size: 5MB. Supported formats: JPG, PNG, GIF</p>
+            </div>
+
+            <!-- Profile Form -->
+            <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>First Name</mat-label>
+                  <input matInput formControlName="firstName" placeholder="Enter first name">
+                  <mat-icon matPrefix>person</mat-icon>
+                  <mat-error *ngIf="profileForm.get('firstName')?.hasError('required')">
+                    First name is required
+                  </mat-error>
+                  <mat-error *ngIf="profileForm.get('firstName')?.hasError('minlength')">
+                    First name must be at least 2 characters
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Last Name</mat-label>
+                  <input matInput formControlName="lastName" placeholder="Enter last name">
+                  <mat-icon matPrefix>person</mat-icon>
+                  <mat-error *ngIf="profileForm.get('lastName')?.hasError('required')">
+                    Last name is required
+                  </mat-error>
+                  <mat-error *ngIf="profileForm.get('lastName')?.hasError('minlength')">
+                    Last name must be at least 2 characters
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Phone Number</mat-label>
+                <input matInput formControlName="phone" placeholder="Enter phone number">
+                <mat-icon matPrefix>phone</mat-icon>
+                <mat-error *ngIf="profileForm.get('phone')?.hasError('pattern')">
+                  Please enter a valid phone number
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Address</mat-label>
+                <textarea matInput formControlName="address" placeholder="Enter address" rows="3"></textarea>
+                <mat-icon matPrefix>home</mat-icon>
+                <mat-error *ngIf="profileForm.get('address')?.hasError('maxlength')">
+                  Address cannot exceed 200 characters
+                </mat-error>
+              </mat-form-field>
+
+              <div class="form-actions">
+                <button mat-raised-button color="primary" type="submit" [disabled]="saving || profileForm.invalid">
+                  <mat-spinner *ngIf="saving" diameter="20" class="button-spinner"></mat-spinner>
+                  <mat-icon *ngIf="!saving">save</mat-icon>
+                  {{ saving ? 'Saving...' : 'Save Changes' }}
+                </button>
+                <button mat-stroked-button type="button" (click)="loadProfile()" [disabled]="saving">
+                  <mat-icon>refresh</mat-icon>
+                  Reset
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Read-Only Information Card -->
+        <mat-card class="info-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>info</mat-icon>
+              Account Information
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="info-section">
+              <div class="info-item">
+                <mat-icon class="info-icon">email</mat-icon>
+                <div class="info-content">
+                  <label>Email Address</label>
+                  <p>{{ currentUser?.email || 'N/A' }}</p>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <mat-icon class="info-icon">admin_panel_settings</mat-icon>
+                <div class="info-content">
+                  <label>Role</label>
+                  <p>Administrator</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-note">
+              <mat-icon>lock</mat-icon>
+              <p>Your email address is read-only. Contact support if you need to update it.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</app-admin-layout>

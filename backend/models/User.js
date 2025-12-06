@@ -42,6 +42,13 @@ const userSchema = new mongoose.Schema({
     required: false
   },
   
+  address: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Address cannot exceed 200 characters'],
+    required: false
+  },
+  
   // Role and User Type
   role: {
     type: String,

@@ -11,6 +11,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AnalyticsService, MeetingAnalytics } from '../../../services/analytics.service';
+import { AuthService } from '../../../services/auth.service';
+import { AdminLayout } from '../admin-layout/admin-layout';
+import { LecturerLayout } from '../../lecturer/lecturer-layout/lecturer-layout';
 
 @Component({
   selector: 'app-meeting-analytics-detail',
@@ -25,14 +28,34 @@ import { AnalyticsService, MeetingAnalytics } from '../../../services/analytics.
     MatChipsModule,
     MatTooltipModule,
     MatTabsModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    AdminLayout,
+    LecturerLayout
   ],
   template: `
-    <div class="analytics-detail-container">
-      <!-- Back Button -->
-      <button mat-icon-button (click)="goBack()" class="back-button">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
+    <ng-container *ngIf="isAdmin; else lecturerLayout">
+      <app-admin-layout>
+        <div class="analytics-detail-content">
+          <ng-container *ngTemplateOutlet="analyticsContent"></ng-container>
+        </div>
+      </app-admin-layout>
+    </ng-container>
+    
+    <ng-template #lecturerLayout>
+      <app-lecturer-layout>
+        <div class="analytics-detail-content">
+          <ng-container *ngTemplateOutlet="analyticsContent"></ng-container>
+        </div>
+      </app-lecturer-layout>
+    </ng-template>
+
+    <ng-template #analyticsContent>
+      <div class="analytics-detail-container">
+        <!-- Back Button -->
+        <button mat-raised-button color="primary" (click)="goBack()" class="back-button">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Analytics
+        </button>
 
       <!-- Loading State -->
       <div *ngIf="loading" class="loading-container">
@@ -283,21 +306,32 @@ import { AnalyticsService, MeetingAnalytics } from '../../../services/analytics.
           </mat-tab>
         </mat-tab-group>
       </div>
-    </div>
+      </div>
+    </ng-template>
   `,
   styles: [`
+    .analytics-detail-content {
+      min-height: 100vh;
+      background: #f5f5f5;
+    }
+
     .analytics-detail-container {
       padding: 24px;
       max-width: 1400px;
       margin: 0 auto;
-      position: relative;
     }
 
     .back-button {
-      position: absolute;
-      top: 24px;
-      left: 24px;
-      z-index: 10;
+      margin-bottom: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-button mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
 
     .loading-container {
@@ -311,7 +345,6 @@ import { AnalyticsService, MeetingAnalytics } from '../../../services/analytics.
 
     .header {
       margin-bottom: 32px;
-      padding-left: 56px;
     }
 
     .header h1 {
@@ -658,12 +691,17 @@ export class MeetingAnalyticsDetailComponent implements OnInit {
   private router = inject(Router);
   private analyticsService = inject(AnalyticsService);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
 
   analytics: MeetingAnalytics | null = null;
   loading = false;
   displayedColumns = ['student', 'status', 'joinTime', 'duration', 'percentage', 'rejoins'];
+  isAdmin = false;
 
   ngOnInit() {
+    // Determine if user is admin or lecturer
+    this.isAdmin = this.authService.isAdmin();
+    
     const meetingId = this.route.snapshot.paramMap.get('id');
     if (meetingId) {
       this.loadAnalytics(meetingId);
@@ -686,7 +724,12 @@ export class MeetingAnalyticsDetailComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/admin/meeting-analytics']);
+    // Navigate based on user role
+    if (this.isAdmin) {
+      this.router.navigate(['/admin/meeting-analytics']);
+    } else {
+      this.router.navigate(['/lecturer/meeting-analytics']);
+    }
   }
 
   formatDuration(seconds: number): string {

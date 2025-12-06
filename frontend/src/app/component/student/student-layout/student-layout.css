@@ -193,6 +193,13 @@
   padding: 20px 8px;
 }
 
+.nav-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 16px 12px;
+  opacity: 0.5;
+}
+
 .nav-item {
   margin-bottom: 8px;
   border-radius: 12px;
@@ -451,11 +458,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .profile-avatar mat-icon {
   font-size: 24px;
   color: #4CAF50;
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 /* Main Content */

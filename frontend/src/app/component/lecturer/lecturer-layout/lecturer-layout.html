@@ -95,6 +95,17 @@
             <span *ngIf="!sidebarCollapsed" class="nav-text">Extra Modules</span>
           </div>
         </div>
+
+        <!-- Divider -->
+        <div class="nav-divider" *ngIf="!sidebarCollapsed"></div>
+
+        <!-- Profile Settings -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/profile" [attr.data-tooltip]="sidebarCollapsed ? 'Profile Settings' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">settings</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Profile Settings</span>
+          </div>
+        </div>
       </nav>
     </mat-sidenav>
 
@@ -124,9 +135,13 @@
         </div>
         
         <!-- Profile -->
-        <button mat-icon-button class="profile-button">
+        <button mat-icon-button class="profile-button" routerLink="/lecturer/profile" title="Profile Settings">
           <div class="profile-avatar">
-            <mat-icon>account_circle</mat-icon>
+            <img *ngIf="(currentUser$ | async)?.profilePicture" 
+                 [src]="(currentUser$ | async)?.profilePicture" 
+                 alt="Profile"
+                 class="profile-picture">
+            <mat-icon *ngIf="!(currentUser$ | async)?.profilePicture">account_circle</mat-icon>
           </div>
         </button>
         

@@ -6,31 +6,69 @@ const Batch = require('../models/Batch');
 const auth = require('../middleware/auth');
 const { sendVerificationEmail, sendRejectionEmail } = require('../services/emailService');
 const NotificationService = require('../services/notificationService');
+const multer = require('multer');
+const { uploadFile, deleteFile } = require('../config/cloudinary');
 
 const router = express.Router();
+
+// Configure multer for file upload (memory storage)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for profile pictures
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images only
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  }
+});
 
 // @route   GET /api/users/profile
 // @desc    Get current user profile
 // @access  Private
 router.get('/profile', auth, async (req, res) => {
   try {
-    // req.user is already the full user object from auth middleware
-    const user = req.user;
+    console.log('📋 [PROFILE] Fetching profile for user ID:', req.user.id);
+    
+    // Fetch full user data with populated fields
+    const user = await User.findById(req.user.id)
+      .populate('department', 'name code')
+      .populate('course', 'name code')
+      .populate('batch', 'name code')
+      .populate('semester', 'name year');
+    
     if (!user) {
+      console.log('❌ [PROFILE] User not found for ID:', req.user.id);
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    const profileData = user.getPublicProfile();
+    console.log('✅ [PROFILE] Profile data prepared for:', user.email);
+    console.log('📦 [PROFILE] Response data keys:', Object.keys(profileData));
+    console.log('👤 [PROFILE] User details:', {
+      firstName: profileData.firstName,
+      lastName: profileData.lastName,
+      email: profileData.email,
+      role: profileData.role,
+      hasDepartment: !!profileData.department,
+      hasCourse: !!profileData.course
+    });
+
     res.status(200).json({
       success: true,
       data: {
-        user: user.getPublicProfile()
+        user: profileData
       }
     });
   } catch (error) {
-    console.error('Get profile error:', error);
+    console.error('❌ [PROFILE] Get profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get profile',
@@ -40,31 +78,72 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 // @route   PUT /api/users/profile
-// @desc    Update user profile
+// @desc    Update user profile (name, phone, address, profile picture)
 // @access  Private
-router.put('/profile', auth, async (req, res) => {
+router.put('/profile', auth, upload.single('profilePicture'), async (req, res) => {
   try {
-    const updates = req.body;
+    const updates = {};
     
-    // Remove sensitive fields that shouldn't be updated through this route
-    delete updates.password;
-    delete updates.email;
-    delete updates.role;
-    delete updates.studentId;
-    delete updates.teacherId;
+    // Only allow specific fields to be updated
+    const allowedFields = ['firstName', 'lastName', 'phone', 'address'];
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
 
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { ...updates, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    );
-
-    if (!user) {
+    // Get current user to check for existing profile picture
+    const currentUser = await User.findById(req.user._id);
+    if (!currentUser) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
+
+    // Handle profile picture upload
+    if (req.file) {
+      try {
+        // Delete old profile picture from Cloudinary if it exists
+        if (currentUser.profilePicture) {
+          // Extract public_id from URL
+          const urlParts = currentUser.profilePicture.split('/');
+          const folderAndFile = urlParts.slice(-2).join('/'); // e.g., "profile-pictures/123456-filename.jpg"
+          const publicId = folderAndFile.split('.')[0]; // Remove extension
+          
+          await deleteFile(publicId, 'image').catch(err => {
+            console.warn('⚠️ Could not delete old profile picture:', err.message);
+          });
+        }
+
+        // Upload new profile picture to Cloudinary
+        const uploadResult = await uploadFile(
+          req.file.buffer,
+          req.file.originalname,
+          'profile-pictures'
+        );
+
+        updates.profilePicture = uploadResult.cloudinaryURL;
+        console.log('✅ [PROFILE] Profile picture uploaded:', uploadResult.cloudinaryURL);
+      } catch (uploadError) {
+        console.error('❌ [PROFILE] Error uploading profile picture:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to upload profile picture',
+          error: uploadError.message
+        });
+      }
+    }
+
+    // Update user profile
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { ...updates, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    ).populate('department', 'name code')
+     .populate('course', 'name code')
+     .populate('batch', 'name code')
+     .populate('semester', 'name year');
 
     res.status(200).json({
       success: true,
@@ -74,10 +153,74 @@ router.put('/profile', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    console.error('❌ [PROFILE] Update profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update profile',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// @route   DELETE /api/users/profile/picture
+// @desc    Delete user profile picture
+// @access  Private
+router.delete('/profile/picture', auth, async (req, res) => {
+  try {
+    console.log('🗑️ [PROFILE] Deleting profile picture for user ID:', req.user.id);
+    
+    // Get current user to check for existing profile picture
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete profile picture from Cloudinary if it exists
+    if (currentUser.profilePicture) {
+      try {
+        // Extract public_id from URL
+        const urlParts = currentUser.profilePicture.split('/');
+        const folderAndFile = urlParts.slice(-2).join('/'); // e.g., "profile-pictures/123456-filename.jpg"
+        const publicId = folderAndFile.split('.')[0]; // Remove extension
+        
+        await deleteFile(publicId, 'image').catch(err => {
+          console.warn('⚠️ Could not delete profile picture from Cloudinary:', err.message);
+        });
+        
+        console.log('✅ [PROFILE] Profile picture deleted from Cloudinary');
+      } catch (deleteError) {
+        console.error('❌ [PROFILE] Error deleting from Cloudinary:', deleteError);
+        // Continue anyway to remove from database
+      }
+    }
+
+    // Update user to remove profile picture
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profilePicture: null, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    ).populate('department', 'name code')
+     .populate('course', 'name code')
+     .populate('batch', 'name code')
+     .populate('semester', 'name year');
+
+    console.log('✅ [PROFILE] Profile picture removed from database');
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture deleted successfully',
+      data: {
+        user: user.getPublicProfile()
+      }
+    });
+  } catch (error) {
+    console.error('❌ [PROFILE] Delete profile picture error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete profile picture',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
