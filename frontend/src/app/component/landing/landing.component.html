@@ -131,25 +131,90 @@
       <h2>What Our Community Says</h2>
       <p>Real experiences from students and teachers</p>
     </div>
-    
-    <div class="testimonials-grid">
-      <mat-card class="testimonial-card" *ngFor="let testimonial of testimonials">
-        <mat-card-content>
-          <div class="testimonial-content">
-            <p>"{{ testimonial.message }}"</p>
+
+    <!-- Rating Summary -->
+    <div class="rating-summary" *ngIf="feedbacks.length > 0">
+      <div class="summary-content">
+        <div class="average-rating-box">
+          <h3>{{ ratingStats.avgDisplay }}</h3>
+          <div class="stars">
+            <mat-icon *ngFor="let i of [1,2,3,4,5]" class="star-icon" [class.filled]="i <= ratingStats.avg">
+              {{ i <= ratingStats.avg ? 'star' : 'star_border' }}
+            </mat-icon>
           </div>
-          <div class="testimonial-author">
-            <div class="author-avatar">
-              {{ testimonial.avatar }}
+          <p>{{ ratingStats.total }} reviews</p>
+        </div>
+        <div class="rating-breakdown">
+          <div class="rating-row" *ngFor="let count of ratingStats.ratings; let i = index">
+            <span class="rating-label">{{ 5 - i }} <mat-icon class="small-star">star</mat-icon></span>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getRatingPercentage(count)"></div>
             </div>
-            <div class="author-info">
-              <h4>{{ testimonial.name }}</h4>
-              <p>{{ testimonial.role }}</p>
-            </div>
+            <span class="rating-count">{{ count }}</span>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </div>
     </div>
+    
+    <!-- Show real feedback if available -->
+    <div class="testimonials-carousel" *ngIf="feedbacks.length > 0; else noFeedback">
+      <button mat-icon-button class="carousel-nav carousel-nav-left" 
+              [disabled]="!hasPrevious" 
+              (click)="previousPage()">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <div class="testimonials-grid" [class.single-item]="displayedFeedbacks.length === 1">
+        <mat-card class="testimonial-card" *ngFor="let feedback of displayedFeedbacks">
+          <mat-card-content>
+            <div class="testimonial-header">
+              <div class="author-info-top">
+                <div class="author-avatar" *ngIf="!feedback.user?.profilePicture">
+                  {{ getInitials(feedback) }}
+                </div>
+                <img *ngIf="feedback.user?.profilePicture" 
+                     [src]="feedback.user?.profilePicture" 
+                     alt="Profile"
+                     class="author-avatar-img">
+                <div class="author-details">
+                  <h4>{{ (feedback.user?.firstName || feedback.userName.split(' ')[0]) }} {{ (feedback.user?.lastName || feedback.userName.split(' ')[1] || '') }}</h4>
+                  <p class="role-info">{{ getRoleWithInfo(feedback) }}</p>
+                  <p class="feedback-date">{{ feedback.createdAt | date:'MMM d, yyyy' }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-content">
+              <p>"{{ feedback.comment }}"</p>
+            </div>
+            <div class="rating-stars-bottom">
+              <mat-icon *ngFor="let star of getStars(feedback.rating)" class="star-icon">star</mat-icon>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      
+      <button mat-icon-button class="carousel-nav carousel-nav-right" 
+              [disabled]="!hasNext" 
+              (click)="nextPage()">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      
+      <div class="carousel-indicators">
+        <span *ngFor="let page of [].constructor(totalPages); let i = index" 
+              class="indicator" 
+              [class.active]="i === currentPage"
+              (click)="currentPage = i"></span>
+      </div>
+    </div>
+    
+    <!-- No feedback message -->
+    <ng-template #noFeedback>
+      <div class="no-feedback">
+        <mat-icon class="no-feedback-icon">feedback</mat-icon>
+        <h3>No Feedback Yet</h3>
+        <p>Be the first to share your experience with Smart LMS!</p>
+      </div>
+    </ng-template>
   </div>
 </section>
 

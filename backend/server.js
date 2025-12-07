@@ -83,6 +83,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/dependencies', require('./routes/dependencies'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/doubts', require('./routes/doubts'));
+app.use('/api/feedback', require('./routes/feedback'));
 
 // Emotion tracking configuration endpoint
 app.get('/api/config/emotion-tracking', (req, res) => {

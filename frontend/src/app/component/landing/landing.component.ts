@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { StatisticsService, OverallStatistics, DepartmentStatistics } from '../../services/statistics.service';
+import { FeedbackService, Feedback } from '../../services/feedback.service';
 
 @Component({
   selector: 'app-landing',
@@ -40,10 +41,33 @@ export class LandingComponent implements OnInit {
   departmentStats: DepartmentStatistics[] = [];
   loading = true;
 
-  constructor(private statisticsService: StatisticsService) {}
+  // Feedback/Testimonials
+  feedbacks: Feedback[] = [];
+  currentPage = 0;
+  itemsPerPage = 2;
+
+  constructor(
+    private statisticsService: StatisticsService,
+    private feedbackService: FeedbackService
+  ) {}
 
   ngOnInit() {
     this.loadStatistics();
+    this.loadFeedback();
+  }
+
+  private loadFeedback() {
+    this.feedbackService.getApprovedFeedbacks().subscribe({
+      next: (response: any) => {
+        if (response.success && response.data.feedbacks) {
+          this.feedbacks = response.data.feedbacks.slice(0, 6); // Limit to 6 feedbacks
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading feedback:', error);
+        this.feedbacks = [];
+      }
+    });
   }
 
   private loadStatistics() {
@@ -117,24 +141,86 @@ export class LandingComponent implements OnInit {
     }
   ];
 
-  testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Computer Science Student',
-      message: 'The Smart LMS platform has transformed my learning experience. The interactive content and progress tracking keep me motivated.',
-      avatar: 'SJ'
-    },
-    {
-      name: 'Dr. Michael Chen',
-      role: 'Mathematics Professor',
-      message: 'As an educator, I find the platform intuitive and powerful. It helps me deliver engaging content to my students effectively.',
-      avatar: 'MC'
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Business Student',
-      message: 'The flexibility of learning on any device has been a game-changer for my busy schedule. Highly recommend!',
-      avatar: 'ER'
+
+
+  // Carousel methods
+  get displayedFeedbacks(): Feedback[] {
+    if (this.feedbacks.length === 0) return [];
+    const start = this.currentPage * this.itemsPerPage;
+    return this.feedbacks.slice(start, start + this.itemsPerPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.feedbacks.length / this.itemsPerPage);
+  }
+
+  get hasPrevious(): boolean {
+    return this.currentPage > 0;
+  }
+
+  get hasNext(): boolean {
+    return this.currentPage < this.totalPages - 1;
+  }
+
+  previousPage() {
+    if (this.hasPrevious) {
+      this.currentPage--;
     }
-  ];
+  }
+
+  nextPage() {
+    if (this.hasNext) {
+      this.currentPage++;
+    }
+  }
+
+  getInitials(feedback: Feedback): string {
+    const firstName = feedback.user?.firstName || feedback.userName.split(' ')[0] || '';
+    const lastName = feedback.user?.lastName || feedback.userName.split(' ')[1] || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  }
+
+  getRoleDisplay(role: string): string {
+    return role === 'teacher' ? 'Lecturer' : 'Student';
+  }
+
+  getRoleWithInfo(feedback: Feedback): string {
+    if (feedback.userRole === 'teacher') {
+      const dept = feedback.user?.department?.name;
+      return dept ? `Lecturer of ${dept}` : 'Lecturer';
+    } else {
+      const course = feedback.user?.course?.name;
+      return course ? `${course} Student` : 'Student';
+    }
+  }
+
+  // Rating statistics
+  get ratingStats() {
+    if (this.feedbacks.length === 0) return { avg: 0, avgDisplay: '0.0', total: 0, ratings: [0, 0, 0, 0, 0] };
+    
+    const ratings = [0, 0, 0, 0, 0]; // 5 star, 4 star, 3 star, 2 star, 1 star
+    let sum = 0;
+
+    this.feedbacks.forEach(f => {
+      ratings[5 - f.rating]++;
+      sum += f.rating;
+    });
+
+    const avgValue = sum / this.feedbacks.length;
+    
+    return {
+      avg: avgValue,
+      avgDisplay: avgValue.toFixed(1),
+      total: this.feedbacks.length,
+      ratings: ratings
+    };
+  }
+
+  getRatingPercentage(count: number): number {
+    return this.feedbacks.length > 0 ? (count / this.feedbacks.length) * 100 : 0;
+  }
+
+  getStars(rating: number): string[] {
+    return Array(rating).fill('star');
+  }
 }

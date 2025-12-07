@@ -252,6 +252,21 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'admin/feedback',
+    loadComponent: () => import('./component/admin/feedback-management/feedback-management.component').then(m => m.FeedbackManagementComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'student/feedback',
+    loadComponent: () => import('./component/student/student-feedback/student-feedback.component').then(m => m.StudentFeedbackComponent),
+    canActivate: [studentGuard]
+  },
+  {
+    path: 'lecturer/feedback',
+    loadComponent: () => import('./component/lecturer/lecturer-feedback/lecturer-feedback.component').then(m => m.LecturerFeedbackComponent),
+    canActivate: [teacherGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

@@ -129,6 +129,14 @@
           </div>
         </div>
 
+        <!-- Feedback Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/feedback" [attr.data-tooltip]="sidebarCollapsed ? 'Feedback Management' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">feedback</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Feedback Management</span>
+          </div>
+        </div>
+
         <!-- Departments Management -->
         <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments" [attr.data-tooltip]="sidebarCollapsed ? 'Departments' : null">
           <div class="nav-content">
