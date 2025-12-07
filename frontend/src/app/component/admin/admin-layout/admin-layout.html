@@ -57,11 +57,35 @@
           </div>
         </div>
 
+        <!-- Departments Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments" [attr.data-tooltip]="sidebarCollapsed ? 'Departments' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">account_balance</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Departments</span>
+          </div>
+        </div>
+
         <!-- Courses Management -->
         <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-courses" [attr.data-tooltip]="sidebarCollapsed ? 'Courses' : null">
           <div class="nav-content">
             <mat-icon class="nav-icon">school</mat-icon>
             <span *ngIf="!sidebarCollapsed" class="nav-text">Courses</span>
+          </div>
+        </div>
+
+        <!-- Batches Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-batches" [attr.data-tooltip]="sidebarCollapsed ? 'Batches' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">groups</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Batches</span>
+          </div>
+        </div>
+
+        <!-- Semesters Management -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-semesters" [attr.data-tooltip]="sidebarCollapsed ? 'Semesters' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">event_note</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Semesters</span>
           </div>
         </div>
 
@@ -137,29 +161,6 @@
           </div>
         </div>
 
-        <!-- Departments Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-departments" [attr.data-tooltip]="sidebarCollapsed ? 'Departments' : null">
-          <div class="nav-content">
-            <mat-icon class="nav-icon">account_balance</mat-icon>
-            <span *ngIf="!sidebarCollapsed" class="nav-text">Departments</span>
-          </div>
-        </div>
-
-        <!-- Batches Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-batches" [attr.data-tooltip]="sidebarCollapsed ? 'Batches' : null">
-          <div class="nav-content">
-            <mat-icon class="nav-icon">groups</mat-icon>
-            <span *ngIf="!sidebarCollapsed" class="nav-text">Batches</span>
-          </div>
-        </div>
-
-        <!-- Semesters Management -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/admin/manage-semesters" [attr.data-tooltip]="sidebarCollapsed ? 'Semesters' : null">
-          <div class="nav-content">
-            <mat-icon class="nav-icon">event_note</mat-icon>
-            <span *ngIf="!sidebarCollapsed" class="nav-text">Semesters</span>
-          </div>
-        </div>
 
         <!-- Divider -->
         <div class="nav-divider" *ngIf="!sidebarCollapsed"></div>

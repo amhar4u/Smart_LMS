@@ -40,6 +40,22 @@
           </div>
         </div>
 
+         <!-- Modules -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/modules" [attr.data-tooltip]="sidebarCollapsed ? 'Modules' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">library_books</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Modules</span>
+          </div>
+        </div>
+
+        <!-- Extra Modules -->
+        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/extra-modules" [attr.data-tooltip]="sidebarCollapsed ? 'Extra Modules' : null">
+          <div class="nav-content">
+            <mat-icon class="nav-icon">auto_stories</mat-icon>
+            <span *ngIf="!sidebarCollapsed" class="nav-text">Extra Modules</span>
+          </div>
+        </div>
+
         <!-- Assignments -->
         <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/assignments" [attr.data-tooltip]="sidebarCollapsed ? 'Assignments' : null">
           <div class="nav-content">
@@ -80,22 +96,7 @@
           </div>
         </div>
 
-        <!-- Modules -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/modules" [attr.data-tooltip]="sidebarCollapsed ? 'Modules' : null">
-          <div class="nav-content">
-            <mat-icon class="nav-icon">library_books</mat-icon>
-            <span *ngIf="!sidebarCollapsed" class="nav-text">Modules</span>
-          </div>
-        </div>
-
-        <!-- Extra Modules -->
-        <div class="nav-item" routerLinkActive="active" routerLink="/lecturer/extra-modules" [attr.data-tooltip]="sidebarCollapsed ? 'Extra Modules' : null">
-          <div class="nav-content">
-            <mat-icon class="nav-icon">auto_stories</mat-icon>
-            <span *ngIf="!sidebarCollapsed" class="nav-text">Extra Modules</span>
-          </div>
-        </div>
-
+       
         <!-- Divider -->
         <div class="nav-divider" *ngIf="!sidebarCollapsed"></div>
 
