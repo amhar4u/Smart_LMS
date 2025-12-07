@@ -1,6 +1,12 @@
+// Production environment - uses production backend on Render.com
+
 export const environment = {
   production: true,
+  
+  // PRODUCTION BACKEND
   apiUrl: 'https://smart-lms-pqp2.onrender.com/api',
+  socketUrl: 'https://smart-lms-pqp2.onrender.com',
+  
   firebase: {
     apiKey: "AIzaSyD_B3ZDSsycZyJKeAesmcqAKzC_BK8zNLI",
     authDomain: "smart-lms-d5ce5.firebaseapp.com",

@@ -1,6 +1,17 @@
+// Development environment - uses local backend
+// To test with production backend locally, change URLs below to production values
+
 export const environment = {
   production: false,
+  
+  // LOCAL BACKEND (default for development)
   apiUrl: 'http://localhost:3000/api',
+  socketUrl: 'http://localhost:3000',
+  
+  // PRODUCTION BACKEND (uncomment to test with production backend locally)
+  // apiUrl: 'https://smart-lms-pqp2.onrender.com/api',
+  // socketUrl: 'https://smart-lms-pqp2.onrender.com',
+  
   firebase: {
     apiKey: "AIzaSyD_B3ZDSsycZyJKeAesmcqAKzC_BK8zNLI",
     authDomain: "smart-lms-d5ce5.firebaseapp.com",
