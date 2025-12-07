@@ -130,12 +130,20 @@
                 <mat-label>Department</mat-label>
                 <mat-select formControlName="department" required [disabled]="isLoadingDepartments">
                   <mat-option *ngIf="isLoadingDepartments" disabled>
+                    <mat-spinner diameter="20" style="display: inline-block; vertical-align: middle; margin-right: 8px;"></mat-spinner>
                     Loading departments...
+                  </mat-option>
+                  <mat-option *ngIf="!isLoadingDepartments && departments.length === 0" disabled>
+                    No departments available for registration
                   </mat-option>
                   <mat-option *ngFor="let department of departments" [value]="department._id">
                     {{ department.name }} ({{ department.code }})
                   </mat-option>
                 </mat-select>
+                <mat-hint *ngIf="isLoadingDepartments">
+                  <mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">hourglass_empty</mat-icon>
+                  Please wait while we load departments...
+                </mat-hint>
                 <mat-error *ngIf="academicInfoForm.get('department')?.invalid && academicInfoForm.get('department')?.touched">
                   {{ getErrorMessage(academicInfoForm, 'department') }}
                 </mat-error>
@@ -143,43 +151,74 @@
 
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Course/Program</mat-label>
-                <mat-select formControlName="course" required [disabled]="isLoadingCourses">
+                <mat-select formControlName="course" required [disabled]="isLoadingCourses || !academicInfoForm.get('department')?.value">
                   <mat-option *ngIf="isLoadingCourses" disabled>
+                    <mat-spinner diameter="20" style="display: inline-block; vertical-align: middle; margin-right: 8px;"></mat-spinner>
                     Loading courses...
+                  </mat-option>
+                  <mat-option *ngIf="!isLoadingCourses && !academicInfoForm.get('department')?.value" disabled>
+                    Please select a department first
+                  </mat-option>
+                  <mat-option *ngIf="!isLoadingCourses && academicInfoForm.get('department')?.value && courses.length === 0" disabled>
+                    No courses available in this department
                   </mat-option>
                   <mat-option *ngFor="let course of courses" [value]="course._id">
                     {{ course.name }} ({{ course.code }})
                   </mat-option>
                 </mat-select>
+                <mat-hint *ngIf="isLoadingCourses">
+                  <mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">hourglass_empty</mat-icon>
+                  Loading courses for selected department...
+                </mat-hint>
+                <mat-hint *ngIf="!isLoadingCourses && academicInfoForm.get('department')?.value && courses.length === 0" style="color: #f44336;">
+                  <mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">info</mat-icon>
+                  This department has no courses available. Please select another department.
+                </mat-hint>
                 <mat-error *ngIf="academicInfoForm.get('course')?.invalid && academicInfoForm.get('course')?.touched">
-                  {{ getErrorMessage(academicInfoForm, 'course') }}
+                  Course is required
                 </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Batch</mat-label>
-                <mat-select formControlName="batch" required [disabled]="isLoadingBatches">
+                <mat-select formControlName="batch" required [disabled]="isLoadingBatches || !academicInfoForm.get('course')?.value">
                   <mat-option *ngIf="isLoadingBatches" disabled>
+                    <mat-spinner diameter="20" style="display: inline-block; vertical-align: middle; margin-right: 8px;"></mat-spinner>
                     Loading batches...
                   </mat-option>
-                  <mat-option *ngIf="!isLoadingBatches && batches.length === 0 && academicInfoForm.get('course')?.value" disabled>
-                    No available batches for selected course
+                  <mat-option *ngIf="!isLoadingBatches && !academicInfoForm.get('course')?.value" disabled>
+                    Please select a course first
+                  </mat-option>
+                  <mat-option *ngIf="!isLoadingBatches && academicInfoForm.get('course')?.value && batches.length === 0" disabled>
+                    No available batches for this course
                   </mat-option>
                   <mat-option *ngFor="let batch of batches" [value]="batch._id">
                     {{ batch.name }} ({{ batch.code }}) - {{ batch.startYear }}-{{ batch.endYear }}
-                    <small *ngIf="batch.remainingSlots > 0" style="color: green;">
-                      - {{ batch.remainingSlots }} slots available
-                    </small>
-                    <small *ngIf="batch.remainingSlots === 0" style="color: red;">
-                      - Full
-                    </small>
+                    @if (batch.remainingSlots > 0) {
+                      <small style="color: green;">
+                        - {{ batch.remainingSlots }} slots available
+                      </small>
+                    }
+                    @if (batch.remainingSlots === 0) {
+                      <small style="color: red;">
+                        - Full
+                      </small>
+                    }
                   </mat-option>
                 </mat-select>
-                <mat-hint *ngIf="academicInfoForm.get('batch')?.value">
+                <mat-hint *ngIf="isLoadingBatches">
+                  <mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">hourglass_empty</mat-icon>
+                  Loading available batches...
+                </mat-hint>
+                <mat-hint *ngIf="!isLoadingBatches && academicInfoForm.get('course')?.value && batches.length === 0" style="color: #f44336;">
+                  <mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: middle;">info</mat-icon>
+                  This course has no available batches. Please select another course or contact administration.
+                </mat-hint>
+                <mat-hint *ngIf="!isLoadingBatches && academicInfoForm.get('batch')?.value">
                   Semester will be automatically assigned based on your selected batch.
                 </mat-hint>
                 <mat-error *ngIf="academicInfoForm.get('batch')?.invalid && academicInfoForm.get('batch')?.touched">
-                  {{ getErrorMessage(academicInfoForm, 'batch') }}
+                  Batch is required
                 </mat-error>
               </mat-form-field>
 

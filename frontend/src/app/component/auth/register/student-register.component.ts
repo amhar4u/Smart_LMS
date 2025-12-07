@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { AuthService } from '../../../services/auth.service';
 import { LoadingService } from '../../../services/loading.service';
@@ -37,6 +38,7 @@ import { BatchService, Batch } from '../../../services/batch.service';
     MatCheckboxModule,
     MatSnackBarModule,
     MatStepperModule,
+    MatProgressSpinnerModule,
     LoadingSpinnerComponent
   ],
   templateUrl: './student-register.component.html',
@@ -118,11 +120,13 @@ export class StudentRegisterComponent implements OnInit {
 
   loadCoursesByDepartment(departmentId: string): void {
     this.isLoadingCourses = true;
+    this.courses = []; // Clear previous courses
     this.courseService.getCoursesByDepartment(departmentId).subscribe({
       next: (response) => {
         this.isLoadingCourses = false;
         if (response.success) {
-          this.courses = response.data;
+          // Filter active courses only
+          this.courses = response.data.filter((course: Course) => course.isActive !== false);
         }
       },
       error: (error) => {
@@ -142,7 +146,8 @@ export class StudentRegisterComponent implements OnInit {
       next: (response) => {
         this.isLoadingDepartments = false;
         if (response.success) {
-          this.departments = response.data;
+          // Only show departments that have active status
+          this.departments = response.data.filter((dept: Department) => dept.isActive !== false);
         }
       },
       error: (error) => {
@@ -158,6 +163,7 @@ export class StudentRegisterComponent implements OnInit {
 
   loadBatchesByCourse(courseId: string): void {
     this.isLoadingBatches = true;
+    this.batches = []; // Clear previous batches
     this.batchService.getBatchesByCoursePublic(courseId).subscribe({
       next: (response: any) => {
         this.isLoadingBatches = false;
