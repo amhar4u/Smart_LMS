@@ -55,6 +55,16 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
+    
+    // Check if user was redirected due to session expiration
+    this.route.queryParams.subscribe(params => {
+      if (params['reason'] === 'session_expired') {
+        this.snackBar.open('Your session has expired. Please login again.', 'Close', {
+          duration: 5000,
+          panelClass: ['warning-snackbar']
+        });
+      }
+    });
   }
 
   initializeForm(): void {
