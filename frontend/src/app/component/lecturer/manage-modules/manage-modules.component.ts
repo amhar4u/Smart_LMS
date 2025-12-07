@@ -74,7 +74,6 @@ export class LecturerManageModulesComponent implements OnInit {
   ngOnInit() {
     this.currentUser = this.authService.getCurrentUser();
     this.loadLecturerSubjects();
-    this.loadModules();
   }
 
   async loadLecturerSubjects() {
@@ -90,8 +89,13 @@ export class LecturerManageModulesComponent implements OnInit {
       if (response && response.success) {
         this.lecturerSubjects = Array.isArray(response.data) ? response.data : [response.data];
       }
+      
+      // Load modules after subjects are fetched
+      this.loadModules();
     } catch (error) {
       console.error('Failed to load lecturer subjects', error);
+      // Still try to load modules even if subjects fail
+      this.loadModules();
     }
   }
 
