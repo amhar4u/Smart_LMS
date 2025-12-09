@@ -42,6 +42,8 @@ export class SubjectDialogComponent implements OnInit {
   courses: Course[] = [];
   batches: Batch[] = [];
   semesters: Semester[] = [];
+  createdSubjects: any[] = []; // Track created subjects in batch mode
+  isAddingMore: boolean = false; // Flag to track if we're adding more subjects
 
   constructor(
     private fb: FormBuilder,
@@ -207,7 +209,7 @@ export class SubjectDialogComponent implements OnInit {
     }
   }
 
-  async onSubmit() {
+  async onSubmit(closeDialog: boolean = true) {
     if (this.form.valid) {
       this.loadingService.show();
       
@@ -235,7 +237,21 @@ export class SubjectDialogComponent implements OnInit {
         }
 
         if (response?.success) {
-          this.dialogRef.close(response.data);
+          // Add to created subjects list
+          this.createdSubjects.push(response.data);
+          
+          this.snackBar.open('Subject created successfully!', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+
+          if (closeDialog) {
+            // Close dialog with all created subjects
+            this.dialogRef.close(this.createdSubjects.length > 0 ? this.createdSubjects : response.data);
+          } else {
+            // Reset only subject-specific fields, keep common fields
+            this.resetSubjectFields();
+          }
         } else {
           this.showError(response?.message || 'Operation failed');
         }
@@ -248,6 +264,40 @@ export class SubjectDialogComponent implements OnInit {
     } else {
       this.markFormGroupTouched();
     }
+  }
+
+  resetSubjectFields() {
+    // Keep common fields (department, course, batch, semester)
+    // Reset only subject-specific fields
+    this.form.patchValue({
+      name: '',
+      code: '',
+      creditHours: '',
+      lecturerId: '',
+      description: ''
+    });
+
+    // Mark subject-specific fields as untouched
+    this.form.get('name')?.markAsUntouched();
+    this.form.get('code')?.markAsUntouched();
+    this.form.get('creditHours')?.markAsUntouched();
+    this.form.get('lecturerId')?.markAsUntouched();
+    this.form.get('description')?.markAsUntouched();
+
+    // Focus on name field
+    setTimeout(() => {
+      const nameInput = document.querySelector('input[formControlName="name"]') as HTMLElement;
+      nameInput?.focus();
+    }, 100);
+  }
+
+  onAddAnother() {
+    this.isAddingMore = true;
+    this.onSubmit(false); // Save but don't close dialog
+  }
+
+  onSubmitAndClose() {
+    this.onSubmit(true); // Save and close dialog
   }
 
   markFormGroupTouched() {

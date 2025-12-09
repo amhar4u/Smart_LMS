@@ -1,9 +1,17 @@
 <div class="dialog-container">
   <div class="dialog-header">
-    <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'edit' }}</mat-icon>
-      {{ dialogTitle }}
-    </h2>
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>{{ data.mode === 'create' ? 'library_add' : 'edit_note' }}</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 mat-dialog-title>{{ dialogTitle }}</h2>
+        <p class="header-subtitle" *ngIf="data.mode === 'create'">Add learning materials and resources for students</p>
+      </div>
+    </div>
+    <button mat-icon-button mat-dialog-close class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
   <mat-dialog-content class="dialog-content">
@@ -306,14 +314,18 @@
   </mat-dialog-content>
 
   <mat-dialog-actions class="dialog-actions">
-    <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
-      <mat-icon>cancel</mat-icon>
-      Cancel
-    </button>
-    <button mat-raised-button color="primary" (click)="onSubmit()" 
-            [disabled]="moduleForm.invalid || loading">
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'save' }}</mat-icon>
-      {{ submitButtonText }}
-    </button>
+    <div class="left-actions">
+      <button mat-stroked-button type="button" (click)="onCancel()" [disabled]="loading">
+        <mat-icon>close</mat-icon>
+        Cancel
+      </button>
+    </div>
+    <div class="right-actions">
+      <button mat-raised-button color="primary" (click)="onSubmit()" 
+              [disabled]="moduleForm.invalid || loading">
+        <mat-icon>{{ data.mode === 'create' ? 'add_circle' : 'save' }}</mat-icon>
+        {{ submitButtonText }}
+      </button>
+    </div>
   </mat-dialog-actions>
 </div>

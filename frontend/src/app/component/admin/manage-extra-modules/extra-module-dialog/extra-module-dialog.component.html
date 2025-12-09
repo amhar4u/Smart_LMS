@@ -1,65 +1,96 @@
 <div class="dialog-container">
   <div class="dialog-header">
-    <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'edit' }}</mat-icon>
-      {{ dialogTitle }}
-    </h2>
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>{{ data.mode === 'create' ? 'add_box' : 'edit_note' }}</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 mat-dialog-title>{{ dialogTitle }}</h2>
+        <p class="header-subtitle" *ngIf="data.mode === 'create'">Create supplementary learning materials for students</p>
+      </div>
+    </div>
+    <button mat-icon-button mat-dialog-close class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
   <mat-dialog-content class="dialog-content">
     <form [formGroup]="extraModuleForm" class="extra-module-form">
-      <!-- Basic Information -->
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Module Title *</mat-label>
-          <input matInput formControlName="title" placeholder="Enter module title">
-          <mat-error>{{ getErrorMessage('title') }}</mat-error>
-        </mat-form-field>
+      
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>info</mat-icon>
+          <h3>Basic Information</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Module Title</mat-label>
+            <mat-icon matPrefix>title</mat-icon>
+            <input matInput formControlName="title" placeholder="Enter module title">
+            <mat-error>{{ getErrorMessage('title') }}</mat-error>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Module Name *</mat-label>
-          <input matInput formControlName="name" placeholder="Enter module name">
-          <mat-error>{{ getErrorMessage('name') }}</mat-error>
-        </mat-form-field>
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Module Name</mat-label>
+            <mat-icon matPrefix>label</mat-icon>
+            <input matInput formControlName="name" placeholder="Enter module name">
+            <mat-error>{{ getErrorMessage('name') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Module Code</mat-label>
+            <mat-icon matPrefix>tag</mat-icon>
+            <input matInput formControlName="code" placeholder="Enter module code" style="text-transform: uppercase;">
+            <mat-error>{{ getErrorMessage('code') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Order</mat-label>
+            <mat-icon matPrefix>sort</mat-icon>
+            <input matInput formControlName="order" type="number" min="1" placeholder="Enter module order">
+            <mat-error>{{ getErrorMessage('order') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Description</mat-label>
+            <mat-icon matPrefix>description</mat-icon>
+            <textarea matInput formControlName="description" rows="3" placeholder="Enter module description"></textarea>
+            <mat-error>{{ getErrorMessage('description') }}</mat-error>
+          </mat-form-field>
+        </div>
       </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Module Code *</mat-label>
-          <input matInput formControlName="code" placeholder="Enter module code" style="text-transform: uppercase;">
-          <mat-error>{{ getErrorMessage('code') }}</mat-error>
-        </mat-form-field>
+      <div class="divider"></div>
 
-        <mat-form-field appearance="outline" class="half-width">
-          <mat-label>Order *</mat-label>
-          <input matInput formControlName="order" type="number" min="1" placeholder="Enter module order">
-          <mat-error>{{ getErrorMessage('order') }}</mat-error>
-        </mat-form-field>
-      </div>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Description *</mat-label>
-        <textarea matInput formControlName="description" rows="3" placeholder="Enter module description"></textarea>
-        <mat-error>{{ getErrorMessage('description') }}</mat-error>
-      </mat-form-field>
-
-      <!-- Lecturer Mode: Subject Selection First -->
-      <ng-container *ngIf="data.lecturerId">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Subject *</mat-label>
-          <mat-select formControlName="subjectId" required (selectionChange)="onSubjectChange($event.value)">
-            <mat-option *ngFor="let subject of subjects" [value]="subject._id">
-              {{ subject.name }} ({{ subject.code }})
-            </mat-option>
-          </mat-select>
-          <mat-hint>Select your subject - other details will be auto-populated</mat-hint>
-          <mat-error>{{ getErrorMessage('subjectId') }}</mat-error>
-        </mat-form-field>
+      <!-- Lecturer Mode: Subject Selection -->
+      <div class="form-section" *ngIf="data.lecturerId">
+        <div class="section-header">
+          <mat-icon>book</mat-icon>
+          <h3>Subject Selection</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Subject</mat-label>
+            <mat-icon matPrefix>subject</mat-icon>
+            <mat-select formControlName="subjectId" required (selectionChange)="onSubjectChange($event.value)">
+              <mat-option *ngFor="let subject of subjects" [value]="subject._id">
+                {{ subject.name }} ({{ subject.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select your subject - other details will be auto-populated</mat-hint>
+            <mat-error>{{ getErrorMessage('subjectId') }}</mat-error>
+          </mat-form-field>
+        </div>
 
         <!-- Auto-populated Info Panel -->
         <div class="auto-populated-info" *ngIf="extraModuleForm.get('subjectId')?.value">
           <div class="info-header">
-            <mat-icon>info</mat-icon>
+            <mat-icon>auto_awesome</mat-icon>
             <h4>Auto-populated Information</h4>
           </div>
           <div class="info-grid">
@@ -81,90 +112,22 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Student Level Selection -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Student Level *</mat-label>
-          <mat-select formControlName="studentLevel" required>
-            <mat-option *ngFor="let level of studentLevels" [value]="level">
-              <div class="level-option">
-                <mat-icon [style.color]="getStudentLevelColor(level)">
-                  {{ level === 'Beginner' ? 'school' : level === 'Intermediate' ? 'trending_up' : level === 'Advanced' ? 'military_tech' : 'groups' }}
-                </mat-icon>
-                <span>{{ level }}</span>
-              </div>
-            </mat-option>
-          </mat-select>
-          <mat-hint>Select the appropriate difficulty level for students</mat-hint>
-          <mat-error>{{ getErrorMessage('studentLevel') }}</mat-error>
-        </mat-form-field>
-      </ng-container>
+      <div class="divider" *ngIf="data.lecturerId"></div>
 
-      <!-- Admin Mode: Hierarchical Selection -->
-      <ng-container *ngIf="!data.lecturerId">
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Department *</mat-label>
-            <mat-select formControlName="department" required (selectionChange)="onDepartmentChange($event.value)">
-              <mat-option *ngFor="let department of departments" [value]="department._id">
-                {{ department.name }} ({{ department.code }})
-              </mat-option>
-            </mat-select>
-            <mat-hint>Select department to filter courses</mat-hint>
-            <mat-error>{{ getErrorMessage('department') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Course *</mat-label>
-            <mat-select formControlName="course" required (selectionChange)="onCourseChange($event.value)" [disabled]="!courses.length">
-              <mat-option *ngFor="let course of courses" [value]="course._id">
-                {{ course.name }} ({{ course.code }})
-              </mat-option>
-            </mat-select>
-            <mat-hint>Select course to filter batches</mat-hint>
-            <mat-error>{{ getErrorMessage('course') }}</mat-error>
-          </mat-form-field>
+      <!-- Student Level Section (Lecturer Mode) -->
+      <div class="form-section" *ngIf="data.lecturerId">
+        <div class="section-header">
+          <mat-icon>trending_up</mat-icon>
+          <h3>Difficulty Level</h3>
+          <span class="required-badge">Required</span>
         </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Batch *</mat-label>
-            <mat-select formControlName="batch" required (selectionChange)="onBatchChange($event.value)" [disabled]="!batches.length">
-              <mat-option *ngFor="let batch of batches" [value]="batch._id">
-                {{ batch.name }} ({{ batch.code }})
-              </mat-option>
-            </mat-select>
-            <mat-hint>Select batch to filter semesters</mat-hint>
-            <mat-error>{{ getErrorMessage('batch') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Semester *</mat-label>
-            <mat-select formControlName="semester" required (selectionChange)="onSemesterChange($event.value)" [disabled]="!semesters.length">
-              <mat-option *ngFor="let semester of semesters" [value]="semester._id">
-                {{ semester.name }} - {{ semester.year }}
-              </mat-option>
-            </mat-select>
-            <mat-hint>Select semester to filter subjects</mat-hint>
-            <mat-error>{{ getErrorMessage('semester') }}</mat-error>
-          </mat-form-field>
-        </div>
-
-        <!-- Subject and Student Level Selection -->
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Subject *</mat-label>
-            <mat-select formControlName="subjectId" required [disabled]="!subjects.length">
-              <mat-option *ngFor="let subject of subjects" [value]="subject._id">
-                {{ subject.name }} ({{ subject.code }})
-              </mat-option>
-            </mat-select>
-            <mat-hint>Subject filtered by semester selection</mat-hint>
-            <mat-error>{{ getErrorMessage('subjectId') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Student Level *</mat-label>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Student Level</mat-label>
+            <mat-icon matPrefix>school</mat-icon>
             <mat-select formControlName="studentLevel" required>
               <mat-option *ngFor="let level of studentLevels" [value]="level">
                 <div class="level-option">
@@ -179,27 +142,141 @@
             <mat-error>{{ getErrorMessage('studentLevel') }}</mat-error>
           </mat-form-field>
         </div>
-      </ng-container>
+      </div>
 
-      <div class="checkbox-container">
-        <mat-checkbox formControlName="isActive" color="primary">
-          Active Module
-        </mat-checkbox>
-        <div class="checkbox-hint">
-          Inactive modules will not be visible to students
+      <div class="divider" *ngIf="data.lecturerId"></div>
+
+      <!-- Admin Mode: Academic Structure -->
+      <div class="form-section" *ngIf="!data.lecturerId">
+        <div class="section-header">
+          <mat-icon>account_tree</mat-icon>
+          <h3>Academic Structure</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Department</mat-label>
+            <mat-icon matPrefix>business</mat-icon>
+            <mat-select formControlName="department" required (selectionChange)="onDepartmentChange($event.value)">
+              <mat-option *ngFor="let department of departments" [value]="department._id">
+                {{ department.name }} ({{ department.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select department to filter courses</mat-hint>
+            <mat-error>{{ getErrorMessage('department') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Course</mat-label>
+            <mat-icon matPrefix>menu_book</mat-icon>
+            <mat-select formControlName="course" required (selectionChange)="onCourseChange($event.value)" [disabled]="!courses.length">
+              <mat-option *ngFor="let course of courses" [value]="course._id">
+                {{ course.name }} ({{ course.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!extraModuleForm.get('department')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select department first
+            </mat-hint>
+            <mat-error>{{ getErrorMessage('course') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Batch</mat-label>
+            <mat-icon matPrefix>groups</mat-icon>
+            <mat-select formControlName="batch" required (selectionChange)="onBatchChange($event.value)" [disabled]="!batches.length">
+              <mat-option *ngFor="let batch of batches" [value]="batch._id">
+                {{ batch.name }} ({{ batch.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!extraModuleForm.get('course')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select course first
+            </mat-hint>
+            <mat-error>{{ getErrorMessage('batch') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Semester</mat-label>
+            <mat-icon matPrefix>event_note</mat-icon>
+            <mat-select formControlName="semester" required (selectionChange)="onSemesterChange($event.value)" [disabled]="!semesters.length">
+              <mat-option *ngFor="let semester of semesters" [value]="semester._id">
+                {{ semester.name }} - {{ semester.year }}
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!extraModuleForm.get('batch')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select batch first
+            </mat-hint>
+            <mat-error>{{ getErrorMessage('semester') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Subject</mat-label>
+            <mat-icon matPrefix>subject</mat-icon>
+            <mat-select formControlName="subjectId" required [disabled]="!subjects.length">
+              <mat-option *ngFor="let subject of subjects" [value]="subject._id">
+                {{ subject.name }} ({{ subject.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!extraModuleForm.get('semester')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select semester first
+            </mat-hint>
+            <mat-error>{{ getErrorMessage('subjectId') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Student Level</mat-label>
+            <mat-icon matPrefix>school</mat-icon>
+            <mat-select formControlName="studentLevel" required>
+              <mat-option *ngFor="let level of studentLevels" [value]="level">
+                <div class="level-option">
+                  <mat-icon [style.color]="getStudentLevelColor(level)">
+                    {{ level === 'Beginner' ? 'school' : level === 'Intermediate' ? 'trending_up' : level === 'Advanced' ? 'military_tech' : 'groups' }}
+                  </mat-icon>
+                  <span>{{ level }}</span>
+                </div>
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select the appropriate difficulty level</mat-hint>
+            <mat-error>{{ getErrorMessage('studentLevel') }}</mat-error>
+          </mat-form-field>
         </div>
       </div>
 
-      <mat-divider></mat-divider>
+      <div class="divider" *ngIf="!data.lecturerId"></div>
+
+      <!-- Module Status Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>settings</mat-icon>
+          <h3>Module Status</h3>
+        </div>
+        
+        <div class="status-checkbox">
+          <mat-checkbox formControlName="isActive" color="primary">
+            <div class="checkbox-content">
+              <strong>Active Module</strong>
+              <span>Inactive modules will not be visible to students</span>
+            </div>
+          </mat-checkbox>
+        </div>
+      </div>
+
+      <div class="divider"></div>
 
       <!-- File Upload Sections -->
-      <div class="upload-sections">
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>cloud_upload</mat-icon>
+          <h3>Learning Materials</h3>
+          <span class="required-badge">Documents Required</span>
+        </div>
+        
         <!-- Documents Upload -->
-        <div class="upload-section">
-          <h3 class="section-title">
-            <mat-icon>description</mat-icon>
-            Documents (PDFs) *Required
-          </h3>
+        <div class="upload-subsection">
+          <div class="subsection-title">
+            <mat-icon>picture_as_pdf</mat-icon>
+            <h4>PDF Documents</h4>
+          </div>
           
           <!-- Existing Documents (Edit Mode) -->
           <div *ngIf="data.mode === 'edit' && data.extraModule?.documents?.length" class="existing-files">
@@ -266,14 +343,12 @@
           </div>
         </div>
 
-        <mat-divider></mat-divider>
-
         <!-- Video Upload -->
-        <div class="upload-section">
-          <h3 class="section-title">
+        <div class="upload-subsection">
+          <div class="subsection-title">
             <mat-icon>videocam</mat-icon>
-            Video (Optional)
-          </h3>
+            <h4>Video Content (Optional)</h4>
+          </div>
           
           <!-- Existing Video (Edit Mode) -->
           <div *ngIf="data.mode === 'edit' && data.extraModule?.video" class="existing-files">
@@ -341,22 +416,30 @@
       </div>
 
       <!-- Upload Progress -->
-      <div *ngIf="uploading" class="upload-progress">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-        <p>{{ submitButtonText }}</p>
+      <div *ngIf="uploading" class="upload-progress-section">
+        <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+        <div class="progress-text">
+          <mat-icon>cloud_upload</mat-icon>
+          <p>{{ submitButtonText }}</p>
+        </div>
       </div>
     </form>
   </mat-dialog-content>
 
   <mat-dialog-actions class="dialog-actions">
-    <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
-      <mat-icon>cancel</mat-icon>
-      Cancel
-    </button>
-    <button mat-raised-button color="primary" (click)="onSubmit()" 
-            [disabled]="extraModuleForm.invalid || loading">
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'save' }}</mat-icon>
-      {{ submitButtonText }}
-    </button>
+    <div class="left-actions">
+      <button mat-stroked-button type="button" (click)="onCancel()" [disabled]="loading">
+        <mat-icon>close</mat-icon>
+        Cancel
+      </button>
+    </div>
+    <div class="right-actions">
+      <button mat-raised-button color="primary" (click)="onSubmit()" 
+              [disabled]="extraModuleForm.invalid || loading">
+        <mat-spinner *ngIf="loading" diameter="20" class="button-spinner"></mat-spinner>
+        <mat-icon *ngIf="!loading">{{ data.mode === 'create' ? 'add_circle' : 'save' }}</mat-icon>
+        {{ submitButtonText }}
+      </button>
+    </div>
   </mat-dialog-actions>
 </div>

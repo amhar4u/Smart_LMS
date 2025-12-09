@@ -1,26 +1,68 @@
-.batch-dialog {
-  min-width: 600px;
-  max-width: 800px;
+.dialog-container {
+  max-width: 700px;
+  width: 100%;
 }
 
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
-.dialog-header h2 {
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-icon mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.header-text h2 {
   margin: 0;
-  font-weight: 500;
-  color: #1976d2;
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+}
+
+.header-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.close-button {
+  color: white !important;
+}
+
+.close-button mat-icon {
+  color: white;
 }
 
 .dialog-content {
-  padding: 24px;
-  max-height: 70vh;
+  padding: 24px !important;
+  max-height: 65vh;
   overflow-y: auto;
+  background: #f8f9fa;
 }
 
 .loading-container {
@@ -40,31 +82,109 @@
 .batch-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.form-row {
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.form-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.section-header {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
-.form-row.two-columns {
+.section-header mat-icon {
+  color: #667eea;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+
+.required-badge {
+  background: #fef3e2;
+  color: #f59e0b;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
-.full-width {
+.form-field {
   width: 100%;
 }
 
-.dialog-actions {
-  padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+  margin: 8px 0;
+}
+
+.info-hint {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+  font-size: 12px;
+}
+
+.info-hint mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 24px !important;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.left-actions, .right-actions {
+  display: flex;
   gap: 12px;
+}
+
+.dialog-actions button {
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .button-spinner {
@@ -120,30 +240,66 @@
   min-width: 100px;
 }
 
+::ng-deep .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  background: #fafafa;
+}
+
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  background: white;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
-  .batch-dialog {
-    min-width: 95vw;
-    max-width: 95vw;
+  .dialog-header {
+    padding: 20px 16px;
   }
-  
-  .form-row.two-columns {
-    grid-template-columns: 1fr;
+
+  .header-content {
     gap: 12px;
+  }
+
+  .header-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-icon mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .header-text h2 {
+    font-size: 18px;
+  }
+
+  .header-subtitle {
+    font-size: 12px;
   }
   
   .dialog-content {
+    padding: 16px !important;
+  }
+
+  .form-section {
     padding: 16px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
   
   .dialog-actions {
-    padding: 12px 16px;
-    flex-direction: column-reverse;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .left-actions, .right-actions {
+    width: 100%;
   }
   
   .dialog-actions button {
     width: 100%;
-    margin: 4px 0;
   }
 }
 

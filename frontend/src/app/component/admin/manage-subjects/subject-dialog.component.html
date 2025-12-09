@@ -1,10 +1,17 @@
 <div class="dialog-container">
   <div class="dialog-header">
-    <h2 mat-dialog-title>
-      <mat-icon>{{ isEdit ? 'edit' : (data.mode === 'duplicate' ? 'content_copy' : 'add') }}</mat-icon>
-      {{ isEdit ? 'Edit Subject' : (data.mode === 'duplicate' ? 'Duplicate Subject' : 'Create New Subject') }}
-    </h2>
-    <button mat-icon-button mat-dialog-close>
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>{{ isEdit ? 'edit' : (data.mode === 'duplicate' ? 'content_copy' : 'school') }}</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 mat-dialog-title>
+          {{ isEdit ? 'Edit Subject' : (data.mode === 'duplicate' ? 'Duplicate Subject' : 'Create New Subject') }}
+        </h2>
+        <p class="header-subtitle" *ngIf="!isEdit">Fill in the details to add subjects to your curriculum</p>
+      </div>
+    </div>
+    <button mat-icon-button mat-dialog-close class="close-button">
       <mat-icon>close</mat-icon>
     </button>
   </div>
@@ -12,154 +19,214 @@
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="subject-form">
     <div mat-dialog-content class="dialog-content">
       
-      <!-- Subject Name -->
-      <mat-form-field class="full-width">
-        <mat-label>Subject Name *</mat-label>
-        <input matInput 
-               formControlName="name" 
-               placeholder="Enter subject name"
-               maxlength="100">
-        <mat-error *ngIf="form.get('name')?.touched && form.get('name')?.errors">
-          {{ getErrorMessage('name') }}
-        </mat-error>
-      </mat-form-field>
+      <!-- Common Fields Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>business</mat-icon>
+          <h3>Academic Structure</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Department -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Department</mat-label>
+            <mat-icon matPrefix>business</mat-icon>
+            <mat-select formControlName="departmentId" (selectionChange)="onDepartmentChange()">
+              <mat-option value="">Select Department</mat-option>
+              <mat-option *ngFor="let department of data.departments" [value]="department._id">
+                {{ department.name }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('departmentId')?.touched && form.get('departmentId')?.errors">
+              {{ getErrorMessage('departmentId') }}
+            </mat-error>
+          </mat-form-field>
 
-      <!-- Subject Code -->
-      <mat-form-field class="full-width">
-        <mat-label>Subject Code *</mat-label>
-        <input matInput 
-               formControlName="code" 
-               placeholder="Enter subject code (e.g., CS101)"
-               maxlength="10"
-               style="text-transform: uppercase;">
-        <mat-error *ngIf="form.get('code')?.touched && form.get('code')?.errors">
-          {{ getErrorMessage('code') }}
-        </mat-error>
-      </mat-form-field>
+          <!-- Course -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Course</mat-label>
+            <mat-icon matPrefix>menu_book</mat-icon>
+            <mat-select formControlName="courseId" [disabled]="!form.get('departmentId')?.value" (selectionChange)="onCourseChange()">
+              <mat-option value="">Select Course</mat-option>
+              <mat-option *ngFor="let course of courses" [value]="course._id">
+                {{ course.name }} ({{ course.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!form.get('departmentId')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select department first
+            </mat-hint>
+            <mat-error *ngIf="form.get('courseId')?.touched && form.get('courseId')?.errors">
+              {{ getErrorMessage('courseId') }}
+            </mat-error>
+          </mat-form-field>
 
-      <!-- Department -->
-      <mat-form-field class="full-width">
-        <mat-label>Department *</mat-label>
-        <mat-select formControlName="departmentId" (selectionChange)="onDepartmentChange()">
-          <mat-option value="">Select Department</mat-option>
-          <mat-option *ngFor="let department of data.departments" [value]="department._id">
-            {{ department.name }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('departmentId')?.touched && form.get('departmentId')?.errors">
-          {{ getErrorMessage('departmentId') }}
-        </mat-error>
-      </mat-form-field>
+          <!-- Batch -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Batch</mat-label>
+            <mat-icon matPrefix>group</mat-icon>
+            <mat-select formControlName="batchId" [disabled]="!form.get('courseId')?.value" (selectionChange)="onBatchChange()">
+              <mat-option value="">Select Batch</mat-option>
+              <mat-option *ngFor="let batch of batches" [value]="batch._id">
+                {{ batch.name }} ({{ batch.startYear }}-{{ batch.endYear }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!form.get('courseId')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select course first
+            </mat-hint>
+            <mat-error *ngIf="form.get('batchId')?.touched && form.get('batchId')?.errors">
+              {{ getErrorMessage('batchId') }}
+            </mat-error>
+          </mat-form-field>
 
-      <!-- Course -->
-      <mat-form-field class="full-width">
-        <mat-label>Course *</mat-label>
-        <mat-select formControlName="courseId" [disabled]="!form.get('departmentId')?.value" (selectionChange)="onCourseChange()">
-          <mat-option value="">Select Course</mat-option>
-          <mat-option *ngFor="let course of courses" [value]="course._id">
-            {{ course.name }} ({{ course.code }})
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('courseId')?.touched && form.get('courseId')?.errors">
-          {{ getErrorMessage('courseId') }}
-        </mat-error>
-        <mat-hint *ngIf="!form.get('departmentId')?.value">
-          Please select a department first
-        </mat-hint>
-      </mat-form-field>
+          <!-- Semester -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Semester</mat-label>
+            <mat-icon matPrefix>calendar_today</mat-icon>
+            <mat-select formControlName="semesterId" [disabled]="!form.get('batchId')?.value">
+              <mat-option value="">Select Semester</mat-option>
+              <mat-option *ngFor="let semester of semesters" [value]="semester._id">
+                {{ semester.name }} ({{ semester.year }} - {{ semester.type | titlecase }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!form.get('batchId')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select batch first
+            </mat-hint>
+            <mat-error *ngIf="form.get('semesterId')?.touched && form.get('semesterId')?.errors">
+              {{ getErrorMessage('semesterId') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
 
-      <!-- Batch -->
-      <mat-form-field class="full-width">
-        <mat-label>Batch *</mat-label>
-        <mat-select formControlName="batchId" [disabled]="!form.get('courseId')?.value" (selectionChange)="onBatchChange()">
-          <mat-option value="">Select Batch</mat-option>
-          <mat-option *ngFor="let batch of batches" [value]="batch._id">
-            {{ batch.name }} ({{ batch.startYear }}-{{ batch.endYear }})
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('batchId')?.touched && form.get('batchId')?.errors">
-          {{ getErrorMessage('batchId') }}
-        </mat-error>
-        <mat-hint *ngIf="!form.get('courseId')?.value">
-          Please select a course first
-        </mat-hint>
-      </mat-form-field>
+      <div class="divider"></div>
 
-      <!-- Semester -->
-      <mat-form-field class="full-width">
-        <mat-label>Semester *</mat-label>
-        <mat-select formControlName="semesterId" [disabled]="!form.get('batchId')?.value">
-          <mat-option value="">Select Semester</mat-option>
-          <mat-option *ngFor="let semester of semesters" [value]="semester._id">
-            {{ semester.name }} ({{ semester.year }} - {{ semester.type | titlecase }})
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('semesterId')?.touched && form.get('semesterId')?.errors">
-          {{ getErrorMessage('semesterId') }}
-        </mat-error>
-        <mat-hint *ngIf="!form.get('batchId')?.value">
-          Please select a batch first
-        </mat-hint>
-      </mat-form-field>
+      <!-- Subject Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>auto_stories</mat-icon>
+          <h3>Subject Details</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Subject Name -->
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Subject Name</mat-label>
+            <mat-icon matPrefix>subject</mat-icon>
+            <input matInput 
+                   formControlName="name" 
+                   placeholder="e.g., Data Structures & Algorithms"
+                   maxlength="100">
+            <mat-error *ngIf="form.get('name')?.touched && form.get('name')?.errors">
+              {{ getErrorMessage('name') }}
+            </mat-error>
+          </mat-form-field>
 
-      <!-- Credit Hours -->
-      <mat-form-field class="full-width">
-        <mat-label>Credit Hours *</mat-label>
-        <input matInput 
-               type="number" 
-               formControlName="creditHours" 
-               placeholder="Enter credit hours"
-               min="1"
-               max="10">
-        <mat-error *ngIf="form.get('creditHours')?.touched && form.get('creditHours')?.errors">
-          {{ getErrorMessage('creditHours') }}
-        </mat-error>
-      </mat-form-field>
+          <!-- Subject Code -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Subject Code</mat-label>
+            <mat-icon matPrefix>tag</mat-icon>
+            <input matInput 
+                   formControlName="code" 
+                   placeholder="e.g., CS101"
+                   maxlength="10"
+                   style="text-transform: uppercase;">
+            <mat-error *ngIf="form.get('code')?.touched && form.get('code')?.errors">
+              {{ getErrorMessage('code') }}
+            </mat-error>
+          </mat-form-field>
 
-      <!-- Lecturer -->
-      <mat-form-field class="full-width">
-        <mat-label>Lecturer *</mat-label>
-        <mat-select formControlName="lecturerId">
-          <mat-option value="">Select Lecturer</mat-option>
-          <mat-option *ngFor="let lecturer of data.lecturers" [value]="lecturer._id">
-            {{ lecturer.firstName }} {{ lecturer.lastName }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="form.get('lecturerId')?.touched && form.get('lecturerId')?.errors">
-          {{ getErrorMessage('lecturerId') }}
-        </mat-error>
-      </mat-form-field>
+          <!-- Credit Hours -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Credit Hours</mat-label>
+            <mat-icon matPrefix>schedule</mat-icon>
+            <input matInput 
+                   type="number" 
+                   formControlName="creditHours" 
+                   placeholder="1-10"
+                   min="1"
+                   max="10">
+            <mat-error *ngIf="form.get('creditHours')?.touched && form.get('creditHours')?.errors">
+              {{ getErrorMessage('creditHours') }}
+            </mat-error>
+          </mat-form-field>
 
-      <!-- Description -->
-      <mat-form-field class="full-width">
-        <mat-label>Description</mat-label>
-        <textarea matInput 
-                  formControlName="description" 
-                  placeholder="Enter subject description"
-                  rows="3"
-                  maxlength="500">
-        </textarea>
-        <mat-hint align="end">
-          {{ form.get('description')?.value?.length || 0 }}/500
-        </mat-hint>
-        <mat-error *ngIf="form.get('description')?.touched && form.get('description')?.errors">
-          {{ getErrorMessage('description') }}
-        </mat-error>
-      </mat-form-field>
+          <!-- Lecturer -->
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Assign Lecturer</mat-label>
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-select formControlName="lecturerId">
+              <mat-option value="">Select Lecturer</mat-option>
+              <mat-option *ngFor="let lecturer of data.lecturers" [value]="lecturer._id">
+                <div class="lecturer-option">
+                  <mat-icon>account_circle</mat-icon>
+                  <span>{{ lecturer.firstName }} {{ lecturer.lastName }}</span>
+                </div>
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('lecturerId')?.touched && form.get('lecturerId')?.errors">
+              {{ getErrorMessage('lecturerId') }}
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Description -->
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Description (Optional)</mat-label>
+            <mat-icon matPrefix>description</mat-icon>
+            <textarea matInput 
+                      formControlName="description" 
+                      placeholder="Brief description of the subject..."
+                      rows="3"
+                      maxlength="500">
+            </textarea>
+            <mat-hint align="end">
+              {{ form.get('description')?.value?.length || 0 }}/500
+            </mat-hint>
+            <mat-error *ngIf="form.get('description')?.touched && form.get('description')?.errors">
+              {{ getErrorMessage('description') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
 
     </div>
 
     <div mat-dialog-actions class="dialog-actions">
-      <button mat-stroked-button type="button" (click)="onCancel()">
-        Cancel
-      </button>
-      <button mat-raised-button 
-              color="primary" 
-              type="submit"
-              [disabled]="form.invalid">
-        <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
-        {{ isEdit ? 'Update Subject' : 'Create Subject' }}
-      </button>
+      <div class="left-actions">
+        <button mat-stroked-button type="button" (click)="onCancel()">
+          <mat-icon>close</mat-icon>
+          Cancel
+        </button>
+      </div>
+      
+      <div class="right-actions">
+        <!-- Show "Add Another" button only in create mode -->
+        <button *ngIf="!isEdit" 
+                mat-raised-button 
+                color="accent"
+                type="button"
+                (click)="onAddAnother()"
+                [disabled]="form.invalid">
+          <mat-icon>add_circle_outline</mat-icon>
+          Add Another Subject
+        </button>
+        
+        <button mat-raised-button 
+                color="primary" 
+                type="button"
+                (click)="onSubmitAndClose()"
+                [disabled]="form.invalid">
+          <mat-icon>{{ isEdit ? 'save' : 'check' }}</mat-icon>
+          {{ isEdit ? 'Update Subject' : (createdSubjects.length > 0 ? 'Submit All' : 'Submit') }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Show count of created subjects -->
+    <div *ngIf="!isEdit && createdSubjects.length > 0" class="created-count">
+      <mat-icon>check_circle</mat-icon>
+      {{ createdSubjects.length }} subject(s) created
     </div>
   </form>
 </div>

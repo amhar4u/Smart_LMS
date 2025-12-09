@@ -1,0 +1,289 @@
+<div class="dialog-container">
+  <!-- Dialog Header -->
+  <div class="dialog-header">
+    <div class="header-content">
+      <div class="icon-wrapper">
+        <mat-icon class="header-icon">assignment</mat-icon>
+      </div>
+      <div class="title-wrapper">
+        <h2 mat-dialog-title>{{ data?.assignment ? 'Edit Assignment' : 'Create New Assignment' }}</h2>
+        <p class="subtitle">Configure assignment details and generate AI-powered questions</p>
+      </div>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Dialog Content -->
+  <div mat-dialog-content class="dialog-content">
+    <form [formGroup]="assignmentForm">
+      <mat-tab-group [(selectedIndex)]="selectedTab" class="assignment-tabs">
+        <!-- Assignment Details Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">edit</mat-icon>
+            Assignment Details
+          </ng-template>
+
+          <div class="tab-content">
+            <!-- Basic Information -->
+            <div class="form-section">
+              <h3><mat-icon>info</mat-icon> Basic Information</h3>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Assignment Title</mat-label>
+                <input matInput formControlName="title" placeholder="Enter assignment title">
+                <mat-icon matPrefix>title</mat-icon>
+                <mat-error>{{ getFormError('title') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="3" 
+                          placeholder="Describe the assignment"></textarea>
+                <mat-icon matPrefix>description</mat-icon>
+                <mat-error>{{ getFormError('description') }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- Academic Information -->
+            <div class="form-section">
+              <h3><mat-icon>school</mat-icon> Academic Information</h3>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Department</mat-label>
+                  <mat-select formControlName="department">
+                    <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                      {{ dept.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>business</mat-icon>
+                  <mat-error>{{ getFormError('department') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Course</mat-label>
+                  <mat-select formControlName="course">
+                    <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
+                      {{ course.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>menu_book</mat-icon>
+                  <mat-error>{{ getFormError('course') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Batch</mat-label>
+                  <mat-select formControlName="batch">
+                    <mat-option *ngFor="let batch of filteredBatches" [value]="batch._id">
+                      {{ batch.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>groups</mat-icon>
+                  <mat-error>{{ getFormError('batch') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Semester</mat-label>
+                  <mat-select formControlName="semester">
+                    <mat-option *ngFor="let semester of filteredSemesters" [value]="semester._id">
+                      {{ semester.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>event_note</mat-icon>
+                  <mat-error>{{ getFormError('semester') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Subject</mat-label>
+                <mat-select formControlName="subject">
+                  <mat-option *ngFor="let subject of filteredSubjects" [value]="subject._id">
+                    {{ subject.name }}
+                  </mat-option>
+                </mat-select>
+                <mat-icon matPrefix>subject</mat-icon>
+                <mat-error>{{ getFormError('subject') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Modules</mat-label>
+                <mat-select formControlName="modules" multiple>
+                  <mat-option *ngFor="let module of filteredModules" [value]="module._id">
+                    {{ module.title }}
+                  </mat-option>
+                </mat-select>
+                <mat-icon matPrefix>library_books</mat-icon>
+                <mat-error>{{ getFormError('modules') }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- Assignment Configuration -->
+            <div class="form-section">
+              <h3><mat-icon>settings</mat-icon> Assignment Configuration</h3>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Assignment Level</mat-label>
+                  <mat-select formControlName="assignmentLevel">
+                    <mat-option *ngFor="let level of assignmentLevels" [value]="level.value">
+                      {{ level.label }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>grade</mat-icon>
+                  <mat-error>{{ getFormError('assignmentLevel') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Assignment Type</mat-label>
+                  <mat-select formControlName="assignmentType">
+                    <mat-option *ngFor="let type of assignmentTypes" [value]="type.value">
+                      {{ type.label }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>quiz</mat-icon>
+                  <mat-error>{{ getFormError('assignmentType') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Number of Questions</mat-label>
+                  <input matInput type="number" formControlName="numberOfQuestions" min="1" max="100">
+                  <mat-icon matPrefix>format_list_numbered</mat-icon>
+                  <mat-error>{{ getFormError('numberOfQuestions') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Due Date</mat-label>
+                  <input matInput [matDatepicker]="picker" formControlName="dueDate">
+                  <mat-icon matPrefix>calendar_today</mat-icon>
+                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                  <mat-error>{{ getFormError('dueDate') }}</mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Content Source -->
+            <div class="form-section">
+              <h3><mat-icon>source</mat-icon> Question Generation Source</h3>
+              
+              <mat-radio-group formControlName="contentSource" class="radio-group">
+                <mat-radio-button value="module_name">Generate from module names</mat-radio-button>
+                <mat-radio-button value="module_content">Provide custom content</mat-radio-button>
+              </mat-radio-group>
+
+              <mat-form-field *ngIf="assignmentForm.get('contentSource')?.value === 'module_content'" 
+                              appearance="outline" class="full-width">
+                <mat-label>Module Content</mat-label>
+                <textarea matInput formControlName="moduleContent" rows="6" 
+                          placeholder="Paste or type the content for question generation"></textarea>
+                <mat-hint>This content will be used to generate assignment questions</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="tab-actions">
+              <button mat-raised-button color="primary" type="button" 
+                      (click)="previewQuestionsAction()"
+                      [disabled]="isPreviewingQuestions">
+                <mat-spinner *ngIf="isPreviewingQuestions" diameter="20"></mat-spinner>
+                <mat-icon *ngIf="!isPreviewingQuestions">preview</mat-icon>
+                {{ isPreviewingQuestions ? 'Generating...' : 'Generate & Preview Questions' }}
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Questions Preview Tab -->
+        <mat-tab [disabled]="previewQuestions.length === 0">
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">list</mat-icon>
+            Questions Preview
+            <span *ngIf="previewQuestions.length > 0" class="question-count-badge">
+              {{ previewQuestions.length }}
+            </span>
+          </ng-template>
+
+          <div class="tab-content">
+            <div *ngIf="previewQuestions.length === 0" class="no-questions">
+              <mat-icon>help_outline</mat-icon>
+              <p>No questions generated yet. Please generate questions from the previous tab.</p>
+            </div>
+
+            <div *ngIf="previewQuestions.length > 0" class="questions-preview">
+              <div class="preview-header">
+                <h3>Generated Questions ({{ previewQuestions.length }})</h3>
+                <p class="total-marks">Total Marks: {{ assignmentForm.get('maxMarks')?.value || 0 }}</p>
+              </div>
+
+              <mat-expansion-panel *ngFor="let question of previewQuestions; let i = index" 
+                                   class="question-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <span class="question-number">Q{{ i + 1 }}</span>
+                    <span class="question-type" [ngClass]="getQuestionTypeBadgeClass(question.type)">
+                      {{ question.type }}
+                    </span>
+                    <span class="question-marks">{{ question.marks }} mark(s)</span>
+                  </mat-panel-title>
+                  <mat-panel-description>
+                    {{ question.question.substring(0, 60) }}{{ question.question.length > 60 ? '...' : '' }}
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <div class="question-content">
+                  <div class="question-text">
+                    <strong>Question:</strong> {{ question.question }}
+                  </div>
+
+                  <!-- MCQ Options -->
+                  <div *ngIf="question.type === 'MCQ' && question.options" class="mcq-options">
+                    <div *ngFor="let option of question.options; let j = index" 
+                         class="option"
+                         [ngClass]="{ 'correct-option': option.isCorrect }">
+                      <span class="option-label">{{ getOptionLabel(j) }}.</span>
+                      <span class="option-text">{{ option.option }}</span>
+                      <mat-icon *ngIf="option.isCorrect" class="correct-icon">check_circle</mat-icon>
+                    </div>
+                  </div>
+
+                  <!-- Short Answer -->
+                  <div *ngIf="question.type === 'short_answer' && question.correctAnswer" 
+                       class="short-answer">
+                    <strong>Expected Answer:</strong> {{ question.correctAnswer }}
+                  </div>
+
+                  <!-- Essay -->
+                  <div *ngIf="question.type === 'essay' && question.maxWords" class="essay-info">
+                    <strong>Maximum Words:</strong> {{ question.maxWords }}
+                  </div>
+                </div>
+              </mat-expansion-panel>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </form>
+  </div>
+
+  <!-- Dialog Actions -->
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-stroked-button (click)="cancel()" class="cancel-btn">
+      <mat-icon>close</mat-icon>
+      Cancel
+    </button>
+    <button mat-raised-button color="primary" (click)="saveAssignment()" 
+            [disabled]="isLoading || previewQuestions.length === 0"
+            class="save-btn">
+      <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+      <mat-icon *ngIf="!isLoading">save</mat-icon>
+      {{ isLoading ? 'Saving...' : (data?.assignment ? 'Update Assignment' : 'Save Assignment') }}
+    </button>
+  </div>
+</div>

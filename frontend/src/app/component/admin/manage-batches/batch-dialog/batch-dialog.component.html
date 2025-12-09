@@ -1,7 +1,15 @@
-<div class="batch-dialog">
+<div class="dialog-container">
   <div class="dialog-header">
-    <h2 mat-dialog-title>{{ getTitle() }}</h2>
-    <button mat-icon-button mat-dialog-close>
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>{{ data.mode === 'create' ? 'group_add' : 'edit' }}</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 mat-dialog-title>{{ getTitle() }}</h2>
+        <p class="header-subtitle" *ngIf="data.mode === 'create'">Create a new student batch for your course</p>
+      </div>
+    </div>
+    <button mat-icon-button mat-dialog-close class="close-button">
       <mat-icon>close</mat-icon>
     </button>
   </div>
@@ -13,122 +21,166 @@
     </div>
 
     <form [formGroup]="batchForm" *ngIf="!isLoading" class="batch-form">
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Batch Name</mat-label>
-          <input matInput formControlName="name" placeholder="Enter batch name">
-          <mat-error *ngIf="nameControl?.hasError('required')">
-            Batch name is required
-          </mat-error>
-          <mat-error *ngIf="nameControl?.hasError('minlength')">
-            Batch name must be at least 2 characters
-          </mat-error>
-        </mat-form-field>
+      
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>info</mat-icon>
+          <h3>Basic Information</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Batch Name</mat-label>
+            <mat-icon matPrefix>label</mat-icon>
+            <input matInput formControlName="name" placeholder="e.g., Batch 2024-A">
+            <mat-error *ngIf="nameControl?.hasError('required')">
+              Batch name is required
+            </mat-error>
+            <mat-error *ngIf="nameControl?.hasError('minlength')">
+              Batch name must be at least 2 characters
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Batch Code</mat-label>
+            <mat-icon matPrefix>tag</mat-icon>
+            <input matInput formControlName="code" placeholder="e.g., 2024A">
+            <mat-hint>Code will be auto-generated from name</mat-hint>
+            <mat-error *ngIf="codeControl?.hasError('required')">
+              Batch code is required
+            </mat-error>
+            <mat-error *ngIf="codeControl?.hasError('pattern')">
+              Code must contain only uppercase letters and numbers
+            </mat-error>
+          </mat-form-field>
+        </div>
       </div>
 
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Batch Code</mat-label>
-          <input matInput formControlName="code" placeholder="Enter batch code">
-          <mat-hint>Code will be auto-generated from name</mat-hint>
-          <mat-error *ngIf="codeControl?.hasError('required')">
-            Batch code is required
-          </mat-error>
-          <mat-error *ngIf="codeControl?.hasError('pattern')">
-            Code must contain only uppercase letters and numbers
-          </mat-error>
-        </mat-form-field>
+      <div class="divider"></div>
+
+      <!-- Academic Structure Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>account_tree</mat-icon>
+          <h3>Academic Structure</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Department</mat-label>
+            <mat-icon matPrefix>business</mat-icon>
+            <mat-select formControlName="department">
+              <mat-option *ngFor="let dept of departments" [value]="dept._id">
+                {{ dept.name }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="departmentControl?.hasError('required')">
+              Department is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Course</mat-label>
+            <mat-icon matPrefix>menu_book</mat-icon>
+            <mat-select formControlName="course" [disabled]="!batchForm.get('department')?.value">
+              <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
+                {{ course.name }} ({{ course.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="!batchForm.get('department')?.value" class="info-hint">
+              <mat-icon>info</mat-icon> Select department first
+            </mat-hint>
+            <mat-error *ngIf="courseControl?.hasError('required')">
+              Course is required
+            </mat-error>
+          </mat-form-field>
+        </div>
       </div>
 
-      <div class="form-row two-columns">
-        <mat-form-field appearance="outline">
-          <mat-label>Department</mat-label>
-          <mat-select formControlName="department">
-            <mat-option *ngFor="let dept of departments" [value]="dept._id">
-              {{ dept.name }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="departmentControl?.hasError('required')">
-            Department is required
-          </mat-error>
-        </mat-form-field>
+      <div class="divider"></div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Course</mat-label>
-          <mat-select formControlName="course" [disabled]="!batchForm.get('department')?.value">
-            <mat-option *ngFor="let course of filteredCourses" [value]="course._id">
-              {{ course.name }} ({{ course.code }})
-            </mat-option>
-          </mat-select>
-          <mat-hint *ngIf="!batchForm.get('department')?.value">Please select a department first</mat-hint>
-          <mat-error *ngIf="courseControl?.hasError('required')">
-            Course is required
-          </mat-error>
-        </mat-form-field>
+      <!-- Duration & Capacity Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>schedule</mat-icon>
+          <h3>Duration & Capacity</h3>
+          <span class="required-badge">Required</span>
+        </div>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Start Year</mat-label>
+            <mat-icon matPrefix>event_available</mat-icon>
+            <mat-select formControlName="startYear">
+              <mat-option *ngFor="let year of yearOptions" [value]="year">
+                {{ year }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="startYearControl?.hasError('required')">
+              Start year is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>End Year</mat-label>
+            <mat-icon matPrefix>event_busy</mat-icon>
+            <mat-select formControlName="endYear">
+              <mat-option *ngFor="let year of yearOptions" [value]="year">
+                {{ year }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Auto-calculated as Start Year + 4</mat-hint>
+            <mat-error *ngIf="endYearControl?.hasError('required')">
+              End year is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Maximum Students</mat-label>
+            <mat-icon matPrefix>group</mat-icon>
+            <input matInput type="number" formControlName="maxStudents" placeholder="50">
+            <mat-hint>Maximum number of students allowed in this batch</mat-hint>
+            <mat-error *ngIf="maxStudentsControl?.hasError('required')">
+              Maximum students is required
+            </mat-error>
+            <mat-error *ngIf="maxStudentsControl?.hasError('min') || maxStudentsControl?.hasError('max')">
+              Must be between 1 and 200 students
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Description (Optional)</mat-label>
+            <mat-icon matPrefix>description</mat-icon>
+            <textarea matInput formControlName="description" placeholder="Brief description of the batch..." rows="3" maxlength="500"></textarea>
+            <mat-hint align="end">{{ batchForm.get('description')?.value?.length || 0 }}/500</mat-hint>
+          </mat-form-field>
+        </div>
       </div>
 
-      <div class="form-row two-columns">
-        <mat-form-field appearance="outline">
-          <mat-label>Start Year</mat-label>
-          <mat-select formControlName="startYear">
-            <mat-option *ngFor="let year of yearOptions" [value]="year">
-              {{ year }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="startYearControl?.hasError('required')">
-            Start year is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>End Year</mat-label>
-          <mat-select formControlName="endYear">
-            <mat-option *ngFor="let year of yearOptions" [value]="year">
-              {{ year }}
-            </mat-option>
-          </mat-select>
-          <mat-hint>Auto-calculated as Start Year + 4</mat-hint>
-          <mat-error *ngIf="endYearControl?.hasError('required')">
-            End year is required
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Maximum Students</mat-label>
-          <input matInput type="number" formControlName="maxStudents" placeholder="50">
-          <mat-hint>Maximum number of students allowed in this batch</mat-hint>
-          <mat-error *ngIf="maxStudentsControl?.hasError('required')">
-            Maximum students is required
-          </mat-error>
-          <mat-error *ngIf="maxStudentsControl?.hasError('min') || maxStudentsControl?.hasError('max')">
-            Must be between 1 and 200 students
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description</mat-label>
-          <textarea matInput formControlName="description" placeholder="Enter batch description (optional)" rows="3"></textarea>
-        </mat-form-field>
-      </div>
     </form>
   </div>
 
   <div mat-dialog-actions class="dialog-actions">
-    <button mat-button type="button" (click)="onCancel()" [disabled]="isSubmitting">
-      Cancel
-    </button>
-    <button 
-      mat-raised-button 
-      color="primary" 
-      type="submit" 
-      (click)="onSubmit()"
-      [disabled]="isSubmitting || batchForm.invalid">
-      <mat-spinner *ngIf="isSubmitting" diameter="20" class="button-spinner"></mat-spinner>
-      {{ getSubmitButtonText() }}
-    </button>
+    <div class="left-actions">
+      <button mat-stroked-button type="button" (click)="onCancel()" [disabled]="isSubmitting">
+        <mat-icon>close</mat-icon>
+        Cancel
+      </button>
+    </div>
+    <div class="right-actions">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        type="submit" 
+        (click)="onSubmit()"
+        [disabled]="isSubmitting || batchForm.invalid">
+        <mat-spinner *ngIf="isSubmitting" diameter="20" class="button-spinner"></mat-spinner>
+        <mat-icon *ngIf="!isSubmitting">{{ data.mode === 'create' ? 'add_circle' : 'save' }}</mat-icon>
+        {{ getSubmitButtonText() }}
+      </button>
+    </div>
   </div>
 </div>

@@ -36,6 +36,7 @@ import { LoadingService } from '../../../services/loading.service';
 import { AdminLayout } from '../admin-layout/admin-layout';
 import { LoadingSpinnerComponent } from '../../../shared/loading-spinner/loading-spinner.component';
 import { ViewAssignmentDialogComponent } from '../view-assignment-dialog/view-assignment-dialog.component';
+import { CreateAssignmentDialogComponent } from '../create-assignment-dialog/create-assignment-dialog.component';
 
 @Component({
   selector: 'app-manage-assignments',
@@ -496,99 +497,37 @@ export class ManageAssignmentsComponent implements OnInit {
   }
 
   showCreateForm() {
-    this.editingAssignment = null;
-    this.showForm = true;
-    this.selectedTab = 0;
-    this.previewQuestions = [];
-    
-    // Reset all filtered arrays
-    this.filteredCourses = [];
-    this.filteredBatches = [];
-    this.filteredSemesters = [];
-    this.filteredSubjects = [];
-    this.filteredModules = [];
-    
-    this.assignmentForm.reset({
-      submissionType: 'online',
-      allowLateSubmission: false,
-      lateSubmissionPenalty: 0,
-      numberOfQuestions: 10,
-      contentSource: 'module_name'
+    const dialogRef = this.dialog.open(CreateAssignmentDialogComponent, {
+      width: '90vw',
+      maxWidth: '1100px',
+      maxHeight: '90vh',
+      disableClose: false,
+      panelClass: 'create-assignment-dialog',
+      data: { assignment: null }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadAssignments();
+      }
     });
   }
 
   showEditForm(assignment: Assignment) {
-    this.editingAssignment = assignment;
-    this.showForm = true;
-    this.selectedTab = 0;
-    this.previewQuestions = assignment.questions || [];
-    
-    // Extract IDs from populated objects
-    const departmentId = typeof assignment.department === 'object' && assignment.department ? assignment.department._id : assignment.department;
-    const courseId = typeof assignment.course === 'object' && assignment.course ? assignment.course._id : assignment.course;
-    const batchId = typeof assignment.batch === 'object' && assignment.batch ? assignment.batch._id : assignment.batch;
-    const semesterId = typeof assignment.semester === 'object' && assignment.semester ? assignment.semester._id : assignment.semester;
-    const subjectId = typeof assignment.subject === 'object' && assignment.subject ? assignment.subject._id : assignment.subject;
-    const moduleIds = Array.isArray(assignment.modules) ? assignment.modules.map((m: any) => typeof m === 'object' ? m._id : m) : [];
-    
-    // First patch the form with assignment data using IDs
-    this.assignmentForm.patchValue({
-      title: assignment.title,
-      description: assignment.description,
-      department: departmentId,
-      course: courseId,
-      batch: batchId,
-      semester: semesterId,
-      subject: subjectId,
-      modules: moduleIds,
-      dueDate: new Date(assignment.dueDate),
-      assignmentLevel: assignment.assignmentLevel,
-      assignmentType: assignment.assignmentType,
-      numberOfQuestions: assignment.numberOfQuestions,
-      maxMarks: assignment.maxMarks,
-      instructions: assignment.instructions,
-      submissionType: assignment.submissionType,
-      allowLateSubmission: assignment.allowLateSubmission,
-      lateSubmissionPenalty: assignment.lateSubmissionPenalty,
-      timeLimit: assignment.timeLimit,
-      contentSource: 'module_name'
+    const dialogRef = this.dialog.open(CreateAssignmentDialogComponent, {
+      width: '90vw',
+      maxWidth: '1100px',
+      maxHeight: '90vh',
+      disableClose: false,
+      panelClass: 'create-assignment-dialog',
+      data: { assignment }
     });
 
-    // Then trigger the cascading dropdown updates sequentially
-    setTimeout(() => {
-      if (departmentId) {
-        this.onDepartmentChange(departmentId);
-        setTimeout(() => {
-          if (courseId) {
-            this.assignmentForm.patchValue({ course: courseId }, { emitEvent: false });
-            this.onCourseChange(courseId);
-            setTimeout(() => {
-              if (batchId) {
-                this.assignmentForm.patchValue({ batch: batchId }, { emitEvent: false });
-                this.onBatchChange(batchId);
-                setTimeout(() => {
-                  if (semesterId) {
-                    this.assignmentForm.patchValue({ semester: semesterId }, { emitEvent: false });
-                    this.onSemesterChange(semesterId);
-                    setTimeout(() => {
-                      if (subjectId) {
-                        this.assignmentForm.patchValue({ subject: subjectId }, { emitEvent: false });
-                        this.onSubjectChange(subjectId);
-                        setTimeout(() => {
-                          if (moduleIds.length > 0) {
-                            this.assignmentForm.patchValue({ modules: moduleIds }, { emitEvent: false });
-                          }
-                        }, 100);
-                      }
-                    }, 100);
-                  }
-                }, 100);
-              }
-            }, 100);
-          }
-        }, 100);
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadAssignments();
       }
-    }, 100);
+    });
   }
 
   hideForm() {
