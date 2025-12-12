@@ -19,6 +19,7 @@ export interface StudentEmotionSummary {
   studentName: string;
   email: string;
   rollNumber: string;
+  role?: string;
   emotionPercentages: EmotionPercentages;
   dominantEmotion: string;
   totalRecords: number;
@@ -30,6 +31,7 @@ export interface AttendanceSummary {
   studentName: string;
   email: string;
   rollNumber: string;
+  role?: string;
   status: string;
   firstJoinTime: Date;
   lastLeaveTime: Date;

@@ -169,8 +169,8 @@ import { LecturerLayout } from '../../lecturer/lecturer-layout/lecturer-layout';
               <!-- Student-wise Emotion Summary -->
               <mat-card class="student-emotions-card">
                 <mat-card-header>
-                  <mat-card-title>Student-wise Emotion Analysis</mat-card-title>
-                  <mat-card-subtitle>Individual emotion breakdown for each student</mat-card-subtitle>
+                  <mat-card-title>Participant Emotion Analysis</mat-card-title>
+                  <mat-card-subtitle>Individual emotion breakdown for each participant</mat-card-subtitle>
                 </mat-card-header>
                 <mat-card-content>
                   <div class="student-emotion-grid">
@@ -178,10 +178,13 @@ import { LecturerLayout } from '../../lecturer/lecturer-layout/lecturer-layout';
                       <mat-card-header>
                         <div class="student-header">
                           <div class="student-avatar">
-                            <mat-icon>person</mat-icon>
+                            <mat-icon>{{ student.role === 'lecturer' ? 'school' : 'person' }}</mat-icon>
                           </div>
                           <div class="student-info">
-                            <h4>{{ student.studentName }}</h4>
+                            <h4>
+                              {{ student.studentName }}
+                              <mat-chip *ngIf="student.role === 'lecturer'" class="role-chip-small">Lecturer</mat-chip>
+                            </h4>
                             <p>{{ student.rollNumber }}</p>
                           </div>
                         </div>
@@ -231,12 +234,15 @@ import { LecturerLayout } from '../../lecturer/lecturer-layout/lecturer-layout';
                   <table mat-table [dataSource]="analytics.attendanceAnalytics.attendanceSummaries" class="attendance-table">
                     <!-- Student Name Column -->
                     <ng-container matColumnDef="student">
-                      <th mat-header-cell *matHeaderCellDef>Student</th>
+                      <th mat-header-cell *matHeaderCellDef>Participant</th>
                       <td mat-cell *matCellDef="let element">
                         <div class="student-cell">
-                          <mat-icon>person</mat-icon>
+                          <mat-icon>{{ element.role === 'lecturer' ? 'school' : 'person' }}</mat-icon>
                           <div>
-                            <div class="student-name">{{ element.studentName }}</div>
+                            <div class="student-name">
+                              {{ element.studentName }}
+                              <mat-chip *ngIf="element.role === 'lecturer'" class="role-chip">Lecturer</mat-chip>
+                            </div>
                             <div class="student-roll">{{ element.rollNumber }}</div>
                           </div>
                         </div>
@@ -673,6 +679,25 @@ import { LecturerLayout } from '../../lecturer/lecturer-layout/lecturer-layout';
       color: white;
       font-size: 12px;
       min-height: 24px;
+    }
+
+    .role-chip {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-size: 11px;
+      min-height: 22px;
+      margin-left: 8px;
+      font-weight: 600;
+    }
+
+    .role-chip-small {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-size: 10px;
+      min-height: 20px;
+      margin-left: 6px;
+      padding: 2px 8px;
+      font-weight: 600;
     }
 
     @media (max-width: 768px) {

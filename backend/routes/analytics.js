@@ -28,7 +28,7 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
 
     // Get all emotions for this meeting
     const emotions = await StudentEmotion.find({ meetingId })
-      .populate('studentId', 'firstName lastName email rollNumber');
+      .populate('studentId', 'firstName lastName email rollNumber role');
 
     // Calculate overall emotion percentages
     const emotionTotals = {
@@ -43,7 +43,8 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
     };
 
     emotions.forEach(record => {
-      emotionTotals[record.dominantEmotion] = (emotionTotals[record.dominantEmotion] || 0) + 1;
+      const emotion = record.dominantEmotion ? record.dominantEmotion.toLowerCase() : 'unknown';
+      emotionTotals[emotion] = (emotionTotals[emotion] || 0) + 1;
     });
 
     const totalRecords = emotions.length;
@@ -57,13 +58,16 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
     // Group by student for student-wise summary
     const studentEmotionMap = {};
     emotions.forEach(record => {
+      if (!record.studentId) return; // Skip if student not found
+      
       const studentId = record.studentId._id.toString();
       if (!studentEmotionMap[studentId]) {
         studentEmotionMap[studentId] = {
           studentId: record.studentId._id,
           studentName: `${record.studentId.firstName} ${record.studentId.lastName}`,
           email: record.studentId.email,
-          rollNumber: record.studentId.rollNumber,
+          rollNumber: record.studentId.rollNumber || 'N/A',
+          role: record.studentId.role || 'student',
           emotionCounts: {
             happy: 0,
             sad: 0,
@@ -80,7 +84,8 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
         };
       }
 
-      studentEmotionMap[studentId].emotionCounts[record.dominantEmotion]++;
+      const emotion = record.dominantEmotion ? record.dominantEmotion.toLowerCase() : 'unknown';
+      studentEmotionMap[studentId].emotionCounts[emotion]++;
       studentEmotionMap[studentId].totalRecords++;
       studentEmotionMap[studentId].attentivenessSum += record.attentiveness;
     });
@@ -99,6 +104,7 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
         studentName: student.studentName,
         email: student.email,
         rollNumber: student.rollNumber,
+        role: student.role,
         emotionPercentages,
         dominantEmotion: Object.keys(student.emotionCounts).reduce((a, b) =>
           student.emotionCounts[a] > student.emotionCounts[b] ? a : b
@@ -110,24 +116,28 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
       };
     });
 
-    // Get attendance data
+    // Get attendance data - includes both students and lecturers
     const attendanceRecords = await Attendance.find({ meetingId })
-      .populate('studentId', 'firstName lastName email rollNumber');
+      .populate('studentId', 'firstName lastName email rollNumber role');
 
-    const attendanceSummaries = attendanceRecords.map(record => ({
-      studentId: record.studentId._id,
-      studentName: `${record.studentId.firstName} ${record.studentId.lastName}`,
-      email: record.studentId.email,
-      rollNumber: record.studentId.rollNumber,
-      status: record.status,
-      firstJoinTime: record.firstJoinTime,
-      lastLeaveTime: record.lastLeaveTime,
-      totalDuration: record.totalDuration,
-      attendancePercentage: record.attendancePercentage,
-      isLate: record.isLate,
-      rejoinCount: record.rejoinCount,
-      sessions: record.sessions
-    }));
+    // Filter out null studentId records and map properly
+    const attendanceSummaries = attendanceRecords
+      .filter(record => record.studentId) // Only include records with valid studentId
+      .map(record => ({
+        studentId: record.studentId._id,
+        studentName: `${record.studentId.firstName} ${record.studentId.lastName}`,
+        email: record.studentId.email,
+        rollNumber: record.studentId.rollNumber || 'N/A',
+        role: record.studentId.role || 'student',
+        status: record.status,
+        firstJoinTime: record.firstJoinTime,
+        lastLeaveTime: record.lastLeaveTime,
+        totalDuration: record.totalDuration,
+        attendancePercentage: record.attendancePercentage,
+        isLate: record.isLate,
+        rejoinCount: record.rejoinCount,
+        sessions: record.sessions
+      }));
 
     // Calculate meeting statistics
     const meetingDuration = meeting.endedAt && meeting.startedAt
