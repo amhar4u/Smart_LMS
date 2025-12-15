@@ -326,12 +326,20 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
       this.loading = false;
       this.snackBar.open('You have joined the meeting', 'Close', { duration: 2000 });
 
-      // Join meeting via Socket.IO for attendance tracking
-      this.socketService.joinMeeting(
-        this.meetingId,
-        this.currentUser._id,
-        userName
-      );
+      // Join meeting via Socket.IO for attendance tracking (AWAIT THIS!)
+      console.log('\n📝 Starting attendance tracking...');
+      try {
+        await this.socketService.joinMeeting(
+          this.meetingId,
+          this.currentUser._id,
+          userName
+        );
+        console.log('✅ Attendance join request completed successfully\n');
+      } catch (attendanceError: any) {
+        console.error('⚠️ Attendance tracking failed:', attendanceError);
+        this.snackBar.open('Warning: Attendance may not be recorded', 'Close', { duration: 3000 });
+        // Continue anyway - don't block the meeting
+      }
 
       // Load available devices
       await this.loadDevices();
@@ -642,6 +650,16 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
     this.currentEmotion = emotionResult.dominantEmotion;
 
     console.log(`🎭 Emotion detected: ${emotionResult.dominantEmotion} (confidence: ${emotionResult.confidence})`);
+    
+    // Log educational state if available
+    if (emotionResult.educationalState) {
+      console.log(`🎓 Educational state: ${emotionResult.dominantEducationalState}`);
+    }
+    
+    // Log behavioral data if available
+    if (emotionResult.behavior) {
+      console.log(`📊 Focus score: ${emotionResult.behavior.focusScore}/100`);
+    }
 
     // Send emotion update to server via Socket.IO
     const studentName = `${this.currentUser.firstName} ${this.currentUser.lastName}`;
@@ -653,7 +671,10 @@ export class StudentMeetingRoomComponent implements OnInit, OnDestroy {
       emotionResult.faceDetected,
       emotionResult.confidence,
       this.sessionId,
-      studentName
+      studentName,
+      emotionResult.educationalState,
+      emotionResult.behavior,
+      emotionResult.dominantEducationalState
     );
   }
 

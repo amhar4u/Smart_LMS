@@ -214,60 +214,111 @@ io.on('connection', (socket) => {
   // Student joins a meeting room
   socket.on('join-meeting', async (data) => {
     const { meetingId, studentId, studentName } = data;
+    
+    console.log('\n' + '='.repeat(80));
+    console.log('👥 JOIN-MEETING EVENT RECEIVED');
+    console.log('='.repeat(80));
+    console.log(`📍 Meeting ID: ${meetingId}`);
+    console.log(`👤 Student ID: ${studentId}`);
+    console.log(`📛 Student Name: ${studentName}`);
+    console.log(`🔌 Socket ID: ${socket.id}`);
+    console.log('-'.repeat(80));
+    
     socket.join(`meeting-${meetingId}`);
     socket.join(`student-${studentId}`);
     
-    console.log(`👤 Student ${studentName} (${studentId}) joined meeting ${meetingId}`);
+    console.log(`✅ Socket joined rooms: meeting-${meetingId}, student-${studentId}`);
     
     try {
       // Record attendance - student joined
       const student = await User.findById(studentId);
-      if (student) {
-        let attendance = await Attendance.findOne({ meetingId, studentId });
-        
-        if (!attendance) {
-          attendance = new Attendance({
-            meetingId,
-            studentId,
-            studentName: `${student.firstName} ${student.lastName}`,
-            studentEmail: student.email,
-            sessions: []
-          });
-        }
-        
-        const joinTime = new Date();
-        attendance.recordJoin(joinTime);
-        
-        // Check if late
-        const meeting = await Meeting.findById(meetingId);
-        if (meeting) {
-          attendance.checkLateArrival(meeting.startTime, 5);
-        }
-        
-        await attendance.save();
-        
-        console.log(`✅ Attendance recorded: ${studentName} joined at ${joinTime}`);
-        
-        // Notify lecturer with attendance details
-        io.to(`meeting-${meetingId}`).emit('student-joined', {
-          studentId,
-          studentName,
-          joinTime,
-          sessionCount: attendance.sessions.length,
-          isLate: attendance.isLate,
-          status: attendance.status,
-          timestamp: new Date()
+      
+      if (!student) {
+        console.error(`❌ Student not found: ${studentId}`);
+        socket.emit('attendance-error', {
+          message: 'Student not found in database'
         });
-        
-        // Send attendance confirmation to student
+        return;
+      }
+      
+      console.log(`✅ Student found: ${student.firstName} ${student.lastName}`);
+      
+      let attendance = await Attendance.findOne({ meetingId, studentId });
+      
+      if (!attendance) {
+        console.log('📝 Creating new attendance record...');
+        attendance = new Attendance({
+          meetingId,
+          studentId,
+          studentName: `${student.firstName} ${student.lastName}`,
+          studentEmail: student.email,
+          sessions: []
+        });
+      } else {
+        console.log(`📝 Existing attendance record found (${attendance.sessions.length} previous sessions)`);
+      }
+      
+      const joinTime = new Date();
+      const joined = attendance.recordJoin(joinTime);
+      
+      if (!joined) {
+        console.log('⚠️  Student already has an active session, not creating duplicate');
         socket.emit('attendance-recorded', {
           type: 'join',
           meetingId,
-          joinTime,
+          joinTime: attendance.sessions[attendance.sessions.length - 1]?.joinTime || joinTime,
           sessionNumber: attendance.sessions.length,
-          isLate: attendance.isLate
+          isLate: attendance.isLate,
+          alreadyActive: true
         });
+        return;
       }
+      
+      console.log(`⏰ Join time: ${joinTime.toISOString()}`);
+      
+      // Check if late
+      const meeting = await Meeting.findById(meetingId);
+      if (meeting) {
+        attendance.checkLateArrival(meeting.startTime, 5);
+        console.log(`⏱️  Late arrival check: ${attendance.isLate ? 'LATE' : 'ON TIME'}`);
+        console.log(`📋 Meeting status: ${meeting.status}`);
+        
+        // Log warning if meeting is already completed
+        if (meeting.status === 'completed') {
+          console.log('⚠️  Warning: Student joining a completed meeting');
+        }
+      } else {
+        console.log('⚠️  Warning: Meeting not found');
+      }
+      
+      await attendance.save();
+      
+      console.log('💾 Attendance saved to database');
+      console.log(`📊 Current status: ${attendance.status}`);
+      console.log(`📈 Total sessions: ${attendance.sessions.length}`);
+      console.log(`🔄 Rejoin count: ${attendance.rejoinCount}`);
+      console.log('='.repeat(80) + '\n');
+      
+      // Notify lecturer with attendance details
+      io.to(`meeting-${meetingId}`).emit('student-joined', {
+        studentId,
+        studentName,
+        joinTime,
+        sessionCount: attendance.sessions.length,
+        isLate: attendance.isLate,
+        status: attendance.status,
+        timestamp: new Date()
+      });
+      
+      // Send attendance confirmation to student
+      socket.emit('attendance-recorded', {
+        type: 'join',
+        meetingId,
+        joinTime,
+        sessionNumber: attendance.sessions.length,
+        isLate: attendance.isLate
+      });
+      
     } catch (error) {
       console.error('Error recording attendance on join:', error);
       socket.emit('attendance-error', {
@@ -279,7 +330,11 @@ io.on('connection', (socket) => {
   // Receive emotion data from student
   socket.on('emotion-update', async (data) => {
     try {
-      const { meetingId, studentId, studentName, emotions, dominantEmotion, faceDetected, confidence, sessionId } = data;
+      const { 
+        meetingId, studentId, studentName, emotions, dominantEmotion, 
+        faceDetected, confidence, sessionId,
+        educationalState, behavior, dominantEducationalState 
+      } = data;
       
       // Get current time for logging
       const now = new Date();
@@ -333,6 +388,34 @@ io.on('connection', (socket) => {
       };
       console.log('🎯 DOMINANT EMOTION:');
       console.log(`   ${emotionEmojis[dominantEmotion] || '❓'} ${dominantEmotion.toUpperCase()}`);
+      console.log('-'.repeat(80));
+      
+      // 🎓 Log educational states
+      if (educationalState) {
+        console.log('🎓 EDUCATIONAL STATES (0-100%):');
+        console.log(`   🤔 Confused:    ${(educationalState.confused * 100).toFixed(2)}%`);
+        console.log(`   😑 Bored:       ${(educationalState.bored * 100).toFixed(2)}%`);
+        console.log(`   ✨ Engaged:     ${(educationalState.engaged * 100).toFixed(2)}%`);
+        console.log(`   💭 Thinking:    ${(educationalState.thinking * 100).toFixed(2)}%`);
+        console.log(`   😤 Frustrated:  ${(educationalState.frustrated * 100).toFixed(2)}%`);
+        console.log(`   🌟 Interested:  ${(educationalState.interested * 100).toFixed(2)}%`);
+        console.log(`   👀 Distracted:  ${(educationalState.distracted * 100).toFixed(2)}%`);
+        console.log('-'.repeat(80));
+        console.log('🎯 DOMINANT EDUCATIONAL STATE:');
+        console.log(`   📚 ${dominantEducationalState?.toUpperCase() || 'NEUTRAL'}`);
+        console.log('-'.repeat(80));
+      }
+      
+      // 📊 Log behavioral data
+      if (behavior) {
+        console.log('📊 BEHAVIORAL INDICATORS:');
+        console.log(`   👁️  Attention Span:      ${behavior.attentionSpan}%`);
+        console.log(`   🔄 Look Away Count:     ${behavior.lookAwayCount}`);
+        console.log(`   📈 Avg Confidence:      ${(behavior.averageConfidence * 100).toFixed(2)}%`);
+        console.log(`   ⏱️  Session Duration:    ${behavior.sessionDuration}s`);
+        console.log(`   🎯 Focus Score:         ${behavior.focusScore}/100`);
+        console.log('-'.repeat(80));
+      }
       
       // Save emotion data to database
       const emotionRecord = new StudentEmotion({
@@ -345,7 +428,10 @@ io.on('connection', (socket) => {
         detectionConfidence: confidence || 0,
         attentiveness: faceDetected ? confidence : 0,
         isPresent: true,
-        sessionId
+        sessionId,
+        educationalState: educationalState || undefined,
+        behavior: behavior || undefined,
+        dominantEducationalState: dominantEducationalState || 'neutral'
       });
 
       await emotionRecord.save();
@@ -442,58 +528,103 @@ io.on('connection', (socket) => {
     const { meetingId, studentId, studentName } = data;
     socket.leave(`meeting-${meetingId}`);
     
-    console.log(`👋 Student ${studentName} left meeting ${meetingId}`);
+    console.log('\n' + '='.repeat(80));
+    console.log('👋 LEAVE-MEETING EVENT RECEIVED');
+    console.log('='.repeat(80));
+    console.log(`📍 Meeting ID: ${meetingId}`);
+    console.log(`👤 Student ID: ${studentId}`);
+    console.log(`📛 Student Name: ${studentName}`);
+    console.log('-'.repeat(80));
     
     try {
       // Record attendance - student left
       const attendance = await Attendance.findOne({ meetingId, studentId });
       
-      if (attendance) {
-        const leaveTime = new Date();
-        attendance.recordLeave(leaveTime);
+      if (!attendance) {
+        console.log('⚠️  No attendance record found for this student');
+        console.log('='.repeat(80) + '\n');
+        return;
+      }
+      
+      const leaveTime = new Date();
+      const left = attendance.recordLeave(leaveTime);
+      
+      if (!left) {
+        console.log('⚠️  No active session found to close');
+        console.log('='.repeat(80) + '\n');
+        return;
+      }
+      
+      console.log(`⏰ Leave time: ${leaveTime.toISOString()}`);
+      console.log(`📊 Total duration so far: ${attendance.totalDuration}s`);
+      
+      // Calculate attendance percentage if meeting has started
+      const meeting = await Meeting.findById(meetingId);
+      if (meeting && meeting.startedAt) {
+        // Use actual meeting duration (from start to now or end)
+        const meetingDuration = meeting.endedAt 
+          ? Math.floor((meeting.endedAt - meeting.startedAt) / 1000)
+          : Math.floor((new Date() - meeting.startedAt) / 1000);
         
-        // Calculate attendance percentage if meeting has started
-        const meeting = await Meeting.findById(meetingId);
-        if (meeting && meeting.startedAt) {
-          const meetingDuration = meeting.endedAt 
-            ? Math.floor((meeting.endedAt - meeting.startedAt) / 1000)
-            : Math.floor((new Date() - meeting.startedAt) / 1000);
-          
+        console.log(`⏱️  Meeting duration: ${meetingDuration}s`);
+        
+        // Only calculate if meeting duration is positive
+        if (meetingDuration > 0) {
           attendance.calculateAttendancePercentage(meetingDuration);
+          
+          // Ensure percentage is not negative (clamp to 0-100)
+          if (attendance.attendancePercentage < 0) {
+            attendance.attendancePercentage = 0;
+          }
+          
+          console.log(`📈 Attendance percentage: ${attendance.attendancePercentage}%`);
           
           // Update status based on percentage
           if (attendance.attendancePercentage < 50) {
             attendance.status = 'partial';
           }
+        } else {
+          console.log('⚠️  Meeting duration is 0 or negative, skipping percentage calculation');
         }
-        
-        await attendance.save();
-        
-        console.log(`✅ Attendance recorded: ${studentName} left at ${leaveTime}, duration: ${attendance.totalDuration}s`);
-        
-        // Notify lecturer with attendance details
-        io.to(`meeting-${meetingId}`).emit('student-left', {
-          studentId,
-          studentName,
-          leaveTime,
-          totalDuration: attendance.totalDuration,
-          attendancePercentage: attendance.attendancePercentage,
-          status: attendance.status,
-          timestamp: new Date()
-        });
-        
-        // Send attendance summary to student
-        socket.emit('attendance-recorded', {
-          type: 'leave',
-          meetingId,
-          leaveTime,
-          totalDuration: attendance.totalDuration,
-          attendancePercentage: attendance.attendancePercentage,
-          sessionCount: attendance.sessions.length
-        });
       }
+      
+      await attendance.save();
+      
+      console.log('💾 Attendance saved to database');
+      console.log(`📊 Final status: ${attendance.status}`);
+      console.log(`📈 Final duration: ${attendance.totalDuration}s`);
+      console.log(`📈 Attendance %: ${attendance.attendancePercentage}%`);
+        
+      console.log('💾 Attendance saved to database');
+      console.log(`📊 Final status: ${attendance.status}`);
+      console.log(`📈 Final duration: ${attendance.totalDuration}s`);
+      console.log(`📈 Attendance %: ${attendance.attendancePercentage}%`);
+      console.log('='.repeat(80) + '\n');
+      
+      // Notify lecturer with attendance details
+      io.to(`meeting-${meetingId}`).emit('student-left', {
+        studentId,
+        studentName,
+        leaveTime,
+        totalDuration: attendance.totalDuration,
+        attendancePercentage: attendance.attendancePercentage,
+        status: attendance.status,
+        timestamp: new Date()
+      });
+      
+      // Send attendance summary to student
+      socket.emit('attendance-recorded', {
+        type: 'leave',
+        meetingId,
+        leaveTime,
+        totalDuration: attendance.totalDuration,
+        attendancePercentage: attendance.attendancePercentage,
+        sessionCount: attendance.sessions.length
+      });
     } catch (error) {
-      console.error('Error recording attendance on leave:', error);
+      console.error('\n' + '❌'.repeat(40));
+      console.error('❌ Error recording attendance on leave:', error.message);
+      console.error('❌'.repeat(40) + '\n');
       socket.emit('attendance-error', {
         message: 'Failed to record leave time'
       });

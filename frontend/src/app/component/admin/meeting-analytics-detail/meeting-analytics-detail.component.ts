@@ -737,6 +737,10 @@ export class MeetingAnalyticsDetailComponent implements OnInit {
     this.loading = true;
     this.analyticsService.getMeetingAnalytics(meetingId).subscribe({
       next: (response) => {
+        console.log('📊 Analytics Response:', response);
+        console.log('📊 Attendance Data:', response.data.attendanceAnalytics);
+        console.log('📊 Attendance Summaries:', response.data.attendanceAnalytics.attendanceSummaries);
+        console.log('📊 Attendance Summaries Length:', response.data.attendanceAnalytics.attendanceSummaries?.length);
         this.analytics = response.data;
         this.loading = false;
       },

@@ -42,9 +42,41 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
       unknown: 0
     };
 
+    // 🎓 Educational state totals
+    const educationalStateTotals = {
+      engaged: 0,
+      thinking: 0,
+      interested: 0,
+      confused: 0,
+      bored: 0,
+      frustrated: 0,
+      distracted: 0,
+      neutral: 0
+    };
+
+    // 📊 Behavioral aggregates
+    let totalAttentionSpan = 0;
+    let totalFocusScore = 0;
+    let totalLookAways = 0;
+    let recordsWithBehavior = 0;
+
     emotions.forEach(record => {
       const emotion = record.dominantEmotion ? record.dominantEmotion.toLowerCase() : 'unknown';
       emotionTotals[emotion] = (emotionTotals[emotion] || 0) + 1;
+
+      // Track educational states
+      if (record.dominantEducationalState) {
+        const eduState = record.dominantEducationalState.toLowerCase();
+        educationalStateTotals[eduState] = (educationalStateTotals[eduState] || 0) + 1;
+      }
+
+      // Aggregate behavioral data
+      if (record.behavior) {
+        totalAttentionSpan += record.behavior.attentionSpan || 0;
+        totalFocusScore += record.behavior.focusScore || 0;
+        totalLookAways += record.behavior.lookAwayCount || 0;
+        recordsWithBehavior++;
+      }
     });
 
     const totalRecords = emotions.length;
@@ -54,6 +86,28 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
         ? Math.round((emotionTotals[emotion] / totalRecords) * 100)
         : 0;
     });
+
+    // Calculate educational state percentages
+    const educationalStatePercentages = {};
+    Object.keys(educationalStateTotals).forEach(state => {
+      educationalStatePercentages[state] = totalRecords > 0
+        ? Math.round((educationalStateTotals[state] / totalRecords) * 100)
+        : 0;
+    });
+
+    // Calculate overall behavioral averages
+    const overallBehavior = {
+      avgAttentionSpan: recordsWithBehavior > 0
+        ? Math.round(totalAttentionSpan / recordsWithBehavior)
+        : 0,
+      avgFocusScore: recordsWithBehavior > 0
+        ? Math.round(totalFocusScore / recordsWithBehavior)
+        : 0,
+      totalLookAways: totalLookAways,
+      avgLookAwaysPerStudent: recordsWithBehavior > 0
+        ? Math.round(totalLookAways / recordsWithBehavior)
+        : 0
+    };
 
     // Group by student for student-wise summary
     const studentEmotionMap = {};
@@ -78,9 +132,25 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
             neutral: 0,
             unknown: 0
           },
+          educationalStateCounts: {
+            engaged: 0,
+            thinking: 0,
+            interested: 0,
+            confused: 0,
+            bored: 0,
+            frustrated: 0,
+            distracted: 0,
+            neutral: 0
+          },
           totalRecords: 0,
           avgAttentiveness: 0,
-          attentivenessSum: 0
+          attentivenessSum: 0,
+          behaviorSum: {
+            attentionSpan: 0,
+            focusScore: 0,
+            lookAwayCount: 0
+          },
+          behaviorRecords: 0
         };
       }
 
@@ -88,6 +158,20 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
       studentEmotionMap[studentId].emotionCounts[emotion]++;
       studentEmotionMap[studentId].totalRecords++;
       studentEmotionMap[studentId].attentivenessSum += record.attentiveness;
+
+      // Track educational states per student
+      if (record.dominantEducationalState) {
+        const eduState = record.dominantEducationalState.toLowerCase();
+        studentEmotionMap[studentId].educationalStateCounts[eduState]++;
+      }
+
+      // Track behavioral data per student
+      if (record.behavior) {
+        studentEmotionMap[studentId].behaviorSum.attentionSpan += record.behavior.attentionSpan || 0;
+        studentEmotionMap[studentId].behaviorSum.focusScore += record.behavior.focusScore || 0;
+        studentEmotionMap[studentId].behaviorSum.lookAwayCount += record.behavior.lookAwayCount || 0;
+        studentEmotionMap[studentId].behaviorRecords++;
+      }
     });
 
     // Calculate student-wise percentages and average attentiveness
@@ -99,6 +183,27 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
           : 0;
       });
 
+      // Calculate educational state percentages
+      const educationalStatePercentages = {};
+      Object.keys(student.educationalStateCounts).forEach(state => {
+        educationalStatePercentages[state] = student.totalRecords > 0
+          ? Math.round((student.educationalStateCounts[state] / student.totalRecords) * 100)
+          : 0;
+      });
+
+      // Calculate behavioral averages
+      const behaviorAvg = {
+        attentionSpan: student.behaviorRecords > 0
+          ? Math.round(student.behaviorSum.attentionSpan / student.behaviorRecords)
+          : 0,
+        focusScore: student.behaviorRecords > 0
+          ? Math.round(student.behaviorSum.focusScore / student.behaviorRecords)
+          : 0,
+        lookAwayCount: student.behaviorRecords > 0
+          ? Math.round(student.behaviorSum.lookAwayCount / student.behaviorRecords)
+          : 0
+      };
+
       return {
         studentId: student.studentId,
         studentName: student.studentName,
@@ -109,6 +214,11 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
         dominantEmotion: Object.keys(student.emotionCounts).reduce((a, b) =>
           student.emotionCounts[a] > student.emotionCounts[b] ? a : b
         ),
+        educationalStatePercentages,
+        dominantEducationalState: Object.keys(student.educationalStateCounts).reduce((a, b) =>
+          student.educationalStateCounts[a] > student.educationalStateCounts[b] ? a : b
+        ),
+        behavior: behaviorAvg,
         totalRecords: student.totalRecords,
         avgAttentiveness: student.totalRecords > 0
           ? Math.round((student.attentivenessSum / student.totalRecords) * 100)
@@ -119,6 +229,18 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
     // Get attendance data - includes both students and lecturers
     const attendanceRecords = await Attendance.find({ meetingId })
       .populate('studentId', 'firstName lastName email rollNumber role');
+
+    console.log('\n📊 ATTENDANCE DEBUG:');
+    console.log(`Total attendance records found: ${attendanceRecords.length}`);
+    attendanceRecords.forEach((record, index) => {
+      console.log(`\nRecord ${index + 1}:`);
+      console.log(`  Student ID: ${record.studentId?._id || 'NULL'}`);
+      console.log(`  Student Name: ${record.studentName}`);
+      console.log(`  Status: ${record.status}`);
+      console.log(`  Sessions: ${record.sessions.length}`);
+      console.log(`  First Join: ${record.firstJoinTime}`);
+      console.log(`  Total Duration: ${record.totalDuration}`);
+    });
 
     // Filter out null studentId records and map properly
     const attendanceSummaries = attendanceRecords
@@ -138,6 +260,9 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
         rejoinCount: record.rejoinCount,
         sessions: record.sessions
       }));
+
+    console.log(`\nFiltered attendance summaries: ${attendanceSummaries.length}`);
+    console.log('Attendance Summaries:', JSON.stringify(attendanceSummaries, null, 2));
 
     // Calculate meeting statistics
     const meetingDuration = meeting.endedAt && meeting.startedAt
@@ -168,6 +293,8 @@ router.get('/meetings/:meetingId/analytics', auth, async (req, res) => {
         },
         emotionAnalytics: {
           overallEmotionPercentages: emotionPercentages,
+          educationalStatePercentages: educationalStatePercentages,
+          overallBehavior: overallBehavior,
           totalEmotionRecords: totalRecords,
           studentsTracked: Object.keys(studentEmotionMap).length,
           studentSummaries: studentSummaries.sort((a, b) =>

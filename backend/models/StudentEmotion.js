@@ -94,6 +94,99 @@ const studentEmotionSchema = new mongoose.Schema({
   sessionId: {
     type: String,
     comment: 'Unique session identifier for this meeting attendance'
+  },
+  // 🎓 EDUCATIONAL STATES (Derived from base emotions)
+  educationalState: {
+    confused: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Calculated: neutral + surprised + low happy (student unsure/puzzled)'
+    },
+    bored: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Calculated: high neutral + low engagement + disengagement patterns'
+    },
+    engaged: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Overall engagement score: face detected + attentiveness + positive emotions'
+    },
+    thinking: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Deep concentration: high neutral + consistent face detection + focus'
+    },
+    frustrated: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Calculated: angry + fearful + sad (struggling with content)'
+    },
+    interested: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Calculated: happy + surprised + high attentiveness (actively learning)'
+    },
+    distracted: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Calculated: low attentiveness + face looking away + disengagement'
+    }
+  },
+  // 📊 BEHAVIORAL INDICATORS (Tracking student actions)
+  behavior: {
+    attentionSpan: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+      comment: 'Percentage of time face was detected in recent period'
+    },
+    lookAwayCount: {
+      type: Number,
+      default: 0,
+      comment: 'Number of times student looked away from screen'
+    },
+    averageConfidence: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+      comment: 'Average face detection confidence over time'
+    },
+    sessionDuration: {
+      type: Number,
+      default: 0,
+      comment: 'Time spent in meeting session (seconds)'
+    },
+    focusScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+      comment: 'Overall focus score based on multiple behavioral factors'
+    }
+  },
+  // 📈 DOMINANT EDUCATIONAL STATE
+  dominantEducationalState: {
+    type: String,
+    enum: ['engaged', 'thinking', 'interested', 'confused', 'bored', 'frustrated', 'distracted', 'neutral'],
+    default: 'neutral',
+    comment: 'The most prominent educational state for this record'
   }
 }, {
   timestamps: true

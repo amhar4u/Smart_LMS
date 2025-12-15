@@ -63,11 +63,14 @@ export class SocketService {
    * Connect to Socket.IO server
    */
   connect(): void {
-    if (this.connected) {
+    if (this.connected && this.socket?.connected) {
+      console.log('✅ Socket already connected');
       return;
     }
 
     const apiUrl = environment.apiUrl.replace('/api', ''); // Remove /api suffix
+    
+    console.log('🔌 Connecting to Socket.IO server:', apiUrl);
     
     this.socket = io(apiUrl, {
       transports: ['websocket', 'polling'],
@@ -78,10 +81,14 @@ export class SocketService {
 
     this.socket.on('connect', () => {
       this.connected = true;
+      console.log('✅ Socket.IO connected successfully');
+      console.log('   Socket ID:', this.socket?.id);
+      console.log('   Connected:', this.socket?.connected);
     });
 
     this.socket.on('disconnect', () => {
       this.connected = false;
+      console.warn('⚠️ Socket.IO disconnected');
     });
 
     this.socket.on('error', (error: any) => {
@@ -117,6 +124,8 @@ export class SocketService {
     this.socket.on('alerts-data', (data: any) => {
       this.alertsDataSubject.next(data);
     });
+
+    // Note: attendance-recorded and attendance-error are handled in joinMeeting() method
   }
 
   /**
@@ -133,16 +142,97 @@ export class SocketService {
   /**
    * Join a meeting room
    */
-  joinMeeting(meetingId: string, studentId: string, studentName: string): void {
+  /**
+   * Check if socket is connected
+   */
+  isConnected(): boolean {
+    return this.socket?.connected || false;
+  }
+
+  /**
+   * Wait for socket connection
+   */
+  private async waitForConnection(maxWait: number = 5000): Promise<boolean> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWait) {
+      if (this.socket?.connected) {
+        return true;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    return false;
+  }
+
+  /**
+   * Join a meeting room with retry logic
+   */
+  async joinMeeting(meetingId: string, studentId: string, studentName: string): Promise<void> {
+    console.log('\n🔔 JOIN-MEETING CALLED');
+    console.log('   Meeting ID:', meetingId);
+    console.log('   Student ID:', studentId);
+    console.log('   Student Name:', studentName);
+    
     if (!this.socket) {
-      console.error('Socket not connected');
-      return;
+      console.error('❌ Socket not initialized');
+      throw new Error('Socket not initialized');
     }
 
-    this.socket.emit('join-meeting', {
-      meetingId,
-      studentId,
-      studentName
+    // Wait for connection with timeout
+    console.log('⏳ Waiting for socket connection...');
+    const isConnected = await this.waitForConnection(5000);
+    
+    if (!isConnected) {
+      console.error('❌ Socket failed to connect after 5 seconds');
+      console.error('   Socket state:', {
+        exists: !!this.socket,
+        connected: this.socket?.connected,
+        disconnected: this.socket?.disconnected
+      });
+      throw new Error('Socket connection timeout');
+    }
+
+    console.log('✅ Socket connected, emitting join-meeting event...');
+    console.log('   Socket ID:', this.socket.id);
+    console.log('   Socket connected:', this.socket.connected);
+    
+    // Return a promise that resolves when attendance is recorded or rejects on error
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Attendance recording timeout'));
+      }, 10000); // 10 second timeout
+
+      // Listen for attendance recorded confirmation
+      const onAttendanceRecorded = (data: any) => {
+        clearTimeout(timeout);
+        this.socket?.off('attendance-recorded', onAttendanceRecorded);
+        this.socket?.off('attendance-error', onAttendanceError);
+        console.log('✅ Attendance confirmed:', data);
+        resolve();
+      };
+
+      // Listen for attendance error
+      const onAttendanceError = (data: any) => {
+        clearTimeout(timeout);
+        this.socket?.off('attendance-recorded', onAttendanceRecorded);
+        this.socket?.off('attendance-error', onAttendanceError);
+        console.error('❌ Attendance error:', data);
+        reject(new Error(data.message || 'Attendance recording failed'));
+      };
+
+      // Set up one-time listeners
+      this.socket?.once('attendance-recorded', onAttendanceRecorded);
+      this.socket?.once('attendance-error', onAttendanceError);
+
+      // Emit the join-meeting event
+      this.socket!.emit('join-meeting', {
+        meetingId,
+        studentId,
+        studentName
+      });
+      
+      console.log('✅ join-meeting event emitted, waiting for confirmation...');
     });
   }
 
@@ -172,7 +262,10 @@ export class SocketService {
     faceDetected: boolean,
     confidence: number,
     sessionId: string,
-    studentName?: string
+    studentName?: string,
+    educationalState?: any,
+    behavior?: any,
+    dominantEducationalState?: string
   ): void {
     if (!this.socket) {
       console.error('Socket not connected');
@@ -188,6 +281,9 @@ export class SocketService {
       faceDetected,
       confidence,
       sessionId,
+      educationalState,
+      behavior,
+      dominantEducationalState,
       timestamp: new Date()
     });
   }
@@ -214,13 +310,6 @@ export class SocketService {
     }
 
     this.socket.emit('request-alerts', { meetingId });
-  }
-
-  /**
-   * Check if socket is connected
-   */
-  isConnected(): boolean {
-    return this.connected;
   }
 
   /**

@@ -500,6 +500,44 @@ router.post('/:id/end', auth, async (req, res) => {
     }
     await meeting.save();
 
+    // Close all active attendance sessions when meeting ends
+    const Attendance = require('../models/Attendance');
+    const activeAttendances = await Attendance.find({
+      meetingId: req.params.id,
+      isCurrentlyPresent: true
+    });
+
+    console.log(`\n🔚 Closing ${activeAttendances.length} active attendance sessions...`);
+
+    // Calculate meeting duration
+    const meetingDuration = meeting.startedAt 
+      ? Math.floor((meeting.endedAt - meeting.startedAt) / 1000)
+      : 0;
+
+    // Close each active session
+    for (const attendance of activeAttendances) {
+      attendance.recordLeave(meeting.endedAt);
+      
+      if (meetingDuration > 0) {
+        attendance.calculateAttendancePercentage(meetingDuration);
+        
+        // Ensure percentage is not negative
+        if (attendance.attendancePercentage < 0) {
+          attendance.attendancePercentage = 0;
+        }
+        
+        // Update status based on percentage
+        if (attendance.attendancePercentage < 50) {
+          attendance.status = 'partial';
+        }
+      }
+      
+      await attendance.save();
+      console.log(`  ✅ Closed session for ${attendance.studentName} - ${attendance.totalDuration}s (${attendance.attendancePercentage}%)`);
+    }
+
+    console.log(`✅ All attendance sessions closed\n`);
+
     res.status(200).json({
       success: true,
       message: 'Meeting ended successfully',

@@ -162,12 +162,14 @@ attendanceSchema.methods.recordLeave = function(leaveTime = new Date()) {
 
 // Method to calculate attendance percentage based on meeting duration
 attendanceSchema.methods.calculateAttendancePercentage = function(meetingDuration) {
-  if (!meetingDuration || meetingDuration === 0) {
+  if (!meetingDuration || meetingDuration <= 0) {
+    this.attendancePercentage = 0;
     return 0;
   }
   
   const percentage = (this.totalDuration / meetingDuration) * 100;
-  this.attendancePercentage = Math.min(Math.round(percentage * 100) / 100, 100);
+  // Clamp percentage between 0 and 100 to prevent validation errors
+  this.attendancePercentage = Math.max(0, Math.min(Math.round(percentage * 100) / 100, 100));
   return this.attendancePercentage;
 };
 
