@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, ValidationErrors, AbstractControl } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
@@ -198,12 +198,49 @@ export class LecturerManageAssignmentsComponent implements OnInit {
       moduleContent: ['']
     });
 
+    // Add custom validator for passingMarks vs maxMarks
+    this.assignmentForm.setValidators(this.passingMarksValidator());
+
+    // Re-validate when maxMarks or passingMarks changes
+    this.assignmentForm.get('maxMarks')?.valueChanges.subscribe(() => {
+      this.assignmentForm.updateValueAndValidity();
+    });
+    this.assignmentForm.get('passingMarks')?.valueChanges.subscribe(() => {
+      this.assignmentForm.updateValueAndValidity();
+    });
+
     this.filterForm = this.fb.group({
       subject: [''],
       assignmentLevel: [''],
       assignmentType: [''],
       isActive: ['']
     });
+  }
+
+  // Custom validator to ensure passing marks don't exceed max marks
+  passingMarksValidator(): ValidatorFn {
+    return (formGroup: AbstractControl): ValidationErrors | null => {
+      if (!(formGroup instanceof FormGroup)) {
+        return null;
+      }
+
+      const passingMarks = formGroup.get('passingMarks')?.value;
+      const maxMarks = formGroup.get('maxMarks')?.value;
+
+      if (passingMarks && maxMarks && passingMarks > maxMarks) {
+        // Set error on passingMarks control
+        formGroup.get('passingMarks')?.setErrors({ exceedsMaxMarks: true });
+        return { passingMarksExceedsMax: true };
+      } else {
+        // Clear the error if it was previously set
+        const passingMarksControl = formGroup.get('passingMarks');
+        if (passingMarksControl?.hasError('exceedsMaxMarks')) {
+          passingMarksControl.setErrors(null);
+        }
+      }
+
+      return null;
+    };
   }
 
   async loadLecturerSubjects() {
@@ -487,6 +524,7 @@ export class LecturerManageAssignmentsComponent implements OnInit {
       if (errors['maxlength']) return `${fieldName} cannot exceed ${errors['maxlength'].requiredLength} characters`;
       if (errors['min']) return `${fieldName} must be at least ${errors['min'].min}`;
       if (errors['max']) return `${fieldName} cannot exceed ${errors['max'].max}`;
+      if (errors['exceedsMaxMarks']) return 'Passing marks cannot exceed maximum marks';
     }
     return '';
   }

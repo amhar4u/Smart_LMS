@@ -91,21 +91,34 @@ export class ModuleDialogComponent implements OnInit {
     if (this.data.mode === 'edit' && this.data.module) {
       this.populateForm(this.data.module);
     }
+
+    // Debug: Log form validity after initialization
+    setTimeout(() => {
+      console.log('🔍 Module Form Status:', {
+        valid: this.moduleForm.valid,
+        invalid: this.moduleForm.invalid,
+        mode: this.data.mode,
+        lecturerId: this.data.lecturerId,
+        errors: this.getFormErrors()
+      });
+    }, 100);
   }
 
   private createForm(): FormGroup {
     // For lecturers: dept/course/batch/semester are optional and auto-populated from subject
+    // Also make them optional in edit mode since they're auto-populated
     const isLecturer = !!this.data.lecturerId;
+    const isEditMode = this.data.mode === 'edit';
     
     return this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       name: ['', [Validators.required, Validators.minLength(3)]],
       code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9-]+$/)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
-      department: ['', isLecturer ? [] : Validators.required],
-      course: ['', isLecturer ? [] : Validators.required],
-      batch: ['', isLecturer ? [] : Validators.required],
-      semester: ['', isLecturer ? [] : Validators.required],
+      department: ['', (isLecturer || isEditMode) ? [] : Validators.required],
+      course: ['', (isLecturer || isEditMode) ? [] : Validators.required],
+      batch: ['', (isLecturer || isEditMode) ? [] : Validators.required],
+      semester: ['', (isLecturer || isEditMode) ? [] : Validators.required],
       subjectId: ['', Validators.required],
       order: [1, [Validators.required, Validators.min(1)]],
       isActive: [true]
@@ -288,18 +301,31 @@ export class ModuleDialogComponent implements OnInit {
   }
 
   private populateForm(module: any): void {
+    // Get the subject ID
+    const subjectId = module.subject?._id || module.subject;
+    
+    console.log('📝 Populating form with module:', { 
+      module, 
+      subjectId,
+      lecturerId: this.data.lecturerId 
+    });
+    
+    // Populate all basic fields including subjectId
+    // Ensure order is at least 1 (fix for modules with order: 0)
     this.moduleForm.patchValue({
       title: module.title || module.name,
       name: module.name,
       code: module.code,
       description: module.description,
-      order: module.order,
+      order: module.order > 0 ? module.order : 1,
       isActive: module.isActive,
-      subjectId: module.subject?._id || module.subject
+      subjectId: subjectId
     });
 
-    // If we have subject data with the reference IDs, load the hierarchical data
-    if (module.subject) {
+    console.log('✅ Form patched. Valid:', this.moduleForm.valid, 'Errors:', this.getFormErrors());
+
+    // For admin mode, load hierarchical data (non-blocking for form validity)
+    if (module.subject && !this.data.lecturerId) {
       const subject = module.subject;
       
       // Load department and set it
@@ -328,11 +354,6 @@ export class ModuleDialogComponent implements OnInit {
                     const semesterId = subject.semesterId._id || subject.semesterId;
                     this.moduleForm.patchValue({ semester: semesterId });
                     this.loadSubjectsBySemester(semesterId);
-                    
-                    // Finally set the subject
-                    setTimeout(() => {
-                      this.moduleForm.patchValue({ subjectId: subject._id });
-                    }, 500);
                   }
                 }, 500);
               }
@@ -600,6 +621,17 @@ export class ModuleDialogComponent implements OnInit {
   get submitButtonText(): string {
     if (this.uploading) return 'Uploading...';
     return this.data.mode === 'create' ? 'Create Module' : 'Update Module';
+  }
+
+  private getFormErrors(): any {
+    const errors: any = {};
+    Object.keys(this.moduleForm.controls).forEach(key => {
+      const control = this.moduleForm.get(key);
+      if (control && control.invalid) {
+        errors[key] = control.errors;
+      }
+    });
+    return errors;
   }
 
   // File validation

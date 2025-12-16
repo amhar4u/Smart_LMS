@@ -130,8 +130,9 @@
                   <div class="form-row">
                     <mat-form-field appearance="outline">
                       <mat-label>Passing Marks</mat-label>
-                      <input matInput type="number" formControlName="passingMarks" min="0">
-                      <mat-hint>Minimum marks required to pass (default: 40% of max marks)</mat-hint>
+                      <input matInput type="number" formControlName="passingMarks" min="0" 
+                             [max]="assignmentForm.get('maxMarks')?.value || 1000">
+                      <mat-hint>Minimum marks required to pass (must not exceed {{ assignmentForm.get('maxMarks')?.value || 'max' }} marks)</mat-hint>
                       <mat-error>{{ getFormError('passingMarks') }}</mat-error>
                     </mat-form-field>
                   </div>

@@ -95,17 +95,19 @@ export class ExtraModuleDialogComponent implements OnInit {
 
   private createForm(): FormGroup {
     // For lecturers: dept/course/batch/semester are optional and auto-populated from subject
+    // Also make them optional in edit mode since they're auto-populated
     const isLecturer = !!this.data.lecturerId;
+    const isEditMode = this.data.mode === 'edit';
     
     return this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       name: ['', [Validators.required, Validators.minLength(3)]],
       code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9-]+$/)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
-      department: ['', isLecturer ? [] : Validators.required],
-      course: ['', isLecturer ? [] : Validators.required],
-      batch: ['', isLecturer ? [] : Validators.required],
-      semester: ['', isLecturer ? [] : Validators.required],
+      department: ['', (isLecturer || isEditMode) ? [] : Validators.required],
+      course: ['', (isLecturer || isEditMode) ? [] : Validators.required],
+      batch: ['', (isLecturer || isEditMode) ? [] : Validators.required],
+      semester: ['', (isLecturer || isEditMode) ? [] : Validators.required],
       subjectId: ['', Validators.required],
       studentLevel: ['', Validators.required],
       order: [1, [Validators.required, Validators.min(1)]],
@@ -260,19 +262,24 @@ export class ExtraModuleDialogComponent implements OnInit {
   }
 
   private populateForm(extraModule: ExtraModule): void {
+    // Get the subject ID
+    const subjectId = typeof extraModule.subject === 'string' ? extraModule.subject : extraModule.subject?._id;
+    
+    // Populate all basic fields including subjectId
+    // Ensure order is at least 1 (fix for modules with order: 0)
     this.extraModuleForm.patchValue({
       title: extraModule.title || extraModule.name,
       name: extraModule.name,
       code: extraModule.code,
       description: extraModule.description,
       studentLevel: extraModule.studentLevel,
-      order: extraModule.order,
+      order: extraModule.order > 0 ? extraModule.order : 1,
       isActive: extraModule.isActive,
-      subjectId: typeof extraModule.subject === 'string' ? extraModule.subject : extraModule.subject?._id
+      subjectId: subjectId
     });
 
-    // If we have subject data with the reference IDs, load the hierarchical data
-    if (extraModule.subject && typeof extraModule.subject === 'object') {
+    // For admin mode, load hierarchical data (non-blocking for form validity)
+    if (extraModule.subject && typeof extraModule.subject === 'object' && !this.data.lecturerId) {
       const subject: any = extraModule.subject;
       
       // Load department and set it
@@ -301,11 +308,6 @@ export class ExtraModuleDialogComponent implements OnInit {
                     const semesterId = typeof subject.semesterId === 'string' ? subject.semesterId : subject.semesterId._id;
                     this.extraModuleForm.patchValue({ semester: semesterId });
                     this.loadSubjectsBySemester(semesterId);
-                    
-                    // Finally set the subject
-                    setTimeout(() => {
-                      this.extraModuleForm.patchValue({ subjectId: subject._id });
-                    }, 500);
                   }
                 }, 500);
               }
