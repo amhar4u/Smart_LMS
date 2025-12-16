@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, ValidatorFn, ValidationErrors, AbstractControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -109,6 +109,15 @@ export class CreateAssignmentDialogComponent implements OnInit {
   }
 
   private initializeForm() {
+    // Calculate default dates
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const weekFromNow = new Date();
+    weekFromNow.setDate(weekFromNow.getDate() + 7);
+    weekFromNow.setHours(23, 59, 59, 999);
+
     this.assignmentForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
       description: ['', [Validators.required, Validators.maxLength(2000)]],
@@ -118,7 +127,10 @@ export class CreateAssignmentDialogComponent implements OnInit {
       semester: ['', Validators.required],
       subject: ['', Validators.required],
       modules: [[], Validators.required],
-      dueDate: ['', Validators.required],
+      startDate: [tomorrow, Validators.required], // When students can start
+      dueDate: [weekFromNow, Validators.required], // Due date
+      endDate: [weekFromNow, Validators.required], // When assignment closes
+      passingMarks: [40, [Validators.required, Validators.min(0)]], // Passing marks (default 40%)
       assignmentLevel: ['', Validators.required],
       assignmentType: ['', Validators.required],
       numberOfQuestions: [10, [Validators.required, Validators.min(1), Validators.max(100)]],
@@ -131,6 +143,43 @@ export class CreateAssignmentDialogComponent implements OnInit {
       contentSource: ['module_name'],
       moduleContent: ['']
     });
+
+    // Add custom validator for passingMarks vs maxMarks
+    this.assignmentForm.setValidators(this.passingMarksValidator());
+
+    // Re-validate when maxMarks or passingMarks changes
+    this.assignmentForm.get('maxMarks')?.valueChanges.subscribe(() => {
+      this.assignmentForm.updateValueAndValidity();
+    });
+    this.assignmentForm.get('passingMarks')?.valueChanges.subscribe(() => {
+      this.assignmentForm.updateValueAndValidity();
+    });
+  }
+
+  // Custom validator to ensure passing marks don't exceed max marks
+  passingMarksValidator(): ValidatorFn {
+    return (formGroup: AbstractControl): ValidationErrors | null => {
+      if (!(formGroup instanceof FormGroup)) {
+        return null;
+      }
+
+      const passingMarks = formGroup.get('passingMarks')?.value;
+      const maxMarks = formGroup.get('maxMarks')?.value;
+
+      if (passingMarks && maxMarks && passingMarks > maxMarks) {
+        // Set error on passingMarks control
+        formGroup.get('passingMarks')?.setErrors({ exceedsMaxMarks: true });
+        return { passingMarksExceedsMax: true };
+      } else {
+        // Clear the error if it was previously set
+        const passingMarksControl = formGroup.get('passingMarks');
+        if (passingMarksControl?.hasError('exceedsMaxMarks')) {
+          passingMarksControl.setErrors(null);
+        }
+      }
+
+      return null;
+    };
   }
 
   private setupFormWatchers(): void {
@@ -275,7 +324,10 @@ export class CreateAssignmentDialogComponent implements OnInit {
       semester: semesterId,
       subject: subjectId,
       modules: moduleIds,
+      startDate: assignment.startDate ? new Date(assignment.startDate) : new Date(),
       dueDate: new Date(assignment.dueDate),
+      endDate: assignment.endDate ? new Date(assignment.endDate) : new Date(assignment.dueDate),
+      passingMarks: assignment.passingMarks || Math.ceil((assignment.maxMarks || 0) * 0.4),
       assignmentLevel: assignment.assignmentLevel,
       assignmentType: assignment.assignmentType,
       numberOfQuestions: assignment.numberOfQuestions,
@@ -341,7 +393,10 @@ export class CreateAssignmentDialogComponent implements OnInit {
     const assignmentData: Assignment = {
       ...formValue,
       questions: this.previewQuestions,
-      dueDate: new Date(formValue.dueDate)
+      startDate: formValue.startDate ? new Date(formValue.startDate) : new Date(),
+      dueDate: formValue.dueDate ? new Date(formValue.dueDate) : new Date(),
+      endDate: formValue.endDate ? new Date(formValue.endDate) : (formValue.dueDate ? new Date(formValue.dueDate) : new Date()),
+      passingMarks: formValue.passingMarks ? Number(formValue.passingMarks) : Math.ceil(formValue.maxMarks * 0.4)
     };
 
     try {
@@ -387,6 +442,7 @@ export class CreateAssignmentDialogComponent implements OnInit {
       if (errors['maxlength']) return `${fieldName} cannot exceed ${errors['maxlength'].requiredLength} characters`;
       if (errors['min']) return `${fieldName} must be at least ${errors['min'].min}`;
       if (errors['max']) return `${fieldName} cannot exceed ${errors['max'].max}`;
+      if (errors['exceedsMaxMarks']) return 'Passing marks cannot exceed maximum marks';
     }
     return '';
   }

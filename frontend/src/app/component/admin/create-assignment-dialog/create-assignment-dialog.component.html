@@ -159,12 +159,78 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
+                  <mat-label>Maximum Marks</mat-label>
+                  <input matInput type="number" formControlName="maxMarks" min="1">
+                  <mat-icon matPrefix>star</mat-icon>
+                  <mat-hint>Will be auto-calculated based on questions</mat-hint>
+                  <mat-error>{{ getFormError('maxMarks') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Submission Type</mat-label>
+                  <mat-select formControlName="submissionType">
+                    <mat-option *ngFor="let type of submissionTypes" [value]="type.value">
+                      {{ type.label }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>upload</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Time Limit (minutes)</mat-label>
+                  <input matInput type="number" formControlName="timeLimit" min="1">
+                  <mat-icon matPrefix>timer</mat-icon>
+                  <mat-hint>Optional - leave empty for no time limit</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Schedule & Grading -->
+            <div class="form-section">
+              <h3><mat-icon>schedule</mat-icon> Schedule & Grading</h3>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Start Date</mat-label>
+                  <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                  <mat-icon matPrefix>play_arrow</mat-icon>
+                  <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #startPicker></mat-datepicker>
+                  <mat-hint>When students can start</mat-hint>
+                  <mat-error>{{ getFormError('startDate') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
                   <mat-label>Due Date</mat-label>
                   <input matInput [matDatepicker]="picker" formControlName="dueDate">
                   <mat-icon matPrefix>calendar_today</mat-icon>
                   <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                   <mat-datepicker #picker></mat-datepicker>
+                  <mat-hint>Submission deadline</mat-hint>
                   <mat-error>{{ getFormError('dueDate') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>End Date</mat-label>
+                  <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+                  <mat-icon matPrefix>stop</mat-icon>
+                  <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #endPicker></mat-datepicker>
+                  <mat-hint>When assignment closes</mat-hint>
+                  <mat-error>{{ getFormError('endDate') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Passing Marks</mat-label>
+                  <input matInput type="number" formControlName="passingMarks" min="0" 
+                         [max]="assignmentForm.get('maxMarks')?.value || 1000">
+                  <mat-icon matPrefix>check_circle</mat-icon>
+                  <mat-hint>Minimum marks required to pass</mat-hint>
+                  <mat-error>{{ getFormError('passingMarks') }}</mat-error>
                 </mat-form-field>
               </div>
             </div>
@@ -184,6 +250,32 @@
                 <textarea matInput formControlName="moduleContent" rows="6" 
                           placeholder="Paste or type the content for question generation"></textarea>
                 <mat-hint>This content will be used to generate assignment questions</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- Additional Settings -->
+            <div class="form-section">
+              <h3><mat-icon>tune</mat-icon> Additional Settings</h3>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Instructions</mat-label>
+                <textarea matInput formControlName="instructions" rows="3" 
+                          placeholder="Special instructions for students"></textarea>
+                <mat-icon matPrefix>info</mat-icon>
+              </mat-form-field>
+
+              <div class="form-row">
+                <mat-slide-toggle formControlName="allowLateSubmission">
+                  Allow Late Submission
+                </mat-slide-toggle>
+              </div>
+
+              <mat-form-field *ngIf="assignmentForm.get('allowLateSubmission')?.value" 
+                              appearance="outline">
+                <mat-label>Late Submission Penalty (%)</mat-label>
+                <input matInput type="number" formControlName="lateSubmissionPenalty" min="0" max="100">
+                <mat-icon matPrefix>warning</mat-icon>
+                <mat-error>{{ getFormError('lateSubmissionPenalty') }}</mat-error>
               </mat-form-field>
             </div>
 
